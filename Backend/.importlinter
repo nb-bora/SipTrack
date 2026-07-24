@@ -1,0 +1,45 @@
+[importlinter]
+root_packages =
+    contexts
+    shared
+    config
+include_external_packages = True
+
+[importlinter:contract:domaine-pur]
+name = Le domaine ne depend ni de Django ni de DRF
+type = forbidden
+source_modules =
+    shared.domain
+    contexts.service_ventes.domain
+forbidden_modules =
+    django
+    rest_framework
+
+[importlinter:contract:domaine-et-application-sans-adaptateurs]
+name = Le domaine et l'application n'importent pas les adaptateurs
+type = forbidden
+source_modules =
+    contexts.service_ventes.domain
+    contexts.service_ventes.application
+forbidden_modules =
+    contexts.service_ventes.infrastructure
+    contexts.service_ventes.interface
+
+[importlinter:contract:domaine-sans-application]
+name = Le domaine n'importe pas la couche application
+type = forbidden
+source_modules =
+    shared.domain
+    contexts.service_ventes.domain
+forbidden_modules =
+    shared.application
+    contexts.service_ventes.application
+
+[importlinter:contract:interface-sans-infrastructure-directe]
+name = L'interface n'importe pas directement l'infrastructure (elle passe par le composition root)
+type = forbidden
+source_modules =
+    contexts.service_ventes.interface
+forbidden_modules =
+    contexts.service_ventes.infrastructure
+allow_indirect_imports = true

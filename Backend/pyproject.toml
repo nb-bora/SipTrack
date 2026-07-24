@@ -1,0 +1,75 @@
+[project]
+name = "siptrack-backend"
+version = "0.1.0"
+description = "SipTrack — API (Django, DDD + Clean Architecture)"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=5.2,<6.0",
+    "djangorestframework>=3.15",
+    "django-environ>=0.11",
+]
+
+# PEP 735 — groupes de dépendances (gérés par uv)
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-django>=4.9",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "django-stubs[compatible-mypy]>=5.1",
+    "djangorestframework-stubs>=3.15",
+    "import-linter>=2.1",
+]
+
+# Projet applicatif (pas une bibliothèque) : pas de build-system → uv ne le "package" pas.
+
+# ---------------------------------------------------------------------------
+# Ruff — lint + format (remplace black, isort, flake8)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+extend-exclude = ["**/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "DJ", "C4", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/settings/*.py" = ["F403", "F405"]
+"**/tests/*.py" = ["S101"]
+
+# ---------------------------------------------------------------------------
+# pytest / pytest-django
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+python_files = ["test_*.py"]
+pythonpath = ["."]
+testpaths = ["contexts"]
+addopts = "-ra"
+
+# ---------------------------------------------------------------------------
+# mypy (+ django-stubs)
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = ["mypy_django_plugin.main"]
+exclude = ['migrations/']
+
+[[tool.mypy.overrides]]
+module = "*.migrations.*"
+ignore_errors = true
+
+# django-environ ne fournit pas de stubs.
+[[tool.mypy.overrides]]
+module = "environ.*"
+ignore_missing_imports = true
+
+# Friction connue DRF + mypy strict : les Serializer génériques sans modèle.
+[[tool.mypy.overrides]]
+module = "contexts.service_ventes.interface.rest.serializers"
+disable_error_code = ["type-arg"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings.dev"
