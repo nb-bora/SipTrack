@@ -1,0 +1,39 @@
+# Normalisation des fins de ligne pour tout le dépôt.
+# Par défaut : Git normalise en LF dans le dépôt, l'OS gère la copie de travail.
+* text=auto eol=lf
+
+# Sources et configuration : toujours LF.
+*.py    text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.toml  text eol=lf
+*.cfg   text eol=lf
+*.ini   text eol=lf
+*.json  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.sh    text eol=lf
+*.env*  text eol=lf
+*.js    text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+Makefile        text eol=lf
+.python-version text eol=lf
+.importlinter   text eol=lf
+uv.lock         text eol=lf
+
+# Scripts Windows : CRLF.
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Binaires : jamais de conversion.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
