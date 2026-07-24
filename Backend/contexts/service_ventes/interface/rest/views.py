@@ -12,9 +12,21 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from config.container import container
-from contexts.service_ventes.application.dto import OuvrirServiceCommand
+from contexts.service_ventes.application.dto import (
+    EnregistrerVenteCommand,
+    OuvrirServiceCommand,
+)
+from contexts.service_ventes.domain.exceptions import (
+    ServiceIntrouvable,
+    ServiceNonOuvert,
+)
 
-from .serializers import OuvrirServiceInputSerializer, ServiceOutputSerializer
+from .serializers import (
+    EnregistrerVenteInputSerializer,
+    OuvrirServiceInputSerializer,
+    ServiceOutputSerializer,
+    VenteOutputSerializer,
+)
 
 
 class ServiceListCreateView(APIView):
@@ -40,3 +52,28 @@ class ServiceDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         return Response(ServiceOutputSerializer(dto).data)
+
+
+class VenteCreateView(APIView):
+    def post(self, request: Request, service_id: str) -> Response:
+        entree = EnregistrerVenteInputSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+        commande = EnregistrerVenteCommand(service_id=service_id, **entree.validated_data)
+
+        try:
+            dto = container.enregistrer_vente().executer(commande)
+        except ServiceIntrouvable:
+            return Response(
+                {"detail": "Service introuvable."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except ServiceNonOuvert:
+            return Response(
+                {"detail": "Le service n'est pas ouvert."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response(
+            VenteOutputSerializer(dto).data,
+            status=status.HTTP_201_CREATED,
+        )
