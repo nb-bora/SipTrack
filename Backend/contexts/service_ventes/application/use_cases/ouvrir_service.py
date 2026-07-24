@@ -32,21 +32,25 @@ class OuvrirServiceHandler:
 
     def executer(self, commande: OuvrirServiceCommand) -> ServiceDTO:
         with self._uow:
+            # Un seul horodatage pour tout l'acte : l'attribution et l'ouverture
+            # du service partagent le même instant (cohérence + testabilité).
+            horodatage = self._clock.now()
             responsable = Attribution(
                 auteur_id=commande.auteur_id,
                 capacite=Capacite(commande.capacite),
-                horodatage=self._clock.now(),
+                horodatage=horodatage,
             )
             service = Service.ouvrir(
                 bar_id=commande.bar_id,
                 responsable=responsable,
                 fond_de_caisse=Montant(commande.fond_de_caisse),
-                horodatage=self._clock.now(),
+                horodatage=horodatage,
             )
             self._services.ajouter(service)
             self._journal.enregistrer(
                 service.evenements_non_publies(),
                 auteur_id=commande.auteur_id,
             )
+            service.purger_evenements()
             self._uow.commit()
             return ServiceDTO.depuis(service)
