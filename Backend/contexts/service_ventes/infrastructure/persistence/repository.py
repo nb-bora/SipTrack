@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from contexts.service_ventes.domain.service import Service
-from contexts.service_ventes.infrastructure.django_app.models import ServiceModel
+from contexts.service_ventes.domain.vente import Vente
+from contexts.service_ventes.infrastructure.django_app.models import (
+    ServiceModel,
+    VenteModel,
+)
 from contexts.service_ventes.infrastructure.persistence import mapper
 
 
@@ -17,3 +21,8 @@ class DjangoServiceRepository:
         except ServiceModel.DoesNotExist:
             return None
         return mapper.vers_domaine(ligne)
+
+
+class DjangoVenteRepository:
+    def ajouter(self, vente: Vente) -> None:
+        VenteModel.objects.create(**mapper.vers_ligne_vente(vente))

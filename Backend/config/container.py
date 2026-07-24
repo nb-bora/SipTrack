@@ -16,10 +16,16 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from contexts.service_ventes.application.dto import ServiceDTO
+    from contexts.service_ventes.application.use_cases.enregistrer_vente import (
+        EnregistrerVenteHandler,
+    )
     from contexts.service_ventes.application.use_cases.ouvrir_service import (
         OuvrirServiceHandler,
     )
-    from contexts.service_ventes.domain.repositories import ServiceRepository
+    from contexts.service_ventes.domain.repositories import (
+        ServiceRepository,
+        VenteRepository,
+    )
     from shared.application.journal import Journal
 
 
@@ -42,6 +48,7 @@ class Container:
     def __init__(self) -> None:
         self._clock = SystemClock()
         self._services: ServiceRepository | None = None
+        self._ventes: VenteRepository | None = None
         self._journal: Journal | None = None
 
     def _service_repository(self) -> ServiceRepository:
@@ -52,6 +59,15 @@ class Container:
 
             self._services = DjangoServiceRepository()
         return self._services
+
+    def _vente_repository(self) -> VenteRepository:
+        if self._ventes is None:
+            from contexts.service_ventes.infrastructure.persistence.repository import (
+                DjangoVenteRepository,
+            )
+
+            self._ventes = DjangoVenteRepository()
+        return self._ventes
 
     def _journal_adapter(self) -> Journal:
         if self._journal is None:
@@ -71,6 +87,20 @@ class Container:
         return OuvrirServiceHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
             services=self._service_repository(),
+            journal=self._journal_adapter(),
+            clock=self._clock,
+        )
+
+    def enregistrer_vente(self) -> EnregistrerVenteHandler:
+        from contexts.service_ventes.application.use_cases.enregistrer_vente import (
+            EnregistrerVenteHandler,
+        )
+        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return EnregistrerVenteHandler(
+            uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
+            services=self._service_repository(),
+            ventes=self._vente_repository(),
             journal=self._journal_adapter(),
             clock=self._clock,
         )

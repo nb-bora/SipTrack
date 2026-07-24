@@ -27,6 +27,24 @@ class ServiceModel(models.Model):
         return f"Service {self.id} ({self.statut})"
 
 
+class VenteModel(models.Model):
+    id = models.CharField(primary_key=True, max_length=36)
+    service = models.ForeignKey(ServiceModel, on_delete=models.PROTECT, related_name="ventes")
+    produit_id = models.CharField(max_length=36)
+    quantite = models.PositiveIntegerField()
+    prix_unitaire = models.PositiveIntegerField()
+    montant_total = models.PositiveIntegerField()
+    forme_paiement = models.CharField(max_length=20)
+    horodatage = models.DateTimeField()
+
+    class Meta:
+        db_table = "service_ventes_vente"
+        ordering = ["horodatage"]
+
+    def __str__(self) -> str:
+        return f"Vente {self.id} ({self.montant_total} XAF)"
+
+
 class MouvementModel(models.Model):
     """Journal d'audit append-only. Ne jamais UPDATE/DELETE (cf. ADR-0003)."""
 

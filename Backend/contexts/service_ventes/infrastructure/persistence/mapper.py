@@ -9,6 +9,7 @@ from typing import Any
 
 from contexts.service_ventes.domain.enums import StatutService
 from contexts.service_ventes.domain.service import Service
+from contexts.service_ventes.domain.vente import Vente
 from contexts.service_ventes.infrastructure.django_app.models import ServiceModel
 from shared.domain.attribution import Attribution, Capacite
 from shared.domain.money import Montant
@@ -42,3 +43,17 @@ def vers_domaine(ligne: ServiceModel) -> Service:
         ouvert_le=ligne.ouvert_le,
         clos_le=ligne.clos_le,
     )
+
+
+def vers_ligne_vente(vente: Vente) -> dict[str, Any]:
+    """Champs prêts pour VenteModel.objects.create(**...)."""
+    return {
+        "id": vente.id,
+        "service_id": vente.service_id,
+        "produit_id": vente.produit_id,
+        "quantite": vente.quantite,
+        "prix_unitaire": vente.prix_unitaire.montant,
+        "montant_total": vente.montant_total.montant,
+        "forme_paiement": vente.forme_paiement.value,
+        "horodatage": vente.horodatage,
+    }

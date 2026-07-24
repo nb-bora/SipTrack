@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from rest_framework import serializers
 
+from contexts.service_ventes.domain.enums import FormePaiement
 from shared.domain.attribution import Capacite
 
 
@@ -24,3 +25,21 @@ class ServiceOutputSerializer(serializers.Serializer):
     statut = serializers.CharField()
     fond_de_caisse = serializers.IntegerField()
     ouvert_le = serializers.CharField()
+
+
+class EnregistrerVenteInputSerializer(serializers.Serializer):
+    auteur_id = serializers.CharField(max_length=36)
+    produit_id = serializers.CharField(max_length=36)
+    quantite = serializers.IntegerField(min_value=1)
+    prix_unitaire = serializers.IntegerField(min_value=0)
+    forme_paiement = serializers.ChoiceField(choices=[f.value for f in FormePaiement])
+
+
+class VenteOutputSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    service_id = serializers.CharField()
+    produit_id = serializers.CharField()
+    quantite = serializers.IntegerField()
+    prix_unitaire = serializers.IntegerField()
+    montant_total = serializers.IntegerField()
+    forme_paiement = serializers.CharField()

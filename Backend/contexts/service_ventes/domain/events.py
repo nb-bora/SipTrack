@@ -13,3 +13,15 @@ class ServiceOuvert(DomainEvent):
     bar_id: str
     auteur_id: str
     fond_de_caisse: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class VenteEnregistree(DomainEvent):
+    vente_id: str
+    service_id: str
+    produit_id: str
+    quantite: int
+    prix_unitaire: int
+    montant_total: int
+    forme_paiement: str
+    auteur_id: str

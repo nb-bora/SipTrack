@@ -9,9 +9,14 @@ from __future__ import annotations
 from typing import Protocol
 
 from .service import Service
+from .vente import Vente
 
 
 class ServiceRepository(Protocol):
     def ajouter(self, service: Service) -> None: ...
 
     def par_id(self, service_id: str) -> Service | None: ...
+
+
+class VenteRepository(Protocol):
+    def ajouter(self, vente: Vente) -> None: ...
