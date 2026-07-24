@@ -5,13 +5,19 @@ name: CI
 on:
   push:
     branches: [main]
+    paths:
+      - "Backend/**"
+      - ".github/workflows/ci.yml"
   pull_request:
+    paths:
+      - "Backend/**"
+      - ".github/workflows/ci.yml"
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -23,10 +29,10 @@ jobs:
         working-directory: Backend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           version: "0.11.21"
           enable-cache: true
