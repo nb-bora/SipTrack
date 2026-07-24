@@ -42,6 +42,7 @@ def test_enregistrer_une_vente_emet_l_evenement() -> None:
     assert evenement.forme_paiement == "especes"
 
 
-def test_une_quantite_nulle_ou_negative_est_interdite() -> None:
+@pytest.mark.parametrize("quantite", [0, -1])
+def test_une_quantite_nulle_ou_negative_est_interdite(quantite: int) -> None:
     with pytest.raises(ValueError):
-        _vente(quantite=0)
+        _vente(quantite=quantite)
