@@ -7,11 +7,17 @@ le code (classes, méthodes, événements).
 > Règle de langage : on ne dit **jamais** « le stock ». C'est trop vague. On dit *pleins*,
 > *vidanges*, *casiers* ou *consignes* — quatre concepts distincts.
 
+> Convention de nommage : les **identifiants de code** (classes, événements, objets-valeurs)
+> sont écrits en **ASCII sans accent** (ex. `PrixDate`, `EcartConstate`, `CasseDeclaree`,
+> `PerteMonetaireConstatee`). C'est volontaire et conforme aux bonnes pratiques Python — les
+> accents et la casse française ne subsistent que dans le **texte**, jamais dans les
+> identifiants. La graphie retenue est **`PrixDate`** (et non `PrixDaté`) partout.
+
 ## Produits et contenants
 
 | Terme | Définition stricte |
 |---|---|
-| **Produit** | Une référence vendable (ex. « 33 Export 65cl »). Un concept, pas une bouteille physique. Porte un `Conditionnement`, un `PrixDaté`, une valeur de consigne. |
+| **Produit** | Une référence vendable (ex. « 33 Export 65cl »). Un concept, pas une bouteille physique. Porte un `Conditionnement`, un `PrixDate`, une valeur de consigne. |
 | **Bouteille** | L'unité physique de vérité. Existe *pleine* ou *vide*. |
 | **Plein** | Bouteille pleine, vendable. |
 | **Vidange** | Bouteille vide, consignée, portant une valeur récupérable. |
