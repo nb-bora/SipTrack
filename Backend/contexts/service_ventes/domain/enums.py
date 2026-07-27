@@ -15,3 +15,9 @@ class FormePaiement(StrEnum):
     ESPECES = "especes"
     MOBILE_MONEY = "mobile_money"
     CREDIT = "credit"
+
+
+class StatutAddition(StrEnum):
+    OUVERTE = "ouverte"
+    REGLEE = "reglee"
+    ABANDONNEE = "abandonnee"

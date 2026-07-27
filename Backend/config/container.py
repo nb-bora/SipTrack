@@ -22,10 +22,14 @@ if TYPE_CHECKING:
     from contexts.service_ventes.application.use_cases.enregistrer_vente import (
         EnregistrerVenteHandler,
     )
+    from contexts.service_ventes.application.use_cases.ouvrir_addition import (
+        OuvrirAdditionHandler,
+    )
     from contexts.service_ventes.application.use_cases.ouvrir_service import (
         OuvrirServiceHandler,
     )
     from contexts.service_ventes.domain.repositories import (
+        AdditionRepository,
         ServiceRepository,
         VenteRepository,
     )
@@ -52,6 +56,7 @@ class Container:
         self._clock = SystemClock()
         self._services: ServiceRepository | None = None
         self._ventes: VenteRepository | None = None
+        self._additions: AdditionRepository | None = None
         self._journal: Journal | None = None
 
     def _service_repository(self) -> ServiceRepository:
@@ -71,6 +76,15 @@ class Container:
 
             self._ventes = DjangoVenteRepository()
         return self._ventes
+
+    def _addition_repository(self) -> AdditionRepository:
+        if self._additions is None:
+            from contexts.service_ventes.infrastructure.persistence.repository import (
+                DjangoAdditionRepository,
+            )
+
+            self._additions = DjangoAdditionRepository()
+        return self._additions
 
     def _journal_adapter(self) -> Journal:
         if self._journal is None:
@@ -117,6 +131,20 @@ class Container:
         return CloturerServiceHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
             services=self._service_repository(),
+            journal=self._journal_adapter(),
+            clock=self._clock,
+        )
+
+    def ouvrir_addition(self) -> OuvrirAdditionHandler:
+        from contexts.service_ventes.application.use_cases.ouvrir_addition import (
+            OuvrirAdditionHandler,
+        )
+        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return OuvrirAdditionHandler(
+            uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
+            services=self._service_repository(),
+            additions=self._addition_repository(),
             journal=self._journal_adapter(),
             clock=self._clock,
         )

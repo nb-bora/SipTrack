@@ -45,6 +45,22 @@ class VenteModel(models.Model):
         return f"Vente {self.id} ({self.montant_total} XAF)"
 
 
+class AdditionModel(models.Model):
+    id = models.CharField(primary_key=True, max_length=36)
+    service = models.ForeignKey(ServiceModel, on_delete=models.PROTECT, related_name="additions")
+    table_numero = models.PositiveIntegerField()
+    statut = models.CharField(max_length=20)
+    ouvert_le = models.DateTimeField()
+    ferme_le = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "service_ventes_addition"
+        ordering = ["ouvert_le"]
+
+    def __str__(self) -> str:
+        return f"Addition table {self.table_numero} ({self.statut})"
+
+
 class MouvementModel(models.Model):
     """Journal d'audit append-only. Ne jamais UPDATE/DELETE (cf. ADR-0003)."""
 
