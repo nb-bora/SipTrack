@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Optional: run quality checks before commit
+# To enable: git config core.hooksPath .githooks
+
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+cd Backend
+
+# Quick checks only (not tests)
+uv run ruff check . > /dev/null 2>&1 || {
+  echo "❌ Ruff check failed. Run: uv run ruff check ."
+  exit 1
+}
+
+uv run ruff format --check . > /dev/null 2>&1 || {
+  echo "❌ Format issues. Run: uv run ruff format ."
+  exit 1
+}
+
+uv run mypy . > /dev/null 2>&1 || {
+  echo "❌ Type errors. Run: uv run mypy ."
+  exit 1
+}
+
+echo "✅ Pre-commit checks passed"

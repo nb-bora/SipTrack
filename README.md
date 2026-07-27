@@ -1,5 +1,7 @@
 # SipTrack
 
+[![CI](https://github.com/nb-bora/SipTrack/workflows/CI/badge.svg)](https://github.com/nb-bora/SipTrack/actions?query=workflow:CI)
+
 > Le registre incontestable du bar.
 
 **SipTrack** est un outil de **gestion et d'audit** pour bars au Cameroun : il trace chaque
