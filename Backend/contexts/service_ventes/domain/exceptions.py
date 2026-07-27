@@ -25,3 +25,19 @@ class ServiceNonOuvert(ServiceVentesError):
     def __init__(self, service_id: str) -> None:
         super().__init__(f"Le service {service_id} n'est pas ouvert.")
         self.service_id = service_id
+
+
+class AdditionIntrouvable(ServiceVentesError):
+    """Aucune addition ne correspond à l'identifiant fourni."""
+
+    def __init__(self, addition_id: str) -> None:
+        super().__init__(f"Addition introuvable : {addition_id}.")
+        self.addition_id = addition_id
+
+
+class AdditionDejaCloturee(ServiceVentesError):
+    """Une opération a été tentée sur une addition déjà réglée/abandonnée."""
+
+    def __init__(self, addition_id: str) -> None:
+        super().__init__(f"L'addition {addition_id} est déjà clôturée.")
+        self.addition_id = addition_id
