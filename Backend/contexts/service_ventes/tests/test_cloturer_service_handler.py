@@ -1,4 +1,4 @@
-"""Test unitaire du cas d'usage EnregistrerVente — couche application isolée (fakes)."""
+"""Test unitaire du cas d'usage CloturerService — couche application isolée (fakes)."""
 
 from __future__ import annotations
 
@@ -8,20 +8,22 @@ from types import TracebackType
 
 import pytest
 
-from contexts.service_ventes.application.dto import EnregistrerVenteCommand
-from contexts.service_ventes.application.use_cases.enregistrer_vente import (
-    EnregistrerVenteHandler,
+from contexts.service_ventes.application.dto import CloturerServiceCommand
+from contexts.service_ventes.application.use_cases.cloturer_service import (
+    CloturerServiceHandler,
 )
 from contexts.service_ventes.domain.enums import StatutService
-from contexts.service_ventes.domain.events import VenteEnregistree
-from contexts.service_ventes.domain.exceptions import ServiceIntrouvable, ServiceNonOuvert
+from contexts.service_ventes.domain.events import ServiceCloture
+from contexts.service_ventes.domain.exceptions import (
+    ServiceDejaCloture,
+    ServiceIntrouvable,
+)
 from contexts.service_ventes.domain.service import Service
-from contexts.service_ventes.domain.vente import Vente
 from shared.domain.attribution import Attribution, Capacite
 from shared.domain.events import DomainEvent
 from shared.domain.money import Montant
 
-_INSTANT = datetime(2026, 7, 24, 18, 30, tzinfo=UTC)
+_INSTANT = datetime(2026, 7, 24, 19, 0, tzinfo=UTC)
 
 
 class FakeUnitOfWork:
@@ -51,6 +53,7 @@ class FakeUnitOfWork:
 class FakeServiceRepository:
     def __init__(self, service: Service | None) -> None:
         self._service = service
+        self.mises_a_jour: list[Service] = []
 
     def ajouter(self, service: Service) -> None:  # pragma: no cover - non utilisé ici
         raise NotImplementedError
@@ -58,16 +61,8 @@ class FakeServiceRepository:
     def par_id(self, service_id: str) -> Service | None:
         return self._service
 
-    def mettre_a_jour(self, service: Service) -> None:  # pragma: no cover - non utilisé ici
-        raise NotImplementedError
-
-
-class FakeVenteRepository:
-    def __init__(self) -> None:
-        self.ajoutes: list[Vente] = []
-
-    def ajouter(self, vente: Vente) -> None:
-        self.ajoutes.append(vente)
+    def mettre_a_jour(self, service: Service) -> None:
+        self.mises_a_jour.append(service)
 
 
 class FakeJournal:
@@ -106,60 +101,75 @@ def _service_cloture() -> Service:
     )
 
 
-def _commande(service_id: str) -> EnregistrerVenteCommand:
-    return EnregistrerVenteCommand(
+def _commande(service_id: str) -> CloturerServiceCommand:
+    return CloturerServiceCommand(
         service_id=service_id,
         auteur_id="u1",
-        produit_id="33export",
-        quantite=2,
-        prix_unitaire=650,
-        forme_paiement="especes",
     )
 
 
 def _handler(
     service: Service | None,
-) -> tuple[EnregistrerVenteHandler, FakeUnitOfWork, FakeVenteRepository, FakeJournal]:
+) -> tuple[CloturerServiceHandler, FakeUnitOfWork, FakeServiceRepository, FakeJournal]:
     uow = FakeUnitOfWork()
-    ventes = FakeVenteRepository()
+    services = FakeServiceRepository(service)
     journal = FakeJournal()
-    handler = EnregistrerVenteHandler(
+    handler = CloturerServiceHandler(
         uow=uow,
-        services=FakeServiceRepository(service),
-        ventes=ventes,
+        services=services,
         journal=journal,
         clock=FakeClock(_INSTANT),
     )
-    return handler, uow, ventes, journal
+    return handler, uow, services, journal
 
 
-def test_la_vente_est_persistee_journalisee_purgee_et_commitee() -> None:
+def test_le_service_est_mis_a_jour_et_le_dto_est_renvoye() -> None:
     service = _service_ouvert()
-    handler, uow, ventes, journal = _handler(service)
+    handler, _uow, services, _journal = _handler(service)
 
     dto = handler.executer(_commande(service.id))
 
-    assert len(ventes.ajoutes) == 1
-    assert dto.montant_total == 1_300
-    assert dto.service_id == service.id
+    assert len(services.mises_a_jour) == 1
+    assert dto.statut == "cloture"
+    assert dto.clos_le is not None
+
+
+def test_les_evenements_sont_journalises_avec_le_bon_auteur_puis_purges() -> None:
+    service = _service_ouvert()
+    service.purger_evenements()  # Le service renvoyé par le repository serait déjà purgé en prod
+    handler, _uow, services, journal = _handler(service)
+
+    handler.executer(_commande(service.id))
+
     assert len(journal.appels) == 1
     evenements, auteur_id = journal.appels[0]
     assert auteur_id == "u1"
-    assert isinstance(evenements[0], VenteEnregistree)
-    assert ventes.ajoutes[0].evenements_non_publies() == ()
+    assert len(evenements) == 1
+    assert isinstance(evenements[0], ServiceCloture)
+    # Après journalisation, l'agrégat ne conserve plus d'événements non publiés.
+    assert services.mises_a_jour[0].evenements_non_publies() == ()
+
+
+def test_la_transaction_est_validee_en_cas_de_succes() -> None:
+    service = _service_ouvert()
+    handler, uow, _services, _journal = _handler(service)
+
+    handler.executer(_commande(service.id))
+
     assert uow.committed is True
+    assert uow.rolled_back is False
 
 
 def test_un_service_introuvable_leve_service_introuvable() -> None:
-    handler, _uow, _ventes, _journal = _handler(None)
+    handler, _uow, _services, _journal = _handler(None)
 
     with pytest.raises(ServiceIntrouvable):
         handler.executer(_commande("inconnu"))
 
 
-def test_un_service_non_ouvert_leve_service_non_ouvert() -> None:
+def test_un_service_deja_cloture_leve_service_deja_cloture() -> None:
     service = _service_cloture()
-    handler, _uow, _ventes, _journal = _handler(service)
+    handler, _uow, _services, _journal = _handler(service)
 
-    with pytest.raises(ServiceNonOuvert):
+    with pytest.raises(ServiceDejaCloture):
         handler.executer(_commande(service.id))

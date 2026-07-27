@@ -22,6 +22,10 @@ class DjangoServiceRepository:
             return None
         return mapper.vers_domaine(ligne)
 
+    def mettre_a_jour(self, service: Service) -> None:
+        data = mapper.vers_ligne(service)
+        ServiceModel.objects.filter(pk=service.id).update(**data)
+
 
 class DjangoVenteRepository:
     def ajouter(self, vente: Vente) -> None:

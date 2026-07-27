@@ -19,12 +19,17 @@ class OuvrirServiceInputSerializer(serializers.Serializer):
     fond_de_caisse = serializers.IntegerField(min_value=0)
 
 
+class CloturerServiceInputSerializer(serializers.Serializer):
+    auteur_id = serializers.CharField(max_length=36)
+
+
 class ServiceOutputSerializer(serializers.Serializer):
     id = serializers.CharField()
     bar_id = serializers.CharField()
     statut = serializers.CharField()
     fond_de_caisse = serializers.IntegerField()
     ouvert_le = serializers.CharField()
+    clos_le = serializers.CharField(required=False, allow_null=True)
 
 
 class EnregistrerVenteInputSerializer(serializers.Serializer):

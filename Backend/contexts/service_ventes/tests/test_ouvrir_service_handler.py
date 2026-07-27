@@ -55,6 +55,13 @@ class FakeServiceRepository:
     def par_id(self, service_id: str) -> Service | None:
         return next((s for s in self.ajoutes if s.id == service_id), None)
 
+    def mettre_a_jour(self, service: Service) -> None:
+        # Simule une mise à jour en cherchant et remplaçant
+        for i, s in enumerate(self.ajoutes):
+            if s.id == service.id:
+                self.ajoutes[i] = service
+                break
+
 
 class FakeJournal:
     def __init__(self) -> None:

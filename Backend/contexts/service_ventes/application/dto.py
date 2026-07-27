@@ -23,6 +23,12 @@ class OuvrirServiceCommand:
 
 
 @dataclass(frozen=True)
+class CloturerServiceCommand:
+    service_id: str
+    auteur_id: str
+
+
+@dataclass(frozen=True)
 class EnregistrerVenteCommand:
     service_id: str
     auteur_id: str
@@ -39,6 +45,7 @@ class ServiceDTO:
     statut: str
     fond_de_caisse: int
     ouvert_le: str
+    clos_le: str | None = None
 
     @classmethod
     def depuis(cls, service: Service) -> ServiceDTO:
@@ -48,6 +55,7 @@ class ServiceDTO:
             statut=service.statut.value,
             fond_de_caisse=service.fond_de_caisse.montant,
             ouvert_le=service.ouvert_le.isoformat(),
+            clos_le=service.clos_le.isoformat() if service.clos_le is not None else None,
         )
 
 

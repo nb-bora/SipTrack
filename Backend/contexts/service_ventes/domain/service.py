@@ -14,7 +14,8 @@ from shared.domain.identifiers import new_id
 from shared.domain.money import Montant
 
 from .enums import StatutService
-from .events import ServiceOuvert
+from .events import ServiceCloture, ServiceOuvert
+from .exceptions import ServiceDejaCloture
 
 
 class Service:
@@ -75,3 +76,17 @@ class Service:
 
     def purger_evenements(self) -> None:
         self._evenements.clear()
+
+    def cloturer(self, *, auteur_id: str, horodatage: datetime) -> None:
+        """Clôture le service et enregistre le fait correspondant."""
+        if self.statut is not StatutService.OUVERT:
+            raise ServiceDejaCloture(self.id)
+        self.statut = StatutService.CLOTURE
+        self.clos_le = horodatage
+        self._enregistrer(
+            ServiceCloture(
+                service_id=self.id,
+                bar_id=self.bar_id,
+                auteur_id=auteur_id,
+            )
+        )
