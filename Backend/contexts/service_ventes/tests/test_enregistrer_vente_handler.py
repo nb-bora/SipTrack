@@ -165,4 +165,3 @@ def test_un_service_non_ouvert_leve_service_non_ouvert() -> None:
 
     with pytest.raises(ServiceNonOuvert):
         handler.executer(commande)
-
