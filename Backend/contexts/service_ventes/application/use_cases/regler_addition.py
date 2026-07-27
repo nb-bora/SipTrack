@@ -34,6 +34,9 @@ class ReglementAdditionHandler:
             if addition is None:
                 raise AdditionIntrouvable(commande.addition_id)
 
+            if addition.service_id != commande.service_id:
+                raise AdditionIntrouvable(commande.addition_id)
+
             addition.regler(
                 auteur_id=commande.auteur_id,
                 horodatage=self._clock.now(),

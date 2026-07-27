@@ -100,4 +100,21 @@ def test_regler_une_addition_deja_reglee_retourne_409() -> None:
     )
 
     assert reponse.status_code == 409
-    assert "déjà" in reponse.json()["detail"].lower()
+    assert "clôturée" in reponse.json()["detail"].lower()
+
+
+@pytest.mark.django_db
+def test_regler_une_addition_avec_mauvais_service_id_retourne_404() -> None:
+    client = APIClient()
+    service_id = _ouvrir_service(client)
+    other_service_id = _ouvrir_service(client)
+    addition_id = _ouvrir_addition(client, service_id)
+
+    reponse = client.post(
+        f"/api/services/{other_service_id}/additions/{addition_id}/reglement/",
+        {"auteur_id": "u1"},
+        format="json",
+    )
+
+    assert reponse.status_code == 404
+    assert "introuvable" in reponse.json()["detail"].lower()

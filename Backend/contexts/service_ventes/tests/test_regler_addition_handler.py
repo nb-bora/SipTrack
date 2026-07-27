@@ -147,3 +147,31 @@ def test_regler_une_addition_deja_reglee_leve_l_erreur() -> None:
 
     with pytest.raises(AdditionDejaCloturee):
         handler.executer(cmd)
+
+
+def test_regler_une_addition_avec_mauvais_service_id_leve_l_erreur() -> None:
+    addition = Addition.ouvrir(
+        service_id="svc1",
+        table_numero=5,
+        horodatage=_HORODATAGE,
+        auteur_id="u1",
+    )
+    additions_repo = FakeAdditionRepository([addition])
+    journal = FakeJournal()
+    clock = SystemClockFake(_HORODATAGE_REGLEMENT)
+    uow = FakeUnitOfWork()
+
+    handler = ReglementAdditionHandler(
+        uow=uow,
+        additions=additions_repo,
+        journal=journal,
+        clock=clock,
+    )
+    cmd = ReglementAdditionCommand(
+        service_id="svc-mauvais",
+        addition_id=addition.id,
+        auteur_id="u1",
+    )
+
+    with pytest.raises(AdditionIntrouvable):
+        handler.executer(cmd)

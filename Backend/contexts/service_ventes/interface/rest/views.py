@@ -160,7 +160,7 @@ class ReglementAdditionView(APIView):
             )
         except AdditionDejaCloturee:
             return Response(
-                {"detail": "L'addition est déjà réglée."},
+                {"detail": "L'addition est déjà clôturée."},
                 status=status.HTTP_409_CONFLICT,
             )
 

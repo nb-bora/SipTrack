@@ -47,7 +47,7 @@ Serveuse règle l'addition de la table 5
 1. **État initial** : `statut == OUVERTE`
    - Toute autre tentative lève `AdditionDejaCloturee`
 
-2. **Immuabilité** : une fois réglée, l'addition ne peut pas être modifiée
+2. **Immutabilité** : une fois réglée, l'addition ne peut plus être modifiée
    - Transition : OUVERTE → RÉGLÉE (terminal)
 
 3. **Horodatage** : `ferme_le` est fixé au moment du règlement
