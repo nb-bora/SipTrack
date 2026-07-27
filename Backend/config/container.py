@@ -16,6 +16,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from contexts.service_ventes.application.dto import ServiceDTO
+    from contexts.service_ventes.application.use_cases.cloturer_service import (
+        CloturerServiceHandler,
+    )
     from contexts.service_ventes.application.use_cases.enregistrer_vente import (
         EnregistrerVenteHandler,
     )
@@ -101,6 +104,19 @@ class Container:
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
             services=self._service_repository(),
             ventes=self._vente_repository(),
+            journal=self._journal_adapter(),
+            clock=self._clock,
+        )
+
+    def cloturer_service(self) -> CloturerServiceHandler:
+        from contexts.service_ventes.application.use_cases.cloturer_service import (
+            CloturerServiceHandler,
+        )
+        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return CloturerServiceHandler(
+            uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
+            services=self._service_repository(),
             journal=self._journal_adapter(),
             clock=self._clock,
         )

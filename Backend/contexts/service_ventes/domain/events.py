@@ -25,3 +25,10 @@ class VenteEnregistree(DomainEvent):
     montant_total: int
     forme_paiement: str
     auteur_id: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class ServiceCloture(DomainEvent):
+    service_id: str
+    bar_id: str
+    auteur_id: str

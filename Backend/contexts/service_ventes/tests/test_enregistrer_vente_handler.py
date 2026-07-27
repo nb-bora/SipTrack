@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from datetime import UTC, datetime
-from types import TracebackType
+from datetime import datetime
 
 import pytest
 
@@ -17,46 +15,17 @@ from contexts.service_ventes.domain.events import VenteEnregistree
 from contexts.service_ventes.domain.exceptions import ServiceIntrouvable, ServiceNonOuvert
 from contexts.service_ventes.domain.service import Service
 from contexts.service_ventes.domain.vente import Vente
+from contexts.service_ventes.tests.conftest import (
+    FakeClock,
+    FakeJournal,
+    FakeServiceRepository,
+    FakeUnitOfWork,
+    creer_service_ouvert,
+)
 from shared.domain.attribution import Attribution, Capacite
-from shared.domain.events import DomainEvent
 from shared.domain.money import Montant
 
-_INSTANT = datetime(2026, 7, 24, 18, 30, tzinfo=UTC)
-
-
-class FakeUnitOfWork:
-    def __init__(self) -> None:
-        self.committed = False
-        self.rolled_back = False
-
-    def __enter__(self) -> FakeUnitOfWork:
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        tb: TracebackType | None,
-    ) -> None:
-        if exc_type is not None:
-            self.rolled_back = True
-
-    def commit(self) -> None:
-        self.committed = True
-
-    def rollback(self) -> None:
-        self.rolled_back = True
-
-
-class FakeServiceRepository:
-    def __init__(self, service: Service | None) -> None:
-        self._service = service
-
-    def ajouter(self, service: Service) -> None:  # pragma: no cover - non utilisé ici
-        raise NotImplementedError
-
-    def par_id(self, service_id: str) -> Service | None:
-        return self._service
+_INSTANT = datetime(2026, 7, 24, 18, 30)
 
 
 class FakeVenteRepository:
@@ -65,31 +34,6 @@ class FakeVenteRepository:
 
     def ajouter(self, vente: Vente) -> None:
         self.ajoutes.append(vente)
-
-
-class FakeJournal:
-    def __init__(self) -> None:
-        self.appels: list[tuple[tuple[DomainEvent, ...], str]] = []
-
-    def enregistrer(self, evenements: Iterable[DomainEvent], *, auteur_id: str) -> None:
-        self.appels.append((tuple(evenements), auteur_id))
-
-
-class FakeClock:
-    def __init__(self, instant: datetime) -> None:
-        self.instant = instant
-
-    def now(self) -> datetime:
-        return self.instant
-
-
-def _service_ouvert() -> Service:
-    return Service.ouvrir(
-        bar_id="bar1",
-        responsable=Attribution(auteur_id="g1", capacite=Capacite.OPERATRICE, horodatage=_INSTANT),
-        fond_de_caisse=Montant(10_000),
-        horodatage=_INSTANT,
-    )
 
 
 def _service_cloture() -> Service:
@@ -131,7 +75,7 @@ def _handler(
 
 
 def test_la_vente_est_persistee_journalisee_purgee_et_commitee() -> None:
-    service = _service_ouvert()
+    service = creer_service_ouvert(_INSTANT)
     handler, uow, ventes, journal = _handler(service)
 
     dto = handler.executer(_commande(service.id))
@@ -149,14 +93,16 @@ def test_la_vente_est_persistee_journalisee_purgee_et_commitee() -> None:
 
 def test_un_service_introuvable_leve_service_introuvable() -> None:
     handler, _uow, _ventes, _journal = _handler(None)
+    commande = _commande("inconnu")
 
     with pytest.raises(ServiceIntrouvable):
-        handler.executer(_commande("inconnu"))
+        handler.executer(commande)
 
 
 def test_un_service_non_ouvert_leve_service_non_ouvert() -> None:
     service = _service_cloture()
     handler, _uow, _ventes, _journal = _handler(service)
+    commande = _commande(service.id)
 
     with pytest.raises(ServiceNonOuvert):
-        handler.executer(_commande(service.id))
+        handler.executer(commande)
