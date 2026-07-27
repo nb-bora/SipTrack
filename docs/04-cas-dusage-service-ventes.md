@@ -37,7 +37,7 @@ Gérante veut ouvrir un service
 |---|---|---|
 | `bar_id` | str | Identifiant du bar |
 | `auteur_id` | str | Identifiant de la gérante |
-| `capacite` | str | Rôle (ex. "operatrice") |
+| `capacite` | str | Rôle (ex. "opératrice") |
 | `fond_de_caisse` | int | Capital de démarrage (XAF) |
 
 ### Sorties (ServiceDTO)
@@ -85,7 +85,7 @@ curl -X POST http://127.0.0.1:8000/api/services/ \
   -d '{
     "bar_id": "bar1",
     "auteur_id": "u1",
-    "capacite": "operatrice",
+    "capacite": "opératrice",
     "fond_de_caisse": 10000
   }'
 ```
@@ -181,7 +181,7 @@ VenteEnregistree
 # D'abord ouvrir un service
 SERVICE_ID=$(curl -s -X POST http://127.0.0.1:8000/api/services/ \
   -H "Content-Type: application/json" \
-  -d '{"bar_id":"bar1","auteur_id":"u1","capacite":"operatrice","fond_de_caisse":10000}' \
+  -d '{"bar_id":"bar1","auteur_id":"u1","capacite":"opératrice","fond_de_caisse":10000}' \
   | jq -r '.id')
 
 # Puis enregistrer une vente
@@ -283,7 +283,7 @@ ServiceCloture
 # Ouvrir un service
 SERVICE_ID=$(curl -s -X POST http://127.0.0.1:8000/api/services/ \
   -H "Content-Type: application/json" \
-  -d '{"bar_id":"bar1","auteur_id":"u1","capacite":"operatrice","fond_de_caisse":10000}' \
+  -d '{"bar_id":"bar1","auteur_id":"u1","capacite":"opératrice","fond_de_caisse":10000}' \
   | jq -r '.id')
 
 # Clôturer le service
@@ -380,7 +380,7 @@ AdditionOuverte
 # Ouvrir un service
 SERVICE_ID=$(curl -s -X POST http://127.0.0.1:8000/api/services/ \
   -H "Content-Type: application/json" \
-  -d '{"bar_id":"bar1","auteur_id":"u1","capacite":"operatrice","fond_de_caisse":10000}' \
+  -d '{"bar_id":"bar1","auteur_id":"u1","capacite":"opératrice","fond_de_caisse":10000}' \
   | jq -r '.id')
 
 # Ouvrir une addition
@@ -403,7 +403,7 @@ curl -X POST http://127.0.0.1:8000/api/services/$SERVICE_ID/additions/ \
 
 ### ✅ Livré
 
-| Tranche | Branch | PR | Status |
+| Tranche | Branch | PR | Statut |
 |---|---|---|---|
 | Ouvrir un service | `feat/ouvrir-service` | Mergée | ✅ LIVRÉ |
 | Enregistrer une vente | `feat/enregistrer-vente` | Mergée | ✅ LIVRÉ |

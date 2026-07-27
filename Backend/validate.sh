@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Local quality gate — run before committing
 
-set -e
+set -euo pipefail
 
 echo "🧹 Running quality checks..."
 echo ""

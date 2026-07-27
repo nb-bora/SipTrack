@@ -21,8 +21,8 @@ C'est le point de départ si vous découvrez l'architecture.
 |---|---|---|---|
 | [0001](./0001-clean-architecture-en-couches.md) | Architecture en couches (Clean Architecture / DDD) | ✅ Accepté | [Synthèse](./SYNTHESE-ADR.md#adr-0001--architecture-en-couches-clean-architecture--ddd) |
 | [0002](./0002-domaine-independant-de-django.md) | Domaine indépendant de Django (persistence-ignorant) | ✅ Accepté | [Synthèse](./SYNTHESE-ADR.md#adr-0002--domaine-indépendant-de-django-persistence-ignorant) |
-| [0003](./0003-journal-audit-vs-event-sourcing.md) | Journal d'audit = exigence métier ; ES = détail d'infra | ✅ Accepté | [Synthèse](./SYNTHESE-ADR.md#adr-0003--journal-dAUDIT--exigence-métier--es--détail-dinfra) |
-| [0004](./0004-petits-agregats-coherence-eventual.md) | Petits agrégats, référence par identité, cohérence eventual | ✅ Accepté | [Synthèse](./SYNTHESE-ADR.md#adr-0004--petits-agrégats-référence-par-identité-cohérence-eventual) |
+| [0003](./0003-journal-audit-vs-event-sourcing.md) | Journal d'audit = exigence métier ; ES = détail d'infra | ✅ Accepté | [Synthèse](./SYNTHESE-ADR.md#adr-0003--journal-daudit--exigence-métier--es--détail-dinfra) |
+| [0004](./0004-petits-agregats-coherence-eventual.md) | Petits agrégats, référence par identité, cohérence éventuelle | ✅ Accepté | [Synthèse](./SYNTHESE-ADR.md#adr-0004--petits-agrégats-référence-par-identité-cohérence-eventual) |
 | [0005](./0005-isolation-bounded-contexts.md) | Isolation stricte des bounded contexts (pas de FK ORM) | ✅ Accepté | [Synthèse](./SYNTHESE-ADR.md#adr-0005--isolation-stricte-des-bounded-contexts) |
 
 ## Guide de lecture

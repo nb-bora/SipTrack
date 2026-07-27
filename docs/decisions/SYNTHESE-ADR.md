@@ -82,7 +82,7 @@ Django est nativement *Active Record* : l'ORM soude modèle et persistance. Le D
 ### Conséquences
 
 ✅ **Domaine isolé** — Zéro `import django` dans `domain/`  
-✅ **Tests rapides** — Les tests de domaine ne touchen pas la DB  
+✅ **Tests rapides** — Les tests de domaine ne touchent pas la DB  
 ✅ **Remplaçable** — L'implémentation ORM est interchangeable
 
 ⚠️ **Mapper explicite** — Chaque repository traduit `domaine_obj ↔ orm_model`  
@@ -171,7 +171,7 @@ uv run lint-imports
 
 ### Pourquoi?
 
-SipTrack est un **outil d'audit** pour la Cameroun. Traçabilité = obligation légale. Mais Event Sourcing complet (toute l'histoire du monde) est sur-dimensionné pour un bar.
+SipTrack est un **outil d'audit** pour le Cameroun. Traçabilité = obligation légale. Mais Event Sourcing complet (toute l'histoire du monde) est sur-dimensionné pour un bar.
 
 ### Conséquences
 
@@ -234,7 +234,7 @@ ORDER BY enregistre_le ASC;
 
 ---
 
-## ADR-0004 — Petits agrégats, référence par identité, cohérence eventual
+## ADR-0004 — Petits agrégats, référence par identité, cohérence éventuelle
 
 **Statut** : ✅ Accepté  
 **Décision** : Agrégats **petits et simples** (une seule responsabilité). Entre-agrégats : référence par identité. Pas de FK ORM inter-agrégats. Cohérence eventual (via événements).
@@ -423,7 +423,7 @@ uv run lint-imports
 | **0001** | 4 couches (Domaine → App → Infra → Interface) | Structure des dossiers |
 | **0002** | Domaine = Python pur, 0 Django | `import-linter` : `domain` ⊄ `django` |
 | **0003** | Journal append-only, pas d'ES complet | Tables `Mouvement` immutables |
-| **0004** | Petits agrégats, référence par identité | Pas de FK ORM inter-agrégats, coérence eventual |
+| **0004** | Petits agrégats, référence par identité | Pas de FK ORM inter-agrégats, cohérence éventuelle (eventual consistency) |
 | **0005** | Isolation stricte des contextes | `import-linter` : `contexts.A` ⊄ `contexts.B` |
 
 **Comment ces ADRs sont appliqués dans le code** :
