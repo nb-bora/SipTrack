@@ -28,6 +28,9 @@ if TYPE_CHECKING:
     from contexts.service_ventes.application.use_cases.ouvrir_service import (
         OuvrirServiceHandler,
     )
+    from contexts.service_ventes.application.use_cases.regler_addition import (
+        ReglementAdditionHandler,
+    )
     from contexts.service_ventes.domain.repositories import (
         AdditionRepository,
         ServiceRepository,
@@ -144,6 +147,19 @@ class Container:
         return OuvrirAdditionHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
             services=self._service_repository(),
+            additions=self._addition_repository(),
+            journal=self._journal_adapter(),
+            clock=self._clock,
+        )
+
+    def regler_addition(self) -> ReglementAdditionHandler:
+        from contexts.service_ventes.application.use_cases.regler_addition import (
+            ReglementAdditionHandler,
+        )
+        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return ReglementAdditionHandler(
+            uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
             additions=self._addition_repository(),
             journal=self._journal_adapter(),
             clock=self._clock,
