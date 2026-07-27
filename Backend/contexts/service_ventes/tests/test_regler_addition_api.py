@@ -8,7 +8,6 @@ from rest_framework.test import APIClient
 from contexts.service_ventes.infrastructure.django_app.models import (
     AdditionModel,
     MouvementModel,
-    ServiceModel,
 )
 
 
@@ -24,7 +23,11 @@ def _ouvrir_service(client: APIClient) -> str:
         format="json",
     )
     assert reponse.status_code == 201
-    return reponse.json()["id"]
+    result = reponse.json()
+    assert isinstance(result, dict)
+    service_id = result["id"]
+    assert isinstance(service_id, str)
+    return service_id
 
 
 def _ouvrir_addition(client: APIClient, service_id: str) -> str:
@@ -34,7 +37,11 @@ def _ouvrir_addition(client: APIClient, service_id: str) -> str:
         format="json",
     )
     assert reponse.status_code == 201
-    return reponse.json()["id"]
+    result = reponse.json()
+    assert isinstance(result, dict)
+    addition_id = result["id"]
+    assert isinstance(addition_id, str)
+    return addition_id
 
 
 @pytest.mark.django_db

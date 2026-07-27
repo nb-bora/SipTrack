@@ -59,7 +59,9 @@ def test_regler_une_addition_la_met_a_jour_et_la_journalise() -> None:
     assert isinstance(dto, AdditionDTO)
     assert dto.statut == "reglee"
     assert dto.ferme_le is not None
-    assert additions_repo.par_id(addition.id).statut is StatutAddition.REGLEE
+    addition_en_repo = additions_repo.par_id(addition.id)
+    assert addition_en_repo is not None
+    assert addition_en_repo.statut is StatutAddition.REGLEE
 
 
 def test_l_evenement_addition_reglee_est_journalise() -> None:

@@ -71,15 +71,17 @@ class FakeJournal:
 
     def __init__(self) -> None:
         self.appels: list[tuple[tuple[DomainEvent, ...], str]] = []
-        self.mouvements: list[dict] = []
+        self.mouvements: list[dict[str, object]] = []
 
     def enregistrer(self, evenements: Iterable[DomainEvent], *, auteur_id: str) -> None:
         self.appels.append((tuple(evenements), auteur_id))
         for evt in evenements:
-            self.mouvements.append({
-                "type": evt.__class__.__name__,
-                **evt.__dict__,
-            })
+            self.mouvements.append(
+                {
+                    "type": evt.__class__.__name__,
+                    **evt.__dict__,
+                }
+            )
 
 
 class FakeAdditionRepository:

@@ -97,10 +97,13 @@ def test_regler_addition_emet_l_evenement_addition_reglee() -> None:
     assert evenement.auteur_id == "u1"
 
 
-@pytest.mark.parametrize("statut_initial", [
-    StatutAddition.REGLEE,
-    StatutAddition.ABANDONNEE,
-])
+@pytest.mark.parametrize(
+    "statut_initial",
+    [
+        StatutAddition.REGLEE,
+        StatutAddition.ABANDONNEE,
+    ],
+)
 def test_regler_une_addition_deja_cloturee_est_interdite(statut_initial: StatutAddition) -> None:
     addition = Addition(
         id="add1",

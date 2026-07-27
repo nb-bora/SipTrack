@@ -7,7 +7,7 @@ ses événements, le tout dans une unité de travail atomique.
 from __future__ import annotations
 
 from contexts.service_ventes.application.dto import AdditionDTO, ReglementAdditionCommand
-from contexts.service_ventes.domain.exceptions import AdditionDejaCloturee, AdditionIntrouvable
+from contexts.service_ventes.domain.exceptions import AdditionIntrouvable
 from contexts.service_ventes.domain.repositories import AdditionRepository
 from shared.application.clock import Clock
 from shared.application.journal import Journal
