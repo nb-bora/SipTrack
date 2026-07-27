@@ -7,10 +7,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from contexts.service_ventes.domain.enums import StatutService
+from contexts.service_ventes.domain.addition import Addition
+from contexts.service_ventes.domain.enums import StatutAddition, StatutService
 from contexts.service_ventes.domain.service import Service
 from contexts.service_ventes.domain.vente import Vente
-from contexts.service_ventes.infrastructure.django_app.models import ServiceModel
+from contexts.service_ventes.infrastructure.django_app.models import (
+    AdditionModel,
+    ServiceModel,
+)
 from shared.domain.attribution import Attribution, Capacite
 from shared.domain.money import Montant
 
@@ -57,3 +61,26 @@ def vers_ligne_vente(vente: Vente) -> dict[str, Any]:
         "forme_paiement": vente.forme_paiement.value,
         "horodatage": vente.horodatage,
     }
+
+
+def vers_ligne_addition(addition: Addition) -> dict[str, Any]:
+    """Champs prêts pour AdditionModel.objects.create(**...)."""
+    return {
+        "id": addition.id,
+        "service_id": addition.service_id,
+        "table_numero": addition.table_numero,
+        "statut": addition.statut.value,
+        "ouvert_le": addition.ouvert_le,
+        "ferme_le": addition.ferme_le,
+    }
+
+
+def vers_domaine_addition(ligne: AdditionModel) -> Addition:
+    return Addition(
+        id=ligne.id,
+        service_id=ligne.service_id,
+        table_numero=ligne.table_numero,
+        statut=StatutAddition(ligne.statut),
+        ouvert_le=ligne.ouvert_le,
+        ferme_le=ligne.ferme_le,
+    )

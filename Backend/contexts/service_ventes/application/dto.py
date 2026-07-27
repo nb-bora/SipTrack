@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from contexts.service_ventes.domain.addition import Addition
     from contexts.service_ventes.domain.service import Service
     from contexts.service_ventes.domain.vente import Vente
 
@@ -57,6 +58,34 @@ class ServiceDTO:
             ouvert_le=service.ouvert_le.isoformat(),
             clos_le=service.clos_le.isoformat() if service.clos_le is not None else None,
         )
+
+
+@dataclass(frozen=True)
+class AdditionDTO:
+    id: str
+    service_id: str
+    table_numero: int
+    statut: str
+    ouvert_le: str
+    ferme_le: str | None = None
+
+    @classmethod
+    def depuis(cls, addition: Addition) -> AdditionDTO:
+        return cls(
+            id=addition.id,
+            service_id=addition.service_id,
+            table_numero=addition.table_numero,
+            statut=addition.statut.value,
+            ouvert_le=addition.ouvert_le.isoformat(),
+            ferme_le=addition.ferme_le.isoformat() if addition.ferme_le is not None else None,
+        )
+
+
+@dataclass(frozen=True)
+class OuvrirAdditionCommand:
+    service_id: str
+    auteur_id: str
+    table_numero: int
 
 
 @dataclass(frozen=True)

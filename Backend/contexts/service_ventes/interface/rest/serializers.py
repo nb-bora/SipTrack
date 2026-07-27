@@ -40,6 +40,20 @@ class EnregistrerVenteInputSerializer(serializers.Serializer):
     forme_paiement = serializers.ChoiceField(choices=[f.value for f in FormePaiement])
 
 
+class OuvrirAdditionInputSerializer(serializers.Serializer):
+    auteur_id = serializers.CharField(max_length=36)
+    table_numero = serializers.IntegerField(min_value=1)
+
+
+class AdditionOutputSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    service_id = serializers.CharField()
+    table_numero = serializers.IntegerField()
+    statut = serializers.CharField()
+    ouvert_le = serializers.CharField()
+    ferme_le = serializers.CharField(required=False, allow_null=True)
+
+
 class VenteOutputSerializer(serializers.Serializer):
     id = serializers.CharField()
     service_id = serializers.CharField()

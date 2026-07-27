@@ -15,6 +15,7 @@ from config.container import container
 from contexts.service_ventes.application.dto import (
     CloturerServiceCommand,
     EnregistrerVenteCommand,
+    OuvrirAdditionCommand,
     OuvrirServiceCommand,
 )
 from contexts.service_ventes.domain.exceptions import (
@@ -24,8 +25,10 @@ from contexts.service_ventes.domain.exceptions import (
 )
 
 from .serializers import (
+    AdditionOutputSerializer,
     CloturerServiceInputSerializer,
     EnregistrerVenteInputSerializer,
+    OuvrirAdditionInputSerializer,
     OuvrirServiceInputSerializer,
     ServiceOutputSerializer,
     VenteOutputSerializer,
@@ -106,4 +109,29 @@ class CloturerServiceView(APIView):
         return Response(
             ServiceOutputSerializer(dto).data,
             status=status.HTTP_200_OK,
+        )
+
+
+class AdditionListCreateView(APIView):
+    def post(self, request: Request, service_id: str) -> Response:
+        entree = OuvrirAdditionInputSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+        commande = OuvrirAdditionCommand(service_id=service_id, **entree.validated_data)
+
+        try:
+            dto = container.ouvrir_addition().executer(commande)
+        except ServiceIntrouvable:
+            return Response(
+                {"detail": _SERVICE_INTROUVABLE},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except ServiceNonOuvert:
+            return Response(
+                {"detail": "Le service n'est pas ouvert."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response(
+            AdditionOutputSerializer(dto).data,
+            status=status.HTTP_201_CREATED,
         )

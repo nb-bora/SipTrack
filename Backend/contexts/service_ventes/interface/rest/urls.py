@@ -5,6 +5,7 @@ from __future__ import annotations
 from django.urls import path
 
 from .views import (
+    AdditionListCreateView,
     CloturerServiceView,
     ServiceDetailView,
     ServiceListCreateView,
@@ -27,5 +28,10 @@ urlpatterns = [
         "services/<str:service_id>/cloture/",
         CloturerServiceView.as_view(),
         name="service-cloture",
+    ),
+    path(
+        "services/<str:service_id>/additions/",
+        AdditionListCreateView.as_view(),
+        name="addition-list-create",
     ),
 ]

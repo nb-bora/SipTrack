@@ -32,3 +32,11 @@ class ServiceCloture(DomainEvent):
     service_id: str
     bar_id: str
     auteur_id: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class AdditionOuverte(DomainEvent):
+    addition_id: str
+    service_id: str
+    table_numero: int
+    auteur_id: str
