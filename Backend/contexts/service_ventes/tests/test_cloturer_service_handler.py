@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from datetime import UTC, datetime
-from types import TracebackType
+from datetime import datetime
 
 import pytest
 
@@ -19,75 +17,17 @@ from contexts.service_ventes.domain.exceptions import (
     ServiceIntrouvable,
 )
 from contexts.service_ventes.domain.service import Service
+from contexts.service_ventes.tests.conftest import (
+    FakeClock,
+    FakeJournal,
+    FakeServiceRepository,
+    FakeUnitOfWork,
+    creer_service_ouvert,
+)
 from shared.domain.attribution import Attribution, Capacite
-from shared.domain.events import DomainEvent
 from shared.domain.money import Montant
 
-_INSTANT = datetime(2026, 7, 24, 19, 0, tzinfo=UTC)
-
-
-class FakeUnitOfWork:
-    def __init__(self) -> None:
-        self.committed = False
-        self.rolled_back = False
-
-    def __enter__(self) -> FakeUnitOfWork:
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        tb: TracebackType | None,
-    ) -> None:
-        if exc_type is not None:
-            self.rolled_back = True
-
-    def commit(self) -> None:
-        self.committed = True
-
-    def rollback(self) -> None:
-        self.rolled_back = True
-
-
-class FakeServiceRepository:
-    def __init__(self, service: Service | None) -> None:
-        self._service = service
-        self.mises_a_jour: list[Service] = []
-
-    def ajouter(self, service: Service) -> None:  # pragma: no cover - non utilisé ici
-        raise NotImplementedError
-
-    def par_id(self, service_id: str) -> Service | None:
-        return self._service
-
-    def mettre_a_jour(self, service: Service) -> None:
-        self.mises_a_jour.append(service)
-
-
-class FakeJournal:
-    def __init__(self) -> None:
-        self.appels: list[tuple[tuple[DomainEvent, ...], str]] = []
-
-    def enregistrer(self, evenements: Iterable[DomainEvent], *, auteur_id: str) -> None:
-        self.appels.append((tuple(evenements), auteur_id))
-
-
-class FakeClock:
-    def __init__(self, instant: datetime) -> None:
-        self.instant = instant
-
-    def now(self) -> datetime:
-        return self.instant
-
-
-def _service_ouvert() -> Service:
-    return Service.ouvrir(
-        bar_id="bar1",
-        responsable=Attribution(auteur_id="g1", capacite=Capacite.OPERATRICE, horodatage=_INSTANT),
-        fond_de_caisse=Montant(10_000),
-        horodatage=_INSTANT,
-    )
+_INSTANT = datetime(2026, 7, 24, 19, 0)
 
 
 def _service_cloture() -> Service:
@@ -124,7 +64,7 @@ def _handler(
 
 
 def test_le_service_est_mis_a_jour_et_le_dto_est_renvoye() -> None:
-    service = _service_ouvert()
+    service = creer_service_ouvert(_INSTANT)
     handler, _uow, services, _journal = _handler(service)
 
     dto = handler.executer(_commande(service.id))
@@ -135,7 +75,7 @@ def test_le_service_est_mis_a_jour_et_le_dto_est_renvoye() -> None:
 
 
 def test_les_evenements_sont_journalises_avec_le_bon_auteur_puis_purges() -> None:
-    service = _service_ouvert()
+    service = creer_service_ouvert(_INSTANT)
     service.purger_evenements()  # Le service renvoyé par le repository serait déjà purgé en prod
     handler, _uow, services, journal = _handler(service)
 
@@ -151,7 +91,7 @@ def test_les_evenements_sont_journalises_avec_le_bon_auteur_puis_purges() -> Non
 
 
 def test_la_transaction_est_validee_en_cas_de_succes() -> None:
-    service = _service_ouvert()
+    service = creer_service_ouvert(_INSTANT)
     handler, uow, _services, _journal = _handler(service)
 
     handler.executer(_commande(service.id))
