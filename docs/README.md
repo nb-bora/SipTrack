@@ -3,6 +3,8 @@
 > Le registre incontestable du bar. Documentation vivante du **domaine métier**, de
 > l'**architecture** et des **cas d'usage** de SipTrack.
 
+👉 **[Commencer par l'INDEX →](./INDEX.md)**
+
 ## À quoi sert ce dossier
 
 SipTrack est un outil de **gestion et d'audit** pour bars au Cameroun. Cette documentation
