@@ -162,14 +162,16 @@ def test_la_transaction_est_validee_en_cas_de_succes() -> None:
 
 def test_un_service_introuvable_leve_service_introuvable() -> None:
     handler, _uow, _services, _journal = _handler(None)
+    commande = _commande("inconnu")
 
     with pytest.raises(ServiceIntrouvable):
-        handler.executer(_commande("inconnu"))
+        handler.executer(commande)
 
 
 def test_un_service_deja_cloture_leve_service_deja_cloture() -> None:
     service = _service_cloture()
     handler, _uow, _services, _journal = _handler(service)
+    commande = _commande(service.id)
 
     with pytest.raises(ServiceDejaCloture):
-        handler.executer(_commande(service.id))
+        handler.executer(commande)

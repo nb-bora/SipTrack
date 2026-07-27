@@ -31,6 +31,8 @@ from .serializers import (
     VenteOutputSerializer,
 )
 
+_SERVICE_INTROUVABLE = "Service introuvable."
+
 
 class ServiceListCreateView(APIView):
     def post(self, request: Request) -> Response:
@@ -51,7 +53,7 @@ class ServiceDetailView(APIView):
         dto = container.service_par_id(service_id)
         if dto is None:
             return Response(
-                {"detail": "Service introuvable."},
+                {"detail": _SERVICE_INTROUVABLE},
                 status=status.HTTP_404_NOT_FOUND,
             )
         return Response(ServiceOutputSerializer(dto).data)
@@ -67,7 +69,7 @@ class VenteCreateView(APIView):
             dto = container.enregistrer_vente().executer(commande)
         except ServiceIntrouvable:
             return Response(
-                {"detail": "Service introuvable."},
+                {"detail": _SERVICE_INTROUVABLE},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except ServiceNonOuvert:
@@ -92,7 +94,7 @@ class CloturerServiceView(APIView):
             dto = container.cloturer_service().executer(commande)
         except ServiceIntrouvable:
             return Response(
-                {"detail": "Service introuvable."},
+                {"detail": _SERVICE_INTROUVABLE},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except ServiceDejaCloture:
