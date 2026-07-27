@@ -58,24 +58,24 @@ jobs:
       - name: 🧹 Lint & Format
         run: |
           echo "::group::Ruff check"
-          uv run --no-build ruff check .
+          uv run --frozen --no-build ruff check .
           echo "::endgroup::"
           echo "::group::Ruff format"
-          uv run --no-build ruff format --check .
+          uv run --frozen --no-build ruff format --check .
           echo "::endgroup::"
 
       - name: 🔍 Types (mypy strict)
-        run: uv run --no-build mypy .
+        run: uv run --frozen --no-build mypy .
 
       - name: 🏗️ Contrats d'architecture (import-linter)
-        run: uv run --no-build lint-imports
+        run: uv run --frozen --no-build lint-imports
 
       - name: 🧪 Tests (pytest)
-        run: uv run --no-build pytest --tb=short --junit-xml=.pytest-results.xml
+        run: uv run --frozen --no-build pytest --tb=short --junit-xml=.pytest-results.xml
 
       - name: 🔐 Audit dependencies
         if: always()
-        run: uv run --no-build pip-audit --desc
+        run: uv run --frozen --no-build pip-audit --desc
         continue-on-error: true
 
       - name: 📊 Publish quality summary
@@ -117,7 +117,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const xmlPath = 'Backend/.pytest-results.xml';
+            const xmlPath = '.pytest-results.xml';
             let testInfo = '';
 
             if (fs.existsSync(xmlPath)) {

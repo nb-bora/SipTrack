@@ -9,17 +9,17 @@ echo "🔍 Running pre-commit checks..."
 cd Backend
 
 # Quick checks only (not tests)
-uv run --no-build ruff check . > /dev/null 2>&1 || {
+uv run --frozen --no-build ruff check . > /dev/null 2>&1 || {
   echo "❌ Ruff check failed. Run: uv run ruff check ."
   exit 1
 }
 
-uv run --no-build ruff format --check . > /dev/null 2>&1 || {
+uv run --frozen --no-build ruff format --check . > /dev/null 2>&1 || {
   echo "❌ Format issues. Run: uv run ruff format ."
   exit 1
 }
 
-uv run --no-build mypy . > /dev/null 2>&1 || {
+uv run --frozen --no-build mypy . > /dev/null 2>&1 || {
   echo "❌ Type errors. Run: uv run mypy ."
   exit 1
 }
