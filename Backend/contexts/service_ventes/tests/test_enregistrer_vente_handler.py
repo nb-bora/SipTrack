@@ -152,14 +152,17 @@ def test_la_vente_est_persistee_journalisee_purgee_et_commitee() -> None:
 
 def test_un_service_introuvable_leve_service_introuvable() -> None:
     handler, _uow, _ventes, _journal = _handler(None)
+    commande = _commande("inconnu")
 
     with pytest.raises(ServiceIntrouvable):
-        handler.executer(_commande("inconnu"))
+        handler.executer(commande)
 
 
 def test_un_service_non_ouvert_leve_service_non_ouvert() -> None:
     service = _service_cloture()
     handler, _uow, _ventes, _journal = _handler(service)
+    commande = _commande(service.id)
 
     with pytest.raises(ServiceNonOuvert):
-        handler.executer(_commande(service.id))
+        handler.executer(commande)
+

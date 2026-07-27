@@ -129,12 +129,17 @@ def test_soustraction_de_deux_montants_de_meme_devise() -> None:
     assert Montant(200) - Montant(75) == Montant(125)
 
 
-def test_operer_sur_des_devises_differentes_est_interdit() -> None:
+def test_additionner_deux_montants_de_devises_differentes_est_interdit() -> None:
     xaf = Montant(100, "XAF")
     eur = Montant(50, "EUR")
 
     with pytest.raises(ValueError):
         _ = xaf + eur
+
+
+def test_soustraire_deux_montants_de_devises_differentes_est_interdit() -> None:
+    xaf = Montant(100, "XAF")
+    eur = Montant(50, "EUR")
 
     with pytest.raises(ValueError):
         _ = xaf - eur
