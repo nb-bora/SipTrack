@@ -8,31 +8,31 @@ echo ""
 
 # Lint
 echo "→ Ruff check..."
-uv run ruff check .
+uv run --no-build ruff check .
 echo "✓ Lint passed"
 echo ""
 
 # Format
 echo "→ Ruff format (check)..."
-uv run ruff format --check .
+uv run --no-build ruff format --check .
 echo "✓ Format OK"
 echo ""
 
 # Types
 echo "→ MyPy strict..."
-uv run mypy .
+uv run --no-build mypy .
 echo "✓ Types OK"
 echo ""
 
 # Architecture
 echo "→ Import-linter..."
-uv run lint-imports
+uv run --no-build lint-imports
 echo "✓ Architecture OK"
 echo ""
 
 # Tests
 echo "→ Pytest..."
-uv run pytest
+uv run --no-build pytest
 echo "✓ Tests passed"
 echo ""
 

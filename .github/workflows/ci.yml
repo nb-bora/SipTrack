@@ -58,24 +58,24 @@ jobs:
       - name: 🧹 Lint & Format
         run: |
           echo "::group::Ruff check"
-          uv run ruff check .
+          uv run --no-build ruff check .
           echo "::endgroup::"
           echo "::group::Ruff format"
-          uv run ruff format --check .
+          uv run --no-build ruff format --check .
           echo "::endgroup::"
 
       - name: 🔍 Types (mypy strict)
-        run: uv run mypy .
+        run: uv run --no-build mypy .
 
       - name: 🏗️ Contrats d'architecture (import-linter)
-        run: uv run lint-imports
+        run: uv run --no-build lint-imports
 
       - name: 🧪 Tests (pytest)
-        run: uv run pytest --tb=short --junit-xml=.pytest-results.xml
+        run: uv run --no-build pytest --tb=short --junit-xml=.pytest-results.xml
 
       - name: 🔐 Audit dependencies
         if: always()
-        run: uv run pip-audit --desc || true
+        run: uv run --no-build pip-audit --desc || true
         continue-on-error: true
 
       - name: 📊 Publish quality summary
@@ -84,7 +84,7 @@ jobs:
           echo "## ✅ Quality Gate Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Tests" >> $GITHUB_STEP_SUMMARY
-          TEST_COUNT=$(uv run pytest --collect-only -q 2>/dev/null | tail -1 | grep -oE '[0-9]+' || echo "0")
+          TEST_COUNT=$(uv run --no-build pytest --collect-only -q 2>/dev/null | tail -1 | grep -oE '[0-9]+' || echo "0")
           echo "- **$TEST_COUNT** tests executed ✓" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Checks" >> $GITHUB_STEP_SUMMARY
