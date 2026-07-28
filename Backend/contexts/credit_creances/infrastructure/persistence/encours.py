@@ -28,7 +28,7 @@ class DjangoEncoursQueryService:
         return tuple(e for e in encours if e.reste > 0)
 
     def _encours(self, client: ClientModel) -> EncoursClientDTO:
-        credits = CreditModel.objects.filter(client_id=client.id).annotate(
+        dettes = CreditModel.objects.filter(client_id=client.id).annotate(
             total_rembourse=Sum("remboursements__montant")
         )
 
@@ -44,7 +44,7 @@ class DjangoEncoursQueryService:
                 reste=credit.montant - int(credit.total_rembourse or 0),
                 statut=credit.statut,
             )
-            for credit in credits
+            for credit in dettes
         )
 
         return EncoursClientDTO(

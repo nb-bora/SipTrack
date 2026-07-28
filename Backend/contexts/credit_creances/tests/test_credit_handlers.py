@@ -127,9 +127,10 @@ def test_une_creance_nait_au_nom_du_client() -> None:
 
 def test_un_credit_pour_un_client_inconnu_est_refuse() -> None:
     handler, uow, credits, _journal = _accorder(clients=FakeClientRepository([]))
+    commande = _commande_credit()
 
     with pytest.raises(ClientIntrouvable):
-        handler.executer(_commande_credit())
+        handler.executer(commande)
 
     assert credits.ajoutes == []
     assert uow.committed is False
@@ -138,9 +139,10 @@ def test_un_credit_pour_un_client_inconnu_est_refuse() -> None:
 def test_une_addition_n_engendre_qu_une_seule_creance() -> None:
     """Deux créances pour une même consommation feraient payer deux fois."""
     handler, uow, credits, _journal = _accorder(credits=FakeCreditRepository([_credit_existant()]))
+    commande = _commande_credit()
 
     with pytest.raises(CreditDejaOuvertPourCetteAddition):
-        handler.executer(_commande_credit())
+        handler.executer(commande)
 
     assert credits.ajoutes == []
     assert uow.committed is False
@@ -211,9 +213,10 @@ def test_le_dernier_franc_eteint_la_dette_de_lui_meme() -> None:
 def test_rembourser_plus_que_le_reste_est_refuse() -> None:
     credit = _credit_existant(5_000)
     handler, uow, _credits, remboursements, _journal = _rembourser(credit, deja_rembourse=4_000)
+    commande = _commande_remboursement(1_500)
 
     with pytest.raises(RemboursementSuperieurAuReste) as erreur:
-        handler.executer(_commande_remboursement(1_500))
+        handler.executer(commande)
 
     assert erreur.value.reste == 1_000
     assert remboursements.ajoutes == []
@@ -223,9 +226,10 @@ def test_rembourser_plus_que_le_reste_est_refuse() -> None:
 def test_rembourser_un_credit_deja_solde_est_refuse() -> None:
     credit = _credit_existant(5_000, statut=StatutCredit.SOLDE)
     handler, uow, _credits, remboursements, _journal = _rembourser(credit, deja_rembourse=5_000)
+    commande = _commande_remboursement(500)
 
     with pytest.raises(CreditDejaSolde):
-        handler.executer(_commande_remboursement(500))
+        handler.executer(commande)
 
     assert remboursements.ajoutes == []
     assert uow.committed is False
@@ -233,6 +237,7 @@ def test_rembourser_un_credit_deja_solde_est_refuse() -> None:
 
 def test_rembourser_un_credit_inexistant_leve_l_erreur() -> None:
     handler, _uow, _credits, _remb, _journal = _rembourser(None)
+    commande = _commande_remboursement(500)
 
     with pytest.raises(CreditIntrouvable):
-        handler.executer(_commande_remboursement(500))
+        handler.executer(commande)
