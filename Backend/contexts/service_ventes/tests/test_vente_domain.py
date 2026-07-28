@@ -14,7 +14,7 @@ from shared.domain.money import Montant
 _HORODATAGE = datetime(2026, 7, 24, 18, 30, tzinfo=UTC)
 
 
-def _vente(quantite: int = 3) -> Vente:
+def _vente(quantite: int = 3, addition_id: str | None = None) -> Vente:
     return Vente.enregistrer(
         service_id="svc1",
         produit_id="33export",
@@ -23,6 +23,7 @@ def _vente(quantite: int = 3) -> Vente:
         forme_paiement=FormePaiement.ESPECES,
         horodatage=_HORODATAGE,
         auteur_id="u1",
+        addition_id=addition_id,
     )
 
 
@@ -46,3 +47,21 @@ def test_enregistrer_une_vente_emet_l_evenement() -> None:
 def test_une_quantite_nulle_ou_negative_est_interdite(quantite: int) -> None:
     with pytest.raises(ValueError):
         _vente(quantite=quantite)
+
+
+def test_une_vente_peut_porter_une_addition() -> None:
+    vente = _vente(addition_id="add1")
+
+    assert vente.addition_id == "add1"
+    evenement = vente.evenements_non_publies()[0]
+    assert isinstance(evenement, VenteEnregistree)
+    assert evenement.addition_id == "add1"
+
+
+def test_une_vente_au_comptoir_ne_porte_aucune_addition() -> None:
+    vente = _vente()
+
+    assert vente.addition_id is None
+    evenement = vente.evenements_non_publies()[0]
+    assert isinstance(evenement, VenteEnregistree)
+    assert evenement.addition_id is None
