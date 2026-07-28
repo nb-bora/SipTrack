@@ -10,6 +10,7 @@ from rest_framework.test import APIClient
 
 from contexts.service_ventes.domain.addition import Addition
 from contexts.service_ventes.domain.enums import FormePaiement, StatutAddition
+from contexts.service_ventes.domain.exceptions import ClientInconnu
 from contexts.service_ventes.domain.paiement import Paiement
 from contexts.service_ventes.domain.service import Service
 from contexts.service_ventes.domain.vente import Vente
@@ -162,6 +163,39 @@ class FakePaiementRepository:
             if p.service_id == service_id
             and p.auteur_id == auteur_id
             and p.forme_paiement is FormePaiement.ESPECES
+        )
+
+
+class FakeCreances:
+    """Implémentation fake du port OuvertureDeCreance pour les tests.
+
+    Enregistre les créances ouvertes pour qu'un test puisse vérifier qu'un
+    crédit encaissé laisse bien une dette derrière lui.
+    """
+
+    def __init__(self, clients_connus: set[str] | None = None) -> None:
+        self.ouvertes: list[dict[str, object]] = []
+        self._clients_connus = clients_connus
+
+    def ouvrir(
+        self,
+        *,
+        client_id: str,
+        service_id: str,
+        addition_id: str,
+        montant: int,
+        auteur_id: str,
+    ) -> None:
+        if self._clients_connus is not None and client_id not in self._clients_connus:
+            raise ClientInconnu(client_id)
+        self.ouvertes.append(
+            {
+                "client_id": client_id,
+                "service_id": service_id,
+                "addition_id": addition_id,
+                "montant": montant,
+                "auteur_id": auteur_id,
+            }
         )
 
 

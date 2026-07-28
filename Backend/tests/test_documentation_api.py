@@ -73,6 +73,10 @@ def test_le_schema_couvre_toutes_les_routes(client_api: APIClient) -> None:
         "/api/services/{service_id}/additions/{addition_id}/",
         "/api/services/{service_id}/additions/{addition_id}/paiements/",
         "/api/services/{service_id}/additions/{addition_id}/reglement/",
+        "/api/clients/",
+        "/api/clients/{client_id}/encours/",
+        "/api/bars/{bar_id}/encours/",
+        "/api/credits/{credit_id}/remboursements/",
     }
 
 

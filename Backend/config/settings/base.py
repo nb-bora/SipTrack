@@ -46,6 +46,7 @@ LOCAL_APPS = [
     "shared.infrastructure.journal",
     # Chaque bounded context expose son app Django via sa couche infrastructure.
     "contexts.service_ventes.infrastructure.django_app",
+    "contexts.credit_creances.infrastructure.django_app",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

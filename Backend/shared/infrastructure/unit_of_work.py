@@ -2,6 +2,13 @@
 
 Motif « cosmic python » : la transaction est ouverte à l'entrée du bloc ; elle
 n'est validée que si commit() a été appelé, sinon elle est annulée.
+
+Transverse comme le journal : la façon d'ouvrir une transaction ne dépend pas du
+métier. Chaque contexte s'en sert sans qu'aucun ne la possède — et surtout, il
+n'en existe qu'une seule implémentation, donc un seul comportement à vérifier.
+
+Imbriquée dans une transaction déjà ouverte, Django pose un point de reprise :
+un échec du bloc interne n'annule que lui, un échec du bloc externe annule tout.
 """
 
 from __future__ import annotations

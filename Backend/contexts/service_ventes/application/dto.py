@@ -107,6 +107,8 @@ class EnregistrerPaiementCommand:
     auteur_id: str
     montant: int
     forme_paiement: str
+    # Obligatoire pour un crédit uniquement : c'est le débiteur.
+    client_id: str = ""
 
 
 @dataclass(frozen=True)
