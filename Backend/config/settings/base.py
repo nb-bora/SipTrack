@@ -35,6 +35,10 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
+    "drf_spectacular",
+    # Sert les assets de Swagger depuis le serveur, pas depuis un CDN : l'outil
+    # vise des bars, pas un bureau fibré.
+    "drf_spectacular_sidecar",
 ]
 
 # Chaque bounded context expose son app Django via sa couche infrastructure.
@@ -136,4 +140,22 @@ REST_FRAMEWORK = {
         # Freine le bourrinage de mots de passe sur l'obtention de jeton.
         "obtention_jeton": env("THROTTLE_OBTENTION_JETON", default="10/min"),
     },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# --- Documentation OpenAPI --------------------------------------------------
+SPECTACULAR_SETTINGS = {
+    "TITLE": "SipTrack — API",
+    "DESCRIPTION": (
+        "Le registre incontestable du bar.\n\n"
+        "Toutes les routes exigent un jeton : `Authorization: Token <jeton>`. "
+        "L'obtenir via `POST /api/auth/jeton/`, puis le coller dans « Authorize ».\n\n"
+        "L'auteur d'un Fait est toujours déduit du compte authentifié — jamais "
+        "du corps de la requête."
+    ),
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
 }
