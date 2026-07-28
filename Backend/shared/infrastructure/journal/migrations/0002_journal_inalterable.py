@@ -37,11 +37,11 @@ DROP FUNCTION IF EXISTS journal_refuser_alteration();
 
 def chainer_les_mouvements_existants(apps, schema_editor):
     """Signe l'historique déjà écrit, dans son ordre d'arrivée."""
-    Mouvement = apps.get_model("journal", "MouvementModel")
+    modele_mouvement = apps.get_model("journal", "MouvementModel")
     empreinte_precedente = GENESE
 
     for sequence, mouvement in enumerate(
-        Mouvement.objects.order_by("horodatage_reception", "id"), start=1
+        modele_mouvement.objects.order_by("horodatage_reception", "id"), start=1
     ):
         mouvement.sequence = sequence
         mouvement.empreinte_precedente = empreinte_precedente
