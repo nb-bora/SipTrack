@@ -39,6 +39,16 @@ if TYPE_CHECKING:
         CreditRepository,
         RemboursementRepository,
     )
+    from contexts.gouvernance_acces.application.use_cases.gerer_bars import (
+        GererBarsHandler,
+    )
+    from contexts.gouvernance_acces.application.use_cases.gerer_comptes import (
+        GererComptesHandler,
+    )
+    from contexts.gouvernance_acces.domain.repositories import (
+        BarRepository,
+        CompteRepository,
+    )
     from contexts.service_ventes.application.dto import ServiceDTO
     from contexts.service_ventes.application.ports import (
         OuvertureDeCreance,
@@ -78,6 +88,12 @@ if TYPE_CHECKING:
         VenteRepository,
         VersementRepository,
     )
+    from contexts.stock_inventaire.application.use_cases.gerer_stock import (
+        GererStockHandler,
+    )
+    from contexts.stock_inventaire.domain.repositories import (
+        ProduitRepository as StockProduitRepository,
+    )
     from shared.application.journal import Journal
 
 
@@ -111,7 +127,10 @@ class Container:
         self._remboursements: RemboursementRepository | None = None
         self._encours: EncoursQueryService | None = None
         self._produits: ProduitRepository | None = None
+        self._bars: BarRepository | None = None
+        self._comptes: CompteRepository | None = None
         self._catalogue_lecture: CatalogueQueryService | None = None
+        self._produits_stock: StockProduitRepository | None = None
         self._journal: Journal | None = None
 
     def _service_repository(self) -> ServiceRepository:
@@ -221,6 +240,24 @@ class Container:
 
             self._produits = DjangoProduitRepository()
         return self._produits
+
+    def _bar_repository(self) -> BarRepository:
+        if self._bars is None:
+            from contexts.gouvernance_acces.infrastructure.persistence.repository import (
+                DjangoBarRepository,
+            )
+
+            self._bars = DjangoBarRepository()
+        return self._bars
+
+    def _compte_repository(self) -> CompteRepository:
+        if self._comptes is None:
+            from contexts.gouvernance_acces.infrastructure.persistence.repository import (
+                DjangoCompteRepository,
+            )
+
+            self._comptes = DjangoCompteRepository()
+        return self._comptes
 
     def _catalogue_query_service(self) -> CatalogueQueryService:
         if self._catalogue_lecture is None:
@@ -427,6 +464,53 @@ class Container:
 
     def catalogue_du_bar(self, bar_id: str) -> tuple[ProduitDTO, ...]:
         return self._catalogue_query_service().du_bar(bar_id)
+
+    def gerer_bars(self) -> GererBarsHandler:
+        from contexts.gouvernance_acces.application.use_cases.gerer_bars import (
+            GererBarsHandler,
+        )
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return GererBarsHandler(
+            uow=DjangoUnitOfWork(),
+            bars=self._bar_repository(),
+            comptes=self._compte_repository(),
+            journal=self._journal_adapter(),
+        )
+
+    def gerer_comptes(self) -> GererComptesHandler:
+        from contexts.gouvernance_acces.application.use_cases.gerer_comptes import (
+            GererComptesHandler,
+        )
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return GererComptesHandler(
+            uow=DjangoUnitOfWork(),
+            bars=self._bar_repository(),
+            comptes=self._compte_repository(),
+            journal=self._journal_adapter(),
+        )
+
+    def _stock_produit_repository(self) -> StockProduitRepository:
+        if self._produits_stock is None:
+            from contexts.stock_inventaire.infrastructure.persistence.repository import (
+                DjangoProduitRepository,
+            )
+
+            self._produits_stock = DjangoProduitRepository()
+        return self._produits_stock
+
+    def gerer_stock(self) -> GererStockHandler:
+        from contexts.stock_inventaire.application.use_cases.gerer_stock import (
+            GererStockHandler,
+        )
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return GererStockHandler(
+            uow=DjangoUnitOfWork(),
+            produits=self._stock_produit_repository(),
+            journal=self._journal_adapter(),
+        )
 
 
 container = Container()
