@@ -25,6 +25,7 @@ class VenteEnregistree(DomainEvent):
     montant_total: int
     forme_paiement: str
     auteur_id: str
+    addition_id: str | None = None
 
 
 @dataclass(frozen=True, kw_only=True)

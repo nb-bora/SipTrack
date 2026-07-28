@@ -38,6 +38,8 @@ class EnregistrerVenteInputSerializer(serializers.Serializer):
     quantite = serializers.IntegerField(min_value=1)
     prix_unitaire = serializers.IntegerField(min_value=0)
     forme_paiement = serializers.ChoiceField(choices=[f.value for f in FormePaiement])
+    # Absent pour une vente au comptoir, qui n'est rattachée à aucune table.
+    addition_id = serializers.CharField(max_length=36, required=False, allow_null=True)
 
 
 class OuvrirAdditionInputSerializer(serializers.Serializer):
@@ -66,3 +68,25 @@ class VenteOutputSerializer(serializers.Serializer):
     prix_unitaire = serializers.IntegerField()
     montant_total = serializers.IntegerField()
     forme_paiement = serializers.CharField()
+    addition_id = serializers.CharField(required=False, allow_null=True)
+
+
+class LigneAdditionOutputSerializer(serializers.Serializer):
+    vente_id = serializers.CharField()
+    produit_id = serializers.CharField()
+    quantite = serializers.IntegerField()
+    prix_unitaire = serializers.IntegerField()
+    montant_total = serializers.IntegerField()
+    forme_paiement = serializers.CharField()
+    horodatage = serializers.CharField()
+
+
+class AdditionDetailOutputSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    service_id = serializers.CharField()
+    table_numero = serializers.IntegerField()
+    statut = serializers.CharField()
+    ouvert_le = serializers.CharField()
+    ferme_le = serializers.CharField(required=False, allow_null=True)
+    lignes = LigneAdditionOutputSerializer(many=True)
+    total = serializers.IntegerField()

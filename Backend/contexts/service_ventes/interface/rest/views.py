@@ -28,6 +28,7 @@ from contexts.service_ventes.domain.exceptions import (
 )
 
 from .serializers import (
+    AdditionDetailOutputSerializer,
     AdditionOutputSerializer,
     CloturerServiceInputSerializer,
     EnregistrerVenteInputSerializer,
@@ -39,6 +40,8 @@ from .serializers import (
 )
 
 _SERVICE_INTROUVABLE = "Service introuvable."
+_ADDITION_INTROUVABLE = "Addition introuvable."
+_ADDITION_CLOTUREE = "L'addition est déjà clôturée."
 
 
 class ServiceListCreateView(APIView):
@@ -79,9 +82,19 @@ class VenteCreateView(APIView):
                 {"detail": _SERVICE_INTROUVABLE},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        except AdditionIntrouvable:
+            return Response(
+                {"detail": _ADDITION_INTROUVABLE},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         except ServiceNonOuvert:
             return Response(
                 {"detail": "Le service n'est pas ouvert."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except AdditionDejaCloturee:
+            return Response(
+                {"detail": _ADDITION_CLOTUREE},
                 status=status.HTTP_409_CONFLICT,
             )
 
@@ -141,6 +154,19 @@ class AdditionListCreateView(APIView):
         )
 
 
+class AdditionDetailView(APIView):
+    """Lecture d'une addition : ses lignes et son total, calculé à la volée."""
+
+    def get(self, request: Request, service_id: str, addition_id: str) -> Response:
+        dto = container.addition_detail(service_id=service_id, addition_id=addition_id)
+        if dto is None:
+            return Response(
+                {"detail": _ADDITION_INTROUVABLE},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(AdditionDetailOutputSerializer(dto).data)
+
+
 class ReglementAdditionView(APIView):
     def post(self, request: Request, service_id: str, addition_id: str) -> Response:
         entree = ReglementAdditionInputSerializer(data=request.data)
@@ -155,12 +181,12 @@ class ReglementAdditionView(APIView):
             dto = container.regler_addition().executer(commande)
         except AdditionIntrouvable:
             return Response(
-                {"detail": "Addition introuvable."},
+                {"detail": _ADDITION_INTROUVABLE},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except AdditionDejaCloturee:
             return Response(
-                {"detail": "L'addition est déjà clôturée."},
+                {"detail": _ADDITION_CLOTUREE},
                 status=status.HTTP_409_CONFLICT,
             )
 

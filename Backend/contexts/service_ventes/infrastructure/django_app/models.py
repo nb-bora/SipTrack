@@ -30,6 +30,14 @@ class ServiceModel(models.Model):
 class VenteModel(models.Model):
     id = models.CharField(primary_key=True, max_length=36)
     service = models.ForeignKey(ServiceModel, on_delete=models.PROTECT, related_name="ventes")
+    # Nullable : une vente au comptoir n'est rattachée à aucune table.
+    addition = models.ForeignKey(
+        "AdditionModel",
+        on_delete=models.PROTECT,
+        related_name="lignes",
+        null=True,
+        blank=True,
+    )
     produit_id = models.CharField(max_length=36)
     quantite = models.PositiveIntegerField()
     prix_unitaire = models.PositiveIntegerField()

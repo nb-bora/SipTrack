@@ -116,3 +116,42 @@ def test_regler_une_addition_deja_cloturee_est_interdite(statut_initial: StatutA
 
     with pytest.raises(AdditionDejaCloturee):
         addition.regler(auteur_id="u1", horodatage=_HORODATAGE)
+
+
+def test_une_addition_ouverte_accepte_une_consommation() -> None:
+    addition = Addition.ouvrir(
+        service_id="svc1",
+        table_numero=5,
+        horodatage=_HORODATAGE,
+        auteur_id="u1",
+    )
+    addition.purger_evenements()
+
+    addition.accepter_consommation()  # ne lève pas
+
+    # C'est une garde pure : elle ne doit ni muter l'addition ni produire de fait.
+    assert addition.statut is StatutAddition.OUVERTE
+    assert addition.ouvert_le == _HORODATAGE
+    assert addition.ferme_le is None
+    assert addition.evenements_non_publies() == ()
+
+
+@pytest.mark.parametrize(
+    "statut_initial",
+    [
+        StatutAddition.REGLEE,
+        StatutAddition.ABANDONNEE,
+    ],
+)
+def test_une_addition_cloturee_refuse_une_consommation(statut_initial: StatutAddition) -> None:
+    addition = Addition(
+        id="add1",
+        service_id="svc1",
+        table_numero=5,
+        statut=statut_initial,
+        ouvert_le=_HORODATAGE,
+        ferme_le=_HORODATAGE,
+    )
+
+    with pytest.raises(AdditionDejaCloturee):
+        addition.accepter_consommation()

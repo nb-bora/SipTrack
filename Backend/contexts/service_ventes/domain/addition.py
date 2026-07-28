@@ -62,6 +62,15 @@ class Addition:
         )
         return addition
 
+    def accepter_consommation(self) -> None:
+        """Vérifie que l'addition peut encore recevoir une consommation.
+
+        Une addition réglée ou abandonnée est close : y rattacher une vente
+        reviendrait à modifier une addition déjà présentée au client.
+        """
+        if self.statut is not StatutAddition.OUVERTE:
+            raise AdditionDejaCloturee(self.id)
+
     def regler(self, *, auteur_id: str, horodatage: datetime) -> None:
         """Régle l'addition (transition Ouverte → Réglée)."""
         if self.statut is not StatutAddition.OUVERTE:

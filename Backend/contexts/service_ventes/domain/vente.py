@@ -1,7 +1,12 @@
 """Agrégat racine : Vente.
 
 Une vente enregistrée pendant un service. Petit agrégat (cf. ADR-0004) qui
-référence son service par identifiant. Aucune dépendance à Django.
+référence son service — et, le cas échéant, son addition — par identifiant.
+Aucune dépendance à Django.
+
+Une vente peut ne pas porter d'addition : le modèle métier prévoit un
+encaissement mixte (caisse + salle), toutes les consommations ne passent pas
+par une table.
 """
 
 from __future__ import annotations
@@ -27,6 +32,7 @@ class Vente:
         prix_unitaire: Montant,
         forme_paiement: FormePaiement,
         horodatage: datetime,
+        addition_id: str | None = None,
     ) -> None:
         self.id = id
         self.service_id = service_id
@@ -35,6 +41,7 @@ class Vente:
         self.prix_unitaire = prix_unitaire
         self.forme_paiement = forme_paiement
         self.horodatage = horodatage
+        self.addition_id = addition_id
         self._evenements: list[DomainEvent] = []
 
     @property
@@ -52,6 +59,7 @@ class Vente:
         forme_paiement: FormePaiement,
         horodatage: datetime,
         auteur_id: str,
+        addition_id: str | None = None,
     ) -> Vente:
         if quantite <= 0:
             raise ValueError("La quantité vendue doit être strictement positive.")
@@ -63,6 +71,7 @@ class Vente:
             prix_unitaire=prix_unitaire,
             forme_paiement=forme_paiement,
             horodatage=horodatage,
+            addition_id=addition_id,
         )
         vente._enregistrer(
             VenteEnregistree(
@@ -74,6 +83,7 @@ class Vente:
                 montant_total=vente.montant_total.montant,
                 forme_paiement=forme_paiement.value,
                 auteur_id=auteur_id,
+                addition_id=addition_id,
             )
         )
         return vente
