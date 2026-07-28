@@ -31,6 +31,8 @@ from contexts.service_ventes.domain.exceptions import (
     AdditionIntrouvable,
     AdditionNonSoldee,
     AdditionsEncoreOuvertes,
+    ClientInconnu,
+    ClientRequisPourUnCredit,
     PaiementSuperieurAuReste,
     RecetteDejaVersee,
     ServiceDejaCloture,
@@ -302,14 +304,20 @@ class PaiementCreateView(APIView):
         description=(
             "Encaisse tout ou partie de ce que la table doit. Quand le cumul des "
             "paiements couvre le total consommé, l'addition passe d'elle-même à "
-            "`reglee` — le règlement est une conséquence, pas une déclaration."
+            "`reglee` — le règlement est une conséquence, pas une déclaration.\n\n"
+            "La forme `credit` exige un `client_id` : elle solde l'addition sans "
+            "qu'aucun argent n'entre, et ouvre à la place une créance au nom de "
+            "ce client. Sans débiteur désigné, la consommation s'évaporerait."
         ),
         request=EnregistrerPaiementInputSerializer,
         responses={
             201: PaiementOutputSerializer,
             400: _validation(),
             404: _erreur("Addition inexistante, ou rattachée à un autre service."),
-            409: _erreur("Addition déjà clôturée, ou paiement supérieur au reste dû."),
+            409: _erreur(
+                "Addition déjà clôturée, paiement supérieur au reste dû, "
+                "crédit sans client, ou client inconnu."
+            ),
         },
     )
     def post(self, request: Request, service_id: str, addition_id: str) -> Response:
@@ -339,6 +347,8 @@ class PaiementCreateView(APIView):
                 {"detail": f"Paiement supérieur au reste dû ({erreur.reste})."},
                 status=status.HTTP_409_CONFLICT,
             )
+        except (ClientRequisPourUnCredit, ClientInconnu) as erreur:
+            return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
 
         return Response(
             PaiementOutputSerializer(dto).data,

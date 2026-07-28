@@ -21,6 +21,7 @@ from contexts.service_ventes.domain.exceptions import (
 from contexts.service_ventes.tests.conftest import (
     FakeAdditionRepository,
     FakeClock,
+    FakeCreances,
     FakeJournal,
     FakePaiementRepository,
     FakeUnitOfWork,
@@ -74,6 +75,7 @@ def _handler(
         additions=additions,
         paiements=paiements,
         ventes=FakeVenteRepository({identifiant: du}),
+        creances=FakeCreances(),
         journal=journal,
         clock=FakeClock(_INSTANT),
     )

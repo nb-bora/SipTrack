@@ -79,6 +79,9 @@ class LigneAdditionOutputSerializer(serializers.Serializer):
 class EnregistrerPaiementInputSerializer(serializers.Serializer):
     montant = serializers.IntegerField(min_value=1)
     forme_paiement = serializers.ChoiceField(choices=[f.value for f in FormePaiement])
+    # Obligatoire pour un crédit seulement — c'est le débiteur. Le refus vient
+    # du cas d'usage, pas d'ici : la règle appartient au métier.
+    client_id = serializers.CharField(required=False, allow_blank=True, default="")
 
 
 class PaiementOutputSerializer(serializers.Serializer):

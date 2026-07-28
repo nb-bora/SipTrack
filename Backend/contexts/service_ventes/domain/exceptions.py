@@ -90,3 +90,23 @@ class AdditionDejaCloturee(ServiceVentesError):
     def __init__(self, addition_id: str) -> None:
         super().__init__(f"L'addition {addition_id} est déjà clôturée.")
         self.addition_id = addition_id
+
+
+class ClientRequisPourUnCredit(ServiceVentesError):
+    """Encaissement en crédit refusé : personne n'est désigné comme débiteur.
+
+    Un crédit sans client, c'est de l'argent qui disparaît sans que quiconque
+    doive rien. C'est précisément le trou que le crédit est censé fermer.
+    """
+
+    def __init__(self, addition_id: str) -> None:
+        super().__init__(f"Un crédit sur l'addition {addition_id} exige un client.")
+        self.addition_id = addition_id
+
+
+class ClientInconnu(ServiceVentesError):
+    """Le client désigné comme débiteur n'existe pas."""
+
+    def __init__(self, client_id: str) -> None:
+        super().__init__(f"Client introuvable : {client_id}.")
+        self.client_id = client_id

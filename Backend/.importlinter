@@ -11,6 +11,7 @@ type = forbidden
 source_modules =
     shared.domain
     contexts.service_ventes.domain
+    contexts.credit_creances.domain
 forbidden_modules =
     django
     rest_framework
@@ -21,9 +22,13 @@ type = forbidden
 source_modules =
     contexts.service_ventes.domain
     contexts.service_ventes.application
+    contexts.credit_creances.domain
+    contexts.credit_creances.application
 forbidden_modules =
     contexts.service_ventes.infrastructure
     contexts.service_ventes.interface
+    contexts.credit_creances.infrastructure
+    contexts.credit_creances.interface
     shared.infrastructure
 
 [importlinter:contract:domaine-sans-application]
@@ -32,9 +37,11 @@ type = forbidden
 source_modules =
     shared.domain
     contexts.service_ventes.domain
+    contexts.credit_creances.domain
 forbidden_modules =
     shared.application
     contexts.service_ventes.application
+    contexts.credit_creances.application
 
 [importlinter:contract:contextes-isoles]
 name = Les bounded contexts ne se connaissent pas (ADR-0005)
@@ -42,18 +49,32 @@ type = independence
 modules =
     contexts.service_ventes
     contexts.gouvernance_acces
+    contexts.credit_creances
 ignore_imports =
     # Exception assumée : le test d'authentification verifie de bout en bout
     # qu'aucun Fait n'atteint le journal sans auteur authentifie. Il doit donc
     # observer le journal de service_ventes. Aucun code de production ne
     # franchit cette frontiere.
     contexts.gouvernance_acces.tests.* -> contexts.service_ventes.**
+    # Meme nature : une creance nait d'une consommation servie. Le test de bout
+    # en bout doit donc ouvrir un service et une addition pour prouver qu'un
+    # credit laisse une dette derriere lui. Aucun code de production ne franchit
+    # cette frontiere : la production passe par le port OuvertureDeCreance.
+    contexts.credit_creances.tests.* -> contexts.service_ventes.**
+    # Le composition root connait tous les contextes : c'est sa definition meme.
+    # Une vue qui lui demande un cas d'usage cree donc un chemin *indirect* vers
+    # les autres contextes. Ce n'est pas la frontiere que ce contrat protege :
+    # un import *direct* d'un contexte a l'autre reste refuse, y compris apres
+    # cette exception.
+    contexts.*.interface.rest.views -> config.container
 
 [importlinter:contract:interface-sans-infrastructure-directe]
 name = L'interface n'importe pas directement l'infrastructure (elle passe par le composition root)
 type = forbidden
 source_modules =
     contexts.service_ventes.interface
+    contexts.credit_creances.interface
 forbidden_modules =
     contexts.service_ventes.infrastructure
+    contexts.credit_creances.infrastructure
 allow_indirect_imports = true

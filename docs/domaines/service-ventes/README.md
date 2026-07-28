@@ -22,13 +22,12 @@ Gestion des services, ventes, additions et reglements de tables. Contexte centra
 
 | # | Fonctionnalité | Dépendances |
 |---|---|---|
-| 10 | Crédit client | Dépend de #8 (Encaisser un paiement) |
 
 ## 📊 Métriques
 
 | Métrique | Valeur |
 |---|---|
-| **Tests (total)** | 148 |
+| **Tests (total)** | 174 |
 | **Couverture domaine** | 100% |
 | **Temps CI/CD** | ~2 min |
 | **Linting** | ✓ Ruff |
@@ -115,7 +114,7 @@ test_ouvrir_service_api.py
 Lancer les tests :
 ```bash
 cd Backend
-uv run pytest                                    # Tous les tests (148)
+uv run pytest                                    # Tous les tests (174)
 uv run pytest -k domain                          # Domaine uniquement
 uv run pytest -k api                             # API + E2E
 ```

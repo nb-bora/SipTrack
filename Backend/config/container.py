@@ -15,7 +15,26 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from contexts.credit_creances.application.queries import (
+        EncoursClientDTO,
+        EncoursQueryService,
+    )
+    from contexts.credit_creances.application.use_cases.accorder_credit import (
+        AccorderCreditHandler,
+    )
+    from contexts.credit_creances.application.use_cases.creer_client import (
+        CreerClientHandler,
+    )
+    from contexts.credit_creances.application.use_cases.enregistrer_remboursement import (
+        EnregistrerRemboursementHandler,
+    )
+    from contexts.credit_creances.domain.repositories import (
+        ClientRepository,
+        CreditRepository,
+        RemboursementRepository,
+    )
     from contexts.service_ventes.application.dto import ServiceDTO
+    from contexts.service_ventes.application.ports import OuvertureDeCreance
     from contexts.service_ventes.application.queries import (
         AdditionDetailDTO,
         AdditionQueryService,
@@ -78,6 +97,10 @@ class Container:
         self._versements: VersementRepository | None = None
         self._sous_caisses: SousCaisseQueryService | None = None
         self._additions_lecture: AdditionQueryService | None = None
+        self._clients: ClientRepository | None = None
+        self._credits: CreditRepository | None = None
+        self._remboursements: RemboursementRepository | None = None
+        self._encours: EncoursQueryService | None = None
         self._journal: Journal | None = None
 
     def _service_repository(self) -> ServiceRepository:
@@ -125,6 +148,42 @@ class Container:
             self._versements = DjangoVersementRepository()
         return self._versements
 
+    def _client_repository(self) -> ClientRepository:
+        if self._clients is None:
+            from contexts.credit_creances.infrastructure.persistence.repository import (
+                DjangoClientRepository,
+            )
+
+            self._clients = DjangoClientRepository()
+        return self._clients
+
+    def _credit_repository(self) -> CreditRepository:
+        if self._credits is None:
+            from contexts.credit_creances.infrastructure.persistence.repository import (
+                DjangoCreditRepository,
+            )
+
+            self._credits = DjangoCreditRepository()
+        return self._credits
+
+    def _remboursement_repository(self) -> RemboursementRepository:
+        if self._remboursements is None:
+            from contexts.credit_creances.infrastructure.persistence.repository import (
+                DjangoRemboursementRepository,
+            )
+
+            self._remboursements = DjangoRemboursementRepository()
+        return self._remboursements
+
+    def _encours_query_service(self) -> EncoursQueryService:
+        if self._encours is None:
+            from contexts.credit_creances.infrastructure.persistence.encours import (
+                DjangoEncoursQueryService,
+            )
+
+            self._encours = DjangoEncoursQueryService()
+        return self._encours
+
     def _sous_caisse_query_service(self) -> SousCaisseQueryService:
         if self._sous_caisses is None:
             from contexts.service_ventes.infrastructure.persistence.sous_caisse import (
@@ -154,7 +213,7 @@ class Container:
         from contexts.service_ventes.application.use_cases.ouvrir_service import (
             OuvrirServiceHandler,
         )
-        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
 
         return OuvrirServiceHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
@@ -167,7 +226,7 @@ class Container:
         from contexts.service_ventes.application.use_cases.enregistrer_vente import (
             EnregistrerVenteHandler,
         )
-        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
 
         return EnregistrerVenteHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
@@ -182,7 +241,7 @@ class Container:
         from contexts.service_ventes.application.use_cases.cloturer_service import (
             CloturerServiceHandler,
         )
-        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
 
         return CloturerServiceHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
@@ -196,7 +255,7 @@ class Container:
         from contexts.service_ventes.application.use_cases.ouvrir_addition import (
             OuvrirAdditionHandler,
         )
-        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
 
         return OuvrirAdditionHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
@@ -210,7 +269,7 @@ class Container:
         from contexts.service_ventes.application.use_cases.regler_addition import (
             ReglementAdditionHandler,
         )
-        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
 
         return ReglementAdditionHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
@@ -225,22 +284,29 @@ class Container:
         from contexts.service_ventes.application.use_cases.enregistrer_paiement import (
             EnregistrerPaiementHandler,
         )
-        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
 
         return EnregistrerPaiementHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
             additions=self._addition_repository(),
             paiements=self._paiement_repository(),
             ventes=self._vente_repository(),
+            creances=self._ouverture_de_creance(),
             journal=self._journal_adapter(),
             clock=self._clock,
         )
+
+    def _ouverture_de_creance(self) -> OuvertureDeCreance:
+        """Branche Service & Ventes sur Crédit & Créances (cf. config/creances.py)."""
+        from config.creances import CreanceViaContexteCredit
+
+        return CreanceViaContexteCredit(self.accorder_credit())
 
     def verser_recette(self) -> VerserRecetteHandler:
         from contexts.service_ventes.application.use_cases.verser_recette import (
             VerserRecetteHandler,
         )
-        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
 
         return VerserRecetteHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
@@ -265,6 +331,51 @@ class Container:
 
         service = self._service_repository().par_id(service_id)
         return ServiceDTO.depuis(service) if service is not None else None
+
+    def creer_client(self) -> CreerClientHandler:
+        from contexts.credit_creances.application.use_cases.creer_client import (
+            CreerClientHandler,
+        )
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return CreerClientHandler(
+            uow=DjangoUnitOfWork(),  # fraiche a chaque appel (transaction)
+            clients=self._client_repository(),
+        )
+
+    def accorder_credit(self) -> AccorderCreditHandler:
+        from contexts.credit_creances.application.use_cases.accorder_credit import (
+            AccorderCreditHandler,
+        )
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return AccorderCreditHandler(
+            uow=DjangoUnitOfWork(),  # fraiche a chaque appel (transaction)
+            clients=self._client_repository(),
+            credits=self._credit_repository(),
+            journal=self._journal_adapter(),
+            clock=self._clock,
+        )
+
+    def enregistrer_remboursement(self) -> EnregistrerRemboursementHandler:
+        from contexts.credit_creances.application.use_cases.enregistrer_remboursement import (
+            EnregistrerRemboursementHandler,
+        )
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return EnregistrerRemboursementHandler(
+            uow=DjangoUnitOfWork(),  # fraiche a chaque appel (transaction)
+            credits=self._credit_repository(),
+            remboursements=self._remboursement_repository(),
+            journal=self._journal_adapter(),
+            clock=self._clock,
+        )
+
+    def encours_du_client(self, client_id: str) -> EncoursClientDTO | None:
+        return self._encours_query_service().par_client(client_id)
+
+    def encours_du_bar(self, bar_id: str) -> tuple[EncoursClientDTO, ...]:
+        return self._encours_query_service().tous(bar_id)
 
 
 container = Container()
