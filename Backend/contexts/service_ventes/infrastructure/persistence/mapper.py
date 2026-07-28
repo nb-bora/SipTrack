@@ -54,6 +54,7 @@ def vers_ligne_vente(vente: Vente) -> dict[str, Any]:
     return {
         "id": vente.id,
         "service_id": vente.service_id,
+        "addition_id": vente.addition_id,
         "produit_id": vente.produit_id,
         "quantite": vente.quantite,
         "prix_unitaire": vente.prix_unitaire.montant,
