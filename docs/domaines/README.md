@@ -6,14 +6,16 @@ Chaque domaine (ou *Bounded Context*) en DDD est documenté ici avec ses fonctio
 
 ### ✅ [Service & Ventes](./service-ventes/)
 
-**État** : 4 fonctionnalités livrées  
+**État** : 6 fonctionnalités livrées  
 **Contexte** : Gestion des services, ventes, additions et règlements  
-**Prochaines étapes** : Régler une addition, Paiement partiel, Crédit client
+**Prochaines étapes** : Garde-fou de clôture, Paiement partiel, Sous-caisse serveuse
 
 - [Ouvrir un service](./service-ventes/01-ouvrir-un-service.md)
 - [Enregistrer une vente](./service-ventes/02-enregistrer-une-vente.md)
 - [Clôturer un service](./service-ventes/03-cloturer-un-service.md)
 - [Ouvrir une addition](./service-ventes/04-ouvrir-une-addition.md)
+- [Régler une addition](./service-ventes/05-regler-une-addition.md)
+- [Rattacher une vente à une addition](./service-ventes/06-rattacher-une-vente-a-une-addition.md)
 
 [Voir le domaine complet →](./service-ventes/)
 
@@ -47,10 +49,12 @@ Chaque domaine (ou *Bounded Context*) en DDD est documenté ici avec ses fonctio
 
 ---
 
-### 📋 [Gouvernance & Accès](./gouvernance-acces/) — À développer
+### 🟢 [Gouvernance & Accès](./gouvernance-acces/) — Amorcé
 
-**État** : 🟡 Design, pas encore implémenté  
+**État** : authentification livrée ; acteurs, rôles et délégation restent à faire  
 **Contexte** : Acteurs, rôles, délégation, validations
+
+- [Authentifier les requêtes et attribuer les faits](./gouvernance-acces/01-authentifier-les-requetes.md)
 
 ---
 

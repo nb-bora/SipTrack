@@ -2,6 +2,9 @@
 
 Les vues ne contiennent aucune règle métier : elles valident l'entrée (DTO),
 délèguent au cas d'usage fourni par le composition root, et sérialisent la sortie.
+
+L'auteur d'un fait n'est jamais lu dans le corps de la requête : il est tiré de
+la requête authentifiée (cf. `shared.interface.rest.attribution`).
 """
 
 from __future__ import annotations
@@ -26,15 +29,14 @@ from contexts.service_ventes.domain.exceptions import (
     ServiceIntrouvable,
     ServiceNonOuvert,
 )
+from shared.interface.rest.attribution import auteur_id_de
 
 from .serializers import (
     AdditionDetailOutputSerializer,
     AdditionOutputSerializer,
-    CloturerServiceInputSerializer,
     EnregistrerVenteInputSerializer,
     OuvrirAdditionInputSerializer,
     OuvrirServiceInputSerializer,
-    ReglementAdditionInputSerializer,
     ServiceOutputSerializer,
     VenteOutputSerializer,
 )
@@ -48,7 +50,10 @@ class ServiceListCreateView(APIView):
     def post(self, request: Request) -> Response:
         entree = OuvrirServiceInputSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
-        commande = OuvrirServiceCommand(**entree.validated_data)
+        commande = OuvrirServiceCommand(
+            auteur_id=auteur_id_de(request),
+            **entree.validated_data,
+        )
 
         dto = container.ouvrir_service().executer(commande)
 
@@ -73,7 +78,11 @@ class VenteCreateView(APIView):
     def post(self, request: Request, service_id: str) -> Response:
         entree = EnregistrerVenteInputSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
-        commande = EnregistrerVenteCommand(service_id=service_id, **entree.validated_data)
+        commande = EnregistrerVenteCommand(
+            service_id=service_id,
+            auteur_id=auteur_id_de(request),
+            **entree.validated_data,
+        )
 
         try:
             dto = container.enregistrer_vente().executer(commande)
@@ -106,9 +115,10 @@ class VenteCreateView(APIView):
 
 class CloturerServiceView(APIView):
     def post(self, request: Request, service_id: str) -> Response:
-        entree = CloturerServiceInputSerializer(data=request.data)
-        entree.is_valid(raise_exception=True)
-        commande = CloturerServiceCommand(service_id=service_id, **entree.validated_data)
+        commande = CloturerServiceCommand(
+            service_id=service_id,
+            auteur_id=auteur_id_de(request),
+        )
 
         try:
             dto = container.cloturer_service().executer(commande)
@@ -133,7 +143,11 @@ class AdditionListCreateView(APIView):
     def post(self, request: Request, service_id: str) -> Response:
         entree = OuvrirAdditionInputSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
-        commande = OuvrirAdditionCommand(service_id=service_id, **entree.validated_data)
+        commande = OuvrirAdditionCommand(
+            service_id=service_id,
+            auteur_id=auteur_id_de(request),
+            **entree.validated_data,
+        )
 
         try:
             dto = container.ouvrir_addition().executer(commande)
@@ -169,12 +183,10 @@ class AdditionDetailView(APIView):
 
 class ReglementAdditionView(APIView):
     def post(self, request: Request, service_id: str, addition_id: str) -> Response:
-        entree = ReglementAdditionInputSerializer(data=request.data)
-        entree.is_valid(raise_exception=True)
         commande = ReglementAdditionCommand(
             service_id=service_id,
             addition_id=addition_id,
-            **entree.validated_data,
+            auteur_id=auteur_id_de(request),
         )
 
         try:
