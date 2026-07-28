@@ -13,20 +13,22 @@ Gestion des services, ventes, additions et reglements de tables. Contexte centra
 | 3 | [Clôturer un service](./03-cloturer-un-service.md) | ✅ LIVRÉ | [Lire](./03-cloturer-un-service.md) |
 | 4 | [Ouvrir une addition](./04-ouvrir-une-addition.md) | ✅ LIVRÉ | [Lire](./04-ouvrir-une-addition.md) |
 | 5 | [Régler une addition](./05-regler-une-addition.md) | ✅ LIVRÉ | [Lire](./05-regler-une-addition.md) |
+| 6 | [Rattacher une vente à une addition](./06-rattacher-une-vente-a-une-addition.md) | ✅ LIVRÉ | [Lire](./06-rattacher-une-vente-a-une-addition.md) |
 
 ### 📋 Prévues
 
 | # | Fonctionnalité | Dépendances |
 |---|---|---|
-| 6 | Paiement partiel | Dépend de #5 (Régler une addition) |
-| 7 | Crédit client | Dépend de #6 (Paiement partiel) |
-| 8 | Sous-caisse serveuse | Dépend de #2 (Enregistrer une vente) |
+| 7 | Paiement partiel | Dépend de #6 (Rattacher une vente à une addition) |
+| 8 | Crédit client | Dépend de #7 (Paiement partiel) |
+| 9 | Sous-caisse serveuse | Dépend de #6 (Rattacher une vente à une addition) |
+| 10 | Garde-fou de clôture (aucune addition ouverte) | Dépend de #4 (Ouvrir une addition) |
 
 ## 📊 Métriques
 
 | Métrique | Valeur |
 |---|---|
-| **Tests (total)** | 60 |
+| **Tests (total)** | 78 |
 | **Couverture domaine** | 100% |
 | **Temps CI/CD** | ~2 min |
 | **Linting** | ✓ Ruff |
@@ -51,17 +53,19 @@ Backend/contexts/service_ventes/
 │   │   ├── ouvrir_service.py
 │   │   ├── enregistrer_vente.py
 │   │   ├── cloturer_service.py
-│   │   └── ouvrir_addition.py
-│   ├── dto.py           ← Commandes et DTOs
-│   └── ports/           ← Interfaces (Repository, Journal, Clock)
+│   │   ├── ouvrir_addition.py
+│   │   └── regler_addition.py
+│   ├── dto.py           ← Commandes et DTOs (écriture)
+│   └── queries.py       ← Port + DTO de lecture (CQRS)
 │
 ├── infrastructure/      ← ORM Django, repos concrets
 │   ├── django_app/
 │   │   └── models.py    ← ServiceModel, VenteModel, etc.
 │   ├── persistence/
-│   │   ├── repository.py    ← DjangoServiceRepository, etc.
-│   │   └── mapper.py        ← Traduction domaine ↔ ORM
-│   └── journal.py       ← Enregistrement des événements
+│   │   ├── repository.py     ← DjangoServiceRepository, etc.
+│   │   ├── query_service.py  ← Lecture (total d'addition)
+│   │   └── mapper.py         ← Traduction domaine ↔ ORM
+│   └── journal/         ← Enregistrement des événements
 │
 └── interface/rest/      ← API DRF
     ├── views.py         ← Endpoints
@@ -111,9 +115,9 @@ test_ouvrir_service_api.py
 Lancer les tests :
 ```bash
 cd Backend
-uv run pytest                        # Tous les tests (46)
-uv run pytest tests/unit/            # Domaine uniquement
-uv run pytest tests/integration/     # API + E2E
+uv run pytest                                    # Tous les tests (78)
+uv run pytest -k domain                          # Domaine uniquement
+uv run pytest -k api                             # API + E2E
 ```
 
 ## 🎯 Patterns appliqués
@@ -137,10 +141,19 @@ Chaque cas d'usage produit un événement horodaté :
 
 ### Cohérence eventual (ADR-0004)
 
-Les invariants inter-agrégats sont gardées au use case suivant :
-- Exemple : « Ne clôturer un service que si aucune Addition n'est ouverte »
-  - V1 (actuelle) : juste la transition d'état (OUVERT → CLÔTURÉ)
-  - V2 (quand Addition arrive) : ajout du garde-fou dans `CloturerServiceHandler`
+Les invariants inter-agrégats sont gardés au use case, pas dans l'agrégat :
+- « Une vente ne se rattache qu'à une addition du même service, encore ouverte »
+  → vérifié par `EnregistrerVenteHandler`, pas par `Vente`
+- « Ne clôturer un service que si aucune Addition n'est ouverte »
+  → **pas encore implémenté** : garde-fou à ajouter dans `CloturerServiceHandler`
+
+### Lecture séparée de l'écriture (CQRS)
+
+Le total d'une addition est **calculé à la lecture**, jamais stocké : le journal des faits est
+la seule vérité, tous les états s'en déduisent. Il est produit par un query service
+(`application/queries.py` pour le port, `persistence/query_service.py` pour l'adaptateur), qui
+lit les tables sans reconstruire d'agrégat — charger toutes les ventes dans `Addition`
+contredirait les petits agrégats.
 
 ## 📚 Références
 
