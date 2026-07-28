@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from contexts.service_ventes.application.dto import AdditionDTO, OuvrirAdditionCommand
 from contexts.service_ventes.domain.addition import Addition
+from contexts.service_ventes.domain.enums import StatutService
 from contexts.service_ventes.domain.exceptions import ServiceIntrouvable, ServiceNonOuvert
 from contexts.service_ventes.domain.repositories import AdditionRepository, ServiceRepository
 from shared.application.clock import Clock
@@ -36,7 +37,7 @@ class OuvrirAdditionHandler:
             service = self._services.par_id(commande.service_id)
             if service is None:
                 raise ServiceIntrouvable(commande.service_id)
-            if not service.statut.value == "ouvert":
+            if service.statut is not StatutService.OUVERT:
                 raise ServiceNonOuvert(commande.service_id)
 
             addition = Addition.ouvrir(

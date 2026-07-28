@@ -4,7 +4,8 @@ La base (Postgres) et les secrets viennent de l'environnement (DATABASE_URL,
 SECRET_KEY). Aucun secret en dur.
 """
 
-from .base import *  # noqa: F403
+# Import générique : convention Django pour les settings (cf. dev.py).
+from .base import *  # noqa: F403  # NOSONAR
 
 DEBUG = False
 
