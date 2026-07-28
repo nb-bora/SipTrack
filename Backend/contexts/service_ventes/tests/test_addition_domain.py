@@ -125,8 +125,15 @@ def test_une_addition_ouverte_accepte_une_consommation() -> None:
         horodatage=_HORODATAGE,
         auteur_id="u1",
     )
+    addition.purger_evenements()
 
     addition.accepter_consommation()  # ne lève pas
+
+    # C'est une garde pure : elle ne doit ni muter l'addition ni produire de fait.
+    assert addition.statut is StatutAddition.OUVERTE
+    assert addition.ouvert_le == _HORODATAGE
+    assert addition.ferme_le is None
+    assert addition.evenements_non_publies() == ()
 
 
 @pytest.mark.parametrize(

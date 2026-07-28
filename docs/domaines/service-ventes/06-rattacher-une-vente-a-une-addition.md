@@ -154,7 +154,7 @@ curl http://127.0.0.1:8000/api/services/$SERVICE_ID/additions/$ADDITION_ID/
 
 - `test_vente_domain.py` — la vente porte (ou non) une addition, événement inclus
 - `test_addition_domain.py` — `accepter_consommation()` selon le statut
-- `test_enregistrer_vente_handler.py` — rattachement, autre service, addition close
+- `test_enregistrer_vente_handler.py` — rattachement, autre service, addition clôturée
 - `test_addition_lignes_api.py` — bout en bout : total, comptoir exclu, 404/409
 
 ## Composition verticale
