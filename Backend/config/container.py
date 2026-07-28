@@ -23,6 +23,9 @@ if TYPE_CHECKING:
     from contexts.service_ventes.application.use_cases.cloturer_service import (
         CloturerServiceHandler,
     )
+    from contexts.service_ventes.application.use_cases.enregistrer_paiement import (
+        EnregistrerPaiementHandler,
+    )
     from contexts.service_ventes.application.use_cases.enregistrer_vente import (
         EnregistrerVenteHandler,
     )
@@ -37,6 +40,7 @@ if TYPE_CHECKING:
     )
     from contexts.service_ventes.domain.repositories import (
         AdditionRepository,
+        PaiementRepository,
         ServiceRepository,
         VenteRepository,
     )
@@ -64,6 +68,7 @@ class Container:
         self._services: ServiceRepository | None = None
         self._ventes: VenteRepository | None = None
         self._additions: AdditionRepository | None = None
+        self._paiements: PaiementRepository | None = None
         self._additions_lecture: AdditionQueryService | None = None
         self._journal: Journal | None = None
 
@@ -93,6 +98,15 @@ class Container:
 
             self._additions = DjangoAdditionRepository()
         return self._additions
+
+    def _paiement_repository(self) -> PaiementRepository:
+        if self._paiements is None:
+            from contexts.service_ventes.infrastructure.persistence.repository import (
+                DjangoPaiementRepository,
+            )
+
+            self._paiements = DjangoPaiementRepository()
+        return self._paiements
 
     def _addition_query_service(self) -> AdditionQueryService:
         if self._additions_lecture is None:
@@ -175,6 +189,23 @@ class Container:
         return ReglementAdditionHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
             additions=self._addition_repository(),
+            paiements=self._paiement_repository(),
+            ventes=self._vente_repository(),
+            journal=self._journal_adapter(),
+            clock=self._clock,
+        )
+
+    def enregistrer_paiement(self) -> EnregistrerPaiementHandler:
+        from contexts.service_ventes.application.use_cases.enregistrer_paiement import (
+            EnregistrerPaiementHandler,
+        )
+        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return EnregistrerPaiementHandler(
+            uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
+            additions=self._addition_repository(),
+            paiements=self._paiement_repository(),
+            ventes=self._vente_repository(),
             journal=self._journal_adapter(),
             clock=self._clock,
         )

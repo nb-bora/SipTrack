@@ -10,7 +10,9 @@ from rest_framework.test import APIClient
 
 from contexts.service_ventes.domain.addition import Addition
 from contexts.service_ventes.domain.enums import StatutAddition
+from contexts.service_ventes.domain.paiement import Paiement
 from contexts.service_ventes.domain.service import Service
+from contexts.service_ventes.domain.vente import Vente
 from shared.domain.attribution import Attribution, Capacite
 from shared.domain.events import DomainEvent
 from shared.domain.money import Montant
@@ -121,6 +123,37 @@ class FakeAdditionRepository:
             for add in self._additions + self.ajoutes
             if add.service_id == service_id and add.statut is StatutAddition.OUVERTE
         )
+
+
+class FakeVenteRepository:
+    """Implémentation fake du VenteRepository pour les tests."""
+
+    def __init__(self, totaux_par_addition: dict[str, int] | None = None) -> None:
+        self.ajoutes: list[Vente] = []
+        self._totaux = totaux_par_addition or {}
+
+    def ajouter(self, vente: Vente) -> None:
+        self.ajoutes.append(vente)
+
+    def total_addition(self, addition_id: str) -> int:
+        return self._totaux.get(addition_id, 0)
+
+
+class FakePaiementRepository:
+    """Implémentation fake du PaiementRepository pour les tests."""
+
+    def __init__(self, deja_encaisse: dict[str, int] | None = None) -> None:
+        self.ajoutes: list[Paiement] = []
+        self._deja_encaisse = deja_encaisse or {}
+
+    def ajouter(self, paiement: Paiement) -> None:
+        self.ajoutes.append(paiement)
+
+    def total_encaisse(self, addition_id: str) -> int:
+        depuis_les_ajouts = sum(
+            p.montant.valeur for p in self.ajoutes if p.addition_id == addition_id
+        )
+        return self._deja_encaisse.get(addition_id, 0) + depuis_les_ajouts
 
 
 class FakeClock:

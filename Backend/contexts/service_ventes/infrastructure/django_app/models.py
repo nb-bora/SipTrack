@@ -52,6 +52,24 @@ class VenteModel(models.Model):
         return f"Vente {self.id} ({self.montant_total} XAF)"
 
 
+class PaiementModel(models.Model):
+    id = models.CharField(primary_key=True, max_length=36)
+    addition = models.ForeignKey(
+        "AdditionModel", on_delete=models.PROTECT, related_name="paiements"
+    )
+    service = models.ForeignKey(ServiceModel, on_delete=models.PROTECT, related_name="paiements")
+    montant = models.PositiveIntegerField()
+    forme_paiement = models.CharField(max_length=20)
+    horodatage = models.DateTimeField()
+
+    class Meta:
+        db_table = "service_ventes_paiement"
+        ordering = ["horodatage"]
+
+    def __str__(self) -> str:
+        return f"Paiement {self.montant} XAF ({self.forme_paiement})"
+
+
 class AdditionModel(models.Model):
     id = models.CharField(primary_key=True, max_length=36)
     service = models.ForeignKey(ServiceModel, on_delete=models.PROTECT, related_name="additions")

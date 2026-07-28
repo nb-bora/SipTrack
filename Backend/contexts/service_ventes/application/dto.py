@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from contexts.service_ventes.domain.addition import Addition
+    from contexts.service_ventes.domain.paiement import Paiement
     from contexts.service_ventes.domain.service import Service
     from contexts.service_ventes.domain.vente import Vente
 
@@ -96,6 +97,36 @@ class ReglementAdditionCommand:
     service_id: str
     addition_id: str
     auteur_id: str
+
+
+@dataclass(frozen=True)
+class EnregistrerPaiementCommand:
+    service_id: str
+    addition_id: str
+    auteur_id: str
+    montant: int
+    forme_paiement: str
+
+
+@dataclass(frozen=True)
+class PaiementDTO:
+    id: str
+    addition_id: str
+    service_id: str
+    montant: int
+    forme_paiement: str
+    reste_a_payer: int
+
+    @classmethod
+    def depuis(cls, paiement: Paiement, *, reste_a_payer: int) -> PaiementDTO:
+        return cls(
+            id=paiement.id,
+            addition_id=paiement.addition_id,
+            service_id=paiement.service_id,
+            montant=paiement.montant.valeur,
+            forme_paiement=paiement.forme_paiement.value,
+            reste_a_payer=reste_a_payer,
+        )
 
 
 @dataclass(frozen=True)

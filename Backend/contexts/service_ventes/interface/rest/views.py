@@ -19,6 +19,7 @@ from rest_framework.views import APIView
 from config.container import container
 from contexts.service_ventes.application.dto import (
     CloturerServiceCommand,
+    EnregistrerPaiementCommand,
     EnregistrerVenteCommand,
     OuvrirAdditionCommand,
     OuvrirServiceCommand,
@@ -27,7 +28,9 @@ from contexts.service_ventes.application.dto import (
 from contexts.service_ventes.domain.exceptions import (
     AdditionDejaCloturee,
     AdditionIntrouvable,
+    AdditionNonSoldee,
     AdditionsEncoreOuvertes,
+    PaiementSuperieurAuReste,
     ServiceDejaCloture,
     ServiceIntrouvable,
     ServiceNonOuvert,
@@ -37,10 +40,12 @@ from shared.interface.rest.attribution import auteur_id_de
 from .serializers import (
     AdditionDetailOutputSerializer,
     AdditionOutputSerializer,
+    EnregistrerPaiementInputSerializer,
     EnregistrerVenteInputSerializer,
     ErreurSerializer,
     OuvrirAdditionInputSerializer,
     OuvrirServiceInputSerializer,
+    PaiementOutputSerializer,
     ServiceOutputSerializer,
     VenteOutputSerializer,
 )
@@ -284,6 +289,57 @@ class AdditionDetailView(APIView):
         return Response(AdditionDetailOutputSerializer(dto).data)
 
 
+class PaiementCreateView(APIView):
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Encaisser un paiement sur une addition",
+        description=(
+            "Encaisse tout ou partie de ce que la table doit. Quand le cumul des "
+            "paiements couvre le total consommé, l'addition passe d'elle-même à "
+            "`reglee` — le règlement est une conséquence, pas une déclaration."
+        ),
+        request=EnregistrerPaiementInputSerializer,
+        responses={
+            201: PaiementOutputSerializer,
+            400: _validation(),
+            404: _erreur("Addition inexistante, ou rattachée à un autre service."),
+            409: _erreur("Addition déjà clôturée, ou paiement supérieur au reste dû."),
+        },
+    )
+    def post(self, request: Request, service_id: str, addition_id: str) -> Response:
+        entree = EnregistrerPaiementInputSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+        commande = EnregistrerPaiementCommand(
+            service_id=service_id,
+            addition_id=addition_id,
+            auteur_id=auteur_id_de(request),
+            **entree.validated_data,
+        )
+
+        try:
+            dto = container.enregistrer_paiement().executer(commande)
+        except AdditionIntrouvable:
+            return Response(
+                {"detail": _ADDITION_INTROUVABLE},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except AdditionDejaCloturee:
+            return Response(
+                {"detail": _ADDITION_CLOTUREE},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except PaiementSuperieurAuReste as erreur:
+            return Response(
+                {"detail": f"Paiement supérieur au reste dû ({erreur.reste})."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response(
+            PaiementOutputSerializer(dto).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
 class ReglementAdditionView(APIView):
     @extend_schema(
         tags=_ETIQUETTES,
@@ -293,7 +349,7 @@ class ReglementAdditionView(APIView):
         responses={
             200: AdditionOutputSerializer,
             404: _erreur("Addition inexistante, ou rattachée à un autre service."),
-            409: _erreur("Addition déjà réglée ou abandonnée."),
+            409: _erreur("Addition déjà réglée, abandonnée, ou non soldée."),
         },
     )
     def post(self, request: Request, service_id: str, addition_id: str) -> Response:
@@ -313,6 +369,11 @@ class ReglementAdditionView(APIView):
         except AdditionDejaCloturee:
             return Response(
                 {"detail": _ADDITION_CLOTUREE},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except AdditionNonSoldee as erreur:
+            return Response(
+                {"detail": f"L'addition n'est pas soldée : reste {erreur.reste} à encaisser."},
                 status=status.HTTP_409_CONFLICT,
             )
 

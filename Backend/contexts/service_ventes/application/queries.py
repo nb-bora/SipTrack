@@ -31,8 +31,21 @@ class LigneAdditionDTO:
 
 
 @dataclass(frozen=True)
+class PaiementLigneDTO:
+    """Un encaissement porté à cette addition."""
+
+    paiement_id: str
+    montant: int
+    forme_paiement: str
+    horodatage: str
+
+
+@dataclass(frozen=True)
 class AdditionDetailDTO:
-    """L'addition telle qu'elle est présentée à la table : ses lignes et son dû."""
+    """L'addition telle qu'elle est présentée à la table : ses lignes et son dû.
+
+    `total`, `paye` et `reste_a_payer` sont tous **calculés** à la lecture.
+    """
 
     id: str
     service_id: str
@@ -41,6 +54,9 @@ class AdditionDetailDTO:
     ouvert_le: str
     lignes: tuple[LigneAdditionDTO, ...]
     total: int
+    paiements: tuple[PaiementLigneDTO, ...]
+    paye: int
+    reste_a_payer: int
     ferme_le: str | None = None
 
 

@@ -7,8 +7,12 @@ ses événements, le tout dans une unité de travail atomique.
 from __future__ import annotations
 
 from contexts.service_ventes.application.dto import AdditionDTO, ReglementAdditionCommand
-from contexts.service_ventes.domain.exceptions import AdditionIntrouvable
-from contexts.service_ventes.domain.repositories import AdditionRepository
+from contexts.service_ventes.domain.exceptions import AdditionIntrouvable, AdditionNonSoldee
+from contexts.service_ventes.domain.repositories import (
+    AdditionRepository,
+    PaiementRepository,
+    VenteRepository,
+)
 from shared.application.clock import Clock
 from shared.application.journal import Journal
 from shared.application.unit_of_work import UnitOfWork
@@ -20,11 +24,15 @@ class ReglementAdditionHandler:
         *,
         uow: UnitOfWork,
         additions: AdditionRepository,
+        paiements: PaiementRepository,
+        ventes: VenteRepository,
         journal: Journal,
         clock: Clock,
     ) -> None:
         self._uow = uow
         self._additions = additions
+        self._paiements = paiements
+        self._ventes = ventes
         self._journal = journal
         self._clock = clock
 
@@ -36,6 +44,14 @@ class ReglementAdditionHandler:
 
             if addition.service_id != commande.service_id:
                 raise AdditionIntrouvable(commande.addition_id)
+
+            # Clore une addition sans avoir encaissé ferait disparaître la
+            # créance : le reste dû doit être à zéro.
+            reste = self._ventes.total_addition(addition.id) - self._paiements.total_encaisse(
+                addition.id
+            )
+            if reste > 0:
+                raise AdditionNonSoldee(addition.id, reste)
 
             addition.regler(
                 auteur_id=commande.auteur_id,

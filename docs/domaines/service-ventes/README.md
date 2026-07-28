@@ -15,20 +15,20 @@ Gestion des services, ventes, additions et reglements de tables. Contexte centra
 | 5 | [Régler une addition](./05-regler-une-addition.md) | ✅ LIVRÉ | [Lire](./05-regler-une-addition.md) |
 | 6 | [Rattacher une vente à une addition](./06-rattacher-une-vente-a-une-addition.md) | ✅ LIVRÉ | [Lire](./06-rattacher-une-vente-a-une-addition.md) |
 | 7 | Garde-fou de clôture (aucune addition ouverte) | ✅ LIVRÉ | [Lire](./03-cloturer-un-service.md) |
+| 8 | [Encaisser un paiement (partiel ou total)](./07-encaisser-un-paiement.md) | ✅ LIVRÉ | [Lire](./07-encaisser-un-paiement.md) |
 
 ### 📋 Prévues
 
 | # | Fonctionnalité | Dépendances |
 |---|---|---|
-| 7 | Paiement partiel | Dépend de #6 (Rattacher une vente à une addition) |
-| 8 | Crédit client | Dépend de #7 (Paiement partiel) |
+| 9 | Crédit client | Dépend de #8 (Encaisser un paiement) |
 | 9 | Sous-caisse serveuse | Dépend de #6 (Rattacher une vente à une addition) |
 
 ## 📊 Métriques
 
 | Métrique | Valeur |
 |---|---|
-| **Tests (total)** | 108 |
+| **Tests (total)** | 128 |
 | **Couverture domaine** | 100% |
 | **Temps CI/CD** | ~2 min |
 | **Linting** | ✓ Ruff |
@@ -115,7 +115,7 @@ test_ouvrir_service_api.py
 Lancer les tests :
 ```bash
 cd Backend
-uv run pytest                                    # Tous les tests (108)
+uv run pytest                                    # Tous les tests (128)
 uv run pytest -k domain                          # Domaine uniquement
 uv run pytest -k api                             # API + E2E
 ```
@@ -128,6 +128,7 @@ Chaque agrégat a une seule responsabilité :
 - `Service` → Cycle de vie du service, caisse
 - `Vente` → Une transaction produit
 - `Addition` → Groupage de ventes par table
+- `Paiement` → Un encaissement porté à une addition
 
 → Pas de FK ORM inter-agrégats ; référence par identité (string)
 

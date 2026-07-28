@@ -9,6 +9,7 @@ from typing import Any
 
 from contexts.service_ventes.domain.addition import Addition
 from contexts.service_ventes.domain.enums import StatutAddition, StatutService
+from contexts.service_ventes.domain.paiement import Paiement
 from contexts.service_ventes.domain.service import Service
 from contexts.service_ventes.domain.vente import Vente
 from contexts.service_ventes.infrastructure.django_app.models import (
@@ -61,6 +62,18 @@ def vers_ligne_vente(vente: Vente) -> dict[str, Any]:
         "montant_total": vente.montant_total.valeur,
         "forme_paiement": vente.forme_paiement.value,
         "horodatage": vente.horodatage,
+    }
+
+
+def vers_ligne_paiement(paiement: Paiement) -> dict[str, Any]:
+    """Champs prêts pour PaiementModel.objects.create(**...)."""
+    return {
+        "id": paiement.id,
+        "addition_id": paiement.addition_id,
+        "service_id": paiement.service_id,
+        "montant": paiement.montant.valeur,
+        "forme_paiement": paiement.forme_paiement.value,
+        "horodatage": paiement.horodatage,
     }
 
 

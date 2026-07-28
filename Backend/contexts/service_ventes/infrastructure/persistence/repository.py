@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from django.db.models import Sum
+
 from contexts.service_ventes.domain.addition import Addition
 from contexts.service_ventes.domain.enums import StatutAddition
+from contexts.service_ventes.domain.paiement import Paiement
 from contexts.service_ventes.domain.service import Service
 from contexts.service_ventes.domain.vente import Vente
 from contexts.service_ventes.infrastructure.django_app.models import (
     AdditionModel,
+    PaiementModel,
     ServiceModel,
     VenteModel,
 )
@@ -33,6 +37,23 @@ class DjangoServiceRepository:
 class DjangoVenteRepository:
     def ajouter(self, vente: Vente) -> None:
         VenteModel.objects.create(**mapper.vers_ligne_vente(vente))
+
+    def total_addition(self, addition_id: str) -> int:
+        total = VenteModel.objects.filter(addition_id=addition_id).aggregate(
+            somme=Sum("montant_total")
+        )["somme"]
+        return int(total or 0)
+
+
+class DjangoPaiementRepository:
+    def ajouter(self, paiement: Paiement) -> None:
+        PaiementModel.objects.create(**mapper.vers_ligne_paiement(paiement))
+
+    def total_encaisse(self, addition_id: str) -> int:
+        total = PaiementModel.objects.filter(addition_id=addition_id).aggregate(
+            somme=Sum("montant")
+        )["somme"]
+        return int(total or 0)
 
 
 class DjangoAdditionRepository:

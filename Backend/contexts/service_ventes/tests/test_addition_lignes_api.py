@@ -158,8 +158,10 @@ def test_le_total_reste_calcule_apres_reglement(client_api: APIClient) -> None:
     addition_id = ouvrir_addition_via_api(client_api, service_id)
     assert _vendre(client_api, service_id, addition_id=addition_id, quantite=3).status_code == 201
 
+    # L'addition se règle en encaissant : la clore sans payer est désormais refusé.
     client_api.post(
-        f"/api/services/{service_id}/additions/{addition_id}/reglement/",
+        f"/api/services/{service_id}/additions/{addition_id}/paiements/",
+        {"montant": 3 * 650, "forme_paiement": "especes"},
         format="json",
     )
 

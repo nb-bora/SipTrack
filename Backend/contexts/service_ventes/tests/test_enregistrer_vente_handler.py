@@ -20,27 +20,19 @@ from contexts.service_ventes.domain.exceptions import (
     ServiceNonOuvert,
 )
 from contexts.service_ventes.domain.service import Service
-from contexts.service_ventes.domain.vente import Vente
 from contexts.service_ventes.tests.conftest import (
     FakeAdditionRepository,
     FakeClock,
     FakeJournal,
     FakeServiceRepository,
     FakeUnitOfWork,
+    FakeVenteRepository,
     creer_service_ouvert,
 )
 from shared.domain.attribution import Attribution, Capacite
 from shared.domain.money import Montant
 
 _INSTANT = datetime(2026, 7, 24, 18, 30)
-
-
-class FakeVenteRepository:
-    def __init__(self) -> None:
-        self.ajoutes: list[Vente] = []
-
-    def ajouter(self, vente: Vente) -> None:
-        self.ajoutes.append(vente)
 
 
 def _service_cloture() -> Service:
