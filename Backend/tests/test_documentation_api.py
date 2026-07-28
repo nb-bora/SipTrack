@@ -84,6 +84,10 @@ def test_le_schema_couvre_toutes_les_routes(client_api: APIClient) -> None:
         "/api/bars/",
         "/api/comptes/",
         "/api/comptes/{compte_id}/capacites/",
+        "/api/inventaire/produits/",
+        "/api/inventaire/produits/{produit_id}/stock/",
+        "/api/inventaire/produits/{produit_id}/vendre/",
+        "/api/inventaire/produits/{produit_id}/inventaire/",
     }
 
 

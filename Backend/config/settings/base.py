@@ -49,6 +49,7 @@ LOCAL_APPS = [
     "contexts.credit_creances.infrastructure.django_app",
     "contexts.catalogue.infrastructure.django_app",
     "contexts.gouvernance_acces.infrastructure.django_app",
+    "contexts.stock_inventaire.infrastructure.django_app",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

@@ -21,6 +21,12 @@ if TYPE_CHECKING:
         GererLeCatalogueHandler,
     )
     from contexts.catalogue.domain.repositories import ProduitRepository
+    from contexts.stock_inventaire.application.use_cases.gerer_stock import (
+        GererStockHandler,
+    )
+    from contexts.stock_inventaire.domain.repositories import (
+        ProduitRepository as StockProduitRepository,
+    )
     from contexts.credit_creances.application.queries import (
         EncoursClientDTO,
         EncoursQueryService,
@@ -124,6 +130,7 @@ class Container:
         self._bars: BarRepository | None = None
         self._comptes: CompteRepository | None = None
         self._catalogue_lecture: CatalogueQueryService | None = None
+        self._produits_stock: StockProduitRepository | None = None
         self._journal: Journal | None = None
 
     def _service_repository(self) -> ServiceRepository:
@@ -481,6 +488,27 @@ class Container:
             uow=DjangoUnitOfWork(),
             bars=self._bar_repository(),
             comptes=self._compte_repository(),
+            journal=self._journal_adapter(),
+        )
+
+    def _stock_produit_repository(self) -> StockProduitRepository:
+        if self._produits_stock is None:
+            from contexts.stock_inventaire.infrastructure.persistence.repository import (
+                DjangoProduitRepository,
+            )
+
+            self._produits_stock = DjangoProduitRepository()
+        return self._produits_stock
+
+    def gerer_stock(self) -> GererStockHandler:
+        from contexts.stock_inventaire.application.use_cases.gerer_stock import (
+            GererStockHandler,
+        )
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return GererStockHandler(
+            uow=DjangoUnitOfWork(),
+            produits=self._stock_produit_repository(),
             journal=self._journal_adapter(),
         )
 
