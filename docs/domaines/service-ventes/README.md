@@ -27,7 +27,7 @@ Gestion des services, ventes, additions et reglements de tables. Contexte centra
 
 | Métrique | Valeur |
 |---|---|
-| **Tests (total)** | 174 |
+| **Tests (total)** | 191 |
 | **Couverture domaine** | 100% |
 | **Temps CI/CD** | ~2 min |
 | **Linting** | ✓ Ruff |
@@ -114,7 +114,7 @@ test_ouvrir_service_api.py
 Lancer les tests :
 ```bash
 cd Backend
-uv run pytest                                    # Tous les tests (174)
+uv run pytest                                    # Tous les tests (191)
 uv run pytest -k domain                          # Domaine uniquement
 uv run pytest -k api                             # API + E2E
 ```

@@ -14,6 +14,7 @@ from rest_framework.test import APIClient
 
 from contexts.credit_creances.tests.conftest import creer_client_via_api
 from contexts.service_ventes.tests.conftest import (
+    inscrire_produit_via_api,
     ouvrir_addition_via_api,
     ouvrir_service_via_api,
 )
@@ -21,12 +22,12 @@ from shared.infrastructure.journal.models import MouvementModel
 
 
 def _servir(client: APIClient, service_id: str, addition_id: str, montant: int) -> None:
+    produit_id = inscrire_produit_via_api(client, prix=montant)
     reponse = client.post(
         f"/api/services/{service_id}/ventes/",
         {
-            "produit_id": "33export",
+            "produit_id": produit_id,
             "quantite": 1,
-            "prix_unitaire": montant,
             "forme_paiement": "credit",
             "addition_id": addition_id,
         },

@@ -12,6 +12,7 @@ import pytest
 from rest_framework.test import APIClient
 
 from contexts.service_ventes.tests.conftest import (
+    inscrire_produit_via_api,
     ouvrir_addition_via_api,
     ouvrir_service_via_api,
 )
@@ -27,12 +28,12 @@ def _servir_et_encaisser(
     table: int = 5,
 ) -> None:
     addition_id = ouvrir_addition_via_api(client, service_id, table_numero=table)
+    produit_id = inscrire_produit_via_api(client, prix=montant)
     reponse = client.post(
         f"/api/services/{service_id}/ventes/",
         {
-            "produit_id": "33export",
+            "produit_id": produit_id,
             "quantite": 1,
-            "prix_unitaire": montant,
             "forme_paiement": forme,
             "addition_id": addition_id,
         },

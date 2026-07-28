@@ -9,6 +9,7 @@ from rest_framework.test import APIClient
 
 from contexts.service_ventes.infrastructure.django_app.models import AdditionModel, VenteModel
 from contexts.service_ventes.tests.conftest import (
+    inscrire_produit_via_api,
     ouvrir_addition_via_api,
     ouvrir_service_via_api,
 )
@@ -23,9 +24,8 @@ def _vendre(
     prix_unitaire: int = 650,
 ) -> Any:
     corps: dict[str, Any] = {
-        "produit_id": "33export",
+        "produit_id": inscrire_produit_via_api(client, prix=prix_unitaire),
         "quantite": quantite,
-        "prix_unitaire": prix_unitaire,
         "forme_paiement": "especes",
     }
     if addition_id is not None:

@@ -15,6 +15,12 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from contexts.catalogue.application.dto import ProduitDTO
+    from contexts.catalogue.application.queries import CatalogueQueryService
+    from contexts.catalogue.application.use_cases.gerer_le_catalogue import (
+        GererLeCatalogueHandler,
+    )
+    from contexts.catalogue.domain.repositories import ProduitRepository
     from contexts.credit_creances.application.queries import (
         EncoursClientDTO,
         EncoursQueryService,
@@ -34,7 +40,10 @@ if TYPE_CHECKING:
         RemboursementRepository,
     )
     from contexts.service_ventes.application.dto import ServiceDTO
-    from contexts.service_ventes.application.ports import OuvertureDeCreance
+    from contexts.service_ventes.application.ports import (
+        OuvertureDeCreance,
+        TarifDuProduit,
+    )
     from contexts.service_ventes.application.queries import (
         AdditionDetailDTO,
         AdditionQueryService,
@@ -101,6 +110,8 @@ class Container:
         self._credits: CreditRepository | None = None
         self._remboursements: RemboursementRepository | None = None
         self._encours: EncoursQueryService | None = None
+        self._produits: ProduitRepository | None = None
+        self._catalogue_lecture: CatalogueQueryService | None = None
         self._journal: Journal | None = None
 
     def _service_repository(self) -> ServiceRepository:
@@ -202,6 +213,30 @@ class Container:
             self._additions_lecture = DjangoAdditionQueryService()
         return self._additions_lecture
 
+    def _produit_repository(self) -> ProduitRepository:
+        if self._produits is None:
+            from contexts.catalogue.infrastructure.persistence.repository import (
+                DjangoProduitRepository,
+            )
+
+            self._produits = DjangoProduitRepository()
+        return self._produits
+
+    def _catalogue_query_service(self) -> CatalogueQueryService:
+        if self._catalogue_lecture is None:
+            from contexts.catalogue.infrastructure.persistence.repository import (
+                DjangoCatalogueQueryService,
+            )
+
+            self._catalogue_lecture = DjangoCatalogueQueryService()
+        return self._catalogue_lecture
+
+    def _tarif_du_produit(self) -> TarifDuProduit:
+        """Branche Service & Ventes sur le Catalogue (cf. config/tarifs.py)."""
+        from config.tarifs import TarifViaCatalogue
+
+        return TarifViaCatalogue(self._produit_repository())
+
     def _journal_adapter(self) -> Journal:
         if self._journal is None:
             from shared.infrastructure.journal.adapter import DjangoJournal
@@ -233,6 +268,7 @@ class Container:
             services=self._service_repository(),
             ventes=self._vente_repository(),
             additions=self._addition_repository(),
+            tarifs=self._tarif_du_produit(),
             journal=self._journal_adapter(),
             clock=self._clock,
         )
@@ -376,6 +412,21 @@ class Container:
 
     def encours_du_bar(self, bar_id: str) -> tuple[EncoursClientDTO, ...]:
         return self._encours_query_service().tous(bar_id)
+
+    def gerer_le_catalogue(self) -> GererLeCatalogueHandler:
+        from contexts.catalogue.application.use_cases.gerer_le_catalogue import (
+            GererLeCatalogueHandler,
+        )
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return GererLeCatalogueHandler(
+            uow=DjangoUnitOfWork(),  # fraiche a chaque appel (transaction)
+            produits=self._produit_repository(),
+            journal=self._journal_adapter(),
+        )
+
+    def catalogue_du_bar(self, bar_id: str) -> tuple[ProduitDTO, ...]:
+        return self._catalogue_query_service().du_bar(bar_id)
 
 
 container = Container()
