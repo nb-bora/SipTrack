@@ -9,33 +9,16 @@ from contexts.service_ventes.infrastructure.django_app.models import (
     MouvementModel,
     VenteModel,
 )
-
-
-def _ouvrir_service(client: APIClient) -> str:
-    reponse = client.post(
-        "/api/services/",
-        {
-            "bar_id": "bar1",
-            "auteur_id": "u1",
-            "capacite": "operatrice",
-            "fond_de_caisse": 10_000,
-        },
-        format="json",
-    )
-    assert reponse.status_code == 201
-    service_id: str = reponse.json()["id"]
-    return service_id
+from contexts.service_ventes.tests.conftest import ouvrir_service_via_api
 
 
 @pytest.mark.django_db
-def test_enregistrer_une_vente_cree_la_vente_et_journalise() -> None:
-    client = APIClient()
-    service_id = _ouvrir_service(client)
+def test_enregistrer_une_vente_cree_la_vente_et_journalise(client_api: APIClient) -> None:
+    service_id = ouvrir_service_via_api(client_api)
 
-    reponse = client.post(
+    reponse = client_api.post(
         f"/api/services/{service_id}/ventes/",
         {
-            "auteur_id": "u1",
             "produit_id": "33export",
             "quantite": 3,
             "prix_unitaire": 650,
@@ -54,13 +37,10 @@ def test_enregistrer_une_vente_cree_la_vente_et_journalise() -> None:
 
 
 @pytest.mark.django_db
-def test_une_vente_sur_un_service_inexistant_retourne_404() -> None:
-    client = APIClient()
-
-    reponse = client.post(
+def test_une_vente_sur_un_service_inexistant_retourne_404(client_api: APIClient) -> None:
+    reponse = client_api.post(
         "/api/services/inconnu/ventes/",
         {
-            "auteur_id": "u1",
             "produit_id": "33export",
             "quantite": 1,
             "prix_unitaire": 650,

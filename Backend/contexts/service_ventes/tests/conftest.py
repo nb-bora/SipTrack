@@ -6,6 +6,8 @@ from collections.abc import Iterable
 from datetime import UTC, datetime
 from types import TracebackType
 
+from rest_framework.test import APIClient
+
 from contexts.service_ventes.domain.addition import Addition
 from contexts.service_ventes.domain.service import Service
 from shared.domain.attribution import Attribution, Capacite
@@ -129,6 +131,34 @@ class SystemClockFake(FakeClock):
     """Alias pour compatibility avec les tests."""
 
     pass
+
+
+def ouvrir_service_via_api(client: APIClient, fond_de_caisse: int = 10_000) -> str:
+    """Ouvre un service par l'API et renvoie son id (client déjà authentifié)."""
+    reponse = client.post(
+        "/api/services/",
+        {
+            "bar_id": "bar1",
+            "capacite": "operatrice",
+            "fond_de_caisse": fond_de_caisse,
+        },
+        format="json",
+    )
+    assert reponse.status_code == 201
+    service_id: str = reponse.json()["id"]
+    return service_id
+
+
+def ouvrir_addition_via_api(client: APIClient, service_id: str, table_numero: int = 5) -> str:
+    """Ouvre une addition par l'API et renvoie son id."""
+    reponse = client.post(
+        f"/api/services/{service_id}/additions/",
+        {"table_numero": table_numero},
+        format="json",
+    )
+    assert reponse.status_code == 201
+    addition_id: str = reponse.json()["id"]
+    return addition_id
 
 
 def creer_service_ouvert(instant: datetime = INSTANT_TEST) -> Service:
