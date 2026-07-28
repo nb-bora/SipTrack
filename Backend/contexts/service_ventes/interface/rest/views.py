@@ -9,6 +9,7 @@ la requête authentifiée (cf. `shared.interface.rest.attribution`).
 
 from __future__ import annotations
 
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.request import Request
@@ -54,6 +55,19 @@ def _erreur(description: str) -> OpenApiResponse:
     return OpenApiResponse(response=ErreurSerializer, description=description)
 
 
+def _validation() -> OpenApiResponse:
+    """Réponse 400 de DRF, à documenter explicitement.
+
+    Dès qu'on surcharge `responses`, drf-spectacular cesse d'ajouter le 400 par
+    défaut : sans cette entrée, le contrat tairait une réponse pourtant possible
+    à chaque endpoint qui valide une entrée.
+    """
+    return OpenApiResponse(
+        response=OpenApiTypes.OBJECT,
+        description="Requête invalide — dictionnaire `champ → [messages d'erreur]`.",
+    )
+
+
 class ServiceListCreateView(APIView):
     @extend_schema(
         tags=_ETIQUETTES,
@@ -63,7 +77,10 @@ class ServiceListCreateView(APIView):
             "authentifié ; `capacite` est déclarée pour cet acte précis."
         ),
         request=OuvrirServiceInputSerializer,
-        responses={201: ServiceOutputSerializer},
+        responses={
+            201: ServiceOutputSerializer,
+            400: _validation(),
+        },
     )
     def post(self, request: Request) -> Response:
         entree = OuvrirServiceInputSerializer(data=request.data)
@@ -111,6 +128,7 @@ class VenteCreateView(APIView):
         request=EnregistrerVenteInputSerializer,
         responses={
             201: VenteOutputSerializer,
+            400: _validation(),
             404: _erreur("Service introuvable, ou addition inexistante / d'un autre service."),
             409: _erreur("Service non ouvert, ou addition déjà clôturée."),
         },
@@ -197,6 +215,7 @@ class AdditionListCreateView(APIView):
         request=OuvrirAdditionInputSerializer,
         responses={
             201: AdditionOutputSerializer,
+            400: _validation(),
             404: _erreur("Service introuvable."),
             409: _erreur("Service non ouvert."),
         },

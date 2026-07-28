@@ -53,6 +53,12 @@ def test_en_developpement_la_documentation_est_ouverte(settings: Any) -> None:
 
 @pytest.mark.django_db
 def test_le_schema_couvre_toutes_les_routes(client_api: APIClient) -> None:
+    """Inventaire exhaustif, volontairement strict.
+
+    Si ce test échoue après l'ajout d'une route, c'est le comportement attendu :
+    complétez la liste. Une égalité stricte détecte aussi bien une route non
+    documentée qu'une route fantôme laissée par une suppression.
+    """
     chemins = set(_schema(client_api)["paths"])
 
     assert chemins == {

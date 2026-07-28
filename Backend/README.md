@@ -49,7 +49,7 @@ Serveur démarré :
 Pour appeler les routes depuis Swagger : cliquer **Authorize** et saisir
 `Token <votre-jeton>` (voir la section suivante pour l'obtenir).
 
-En développement la doc est ouverte ; ailleurs elle exige un jeton — la carte
+En développement, la doc est ouverte ; ailleurs elle exige un jeton — la carte
 complète de l'API n'a pas à être publique. Les assets sont servis en local, donc
 tout fonctionne sans réseau.
 
