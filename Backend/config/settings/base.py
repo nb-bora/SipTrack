@@ -34,6 +34,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     "rest_framework",
+    "rest_framework.authtoken",
 ]
 
 # Chaque bounded context expose son app Django via sa couche infrastructure.
@@ -118,4 +119,21 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    # Jeton plutôt que session : l'app mobile est offline-first, elle ne peut
+    # pas dépendre d'une session serveur ni d'un cycle de rafraîchissement.
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    # Fermé par défaut : une route nouvellement ajoutée est protégée sans que
+    # personne ait à y penser. C'est l'inverse qui serait dangereux.
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        # Freine le bourrinage de mots de passe sur l'obtention de jeton.
+        "obtention_jeton": env("THROTTLE_OBTENTION_JETON", default="10/min"),
+    },
 }
