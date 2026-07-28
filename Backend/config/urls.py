@@ -18,6 +18,7 @@ urlpatterns = [
     path("api/", include("contexts.service_ventes.interface.rest.urls")),
     path("api/", include("contexts.credit_creances.interface.rest.urls")),
     path("api/", include("contexts.catalogue.interface.rest.urls")),
+    path("api/", include("contexts.gouvernance_acces.interface.rest.urls")),
     # --- Documentation de l'API ---
     path(
         "api/schema/",
