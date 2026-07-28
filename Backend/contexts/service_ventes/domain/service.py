@@ -62,7 +62,7 @@ class Service:
                 service_id=service.id,
                 bar_id=bar_id,
                 auteur_id=responsable.auteur_id,
-                fond_de_caisse=fond_de_caisse.montant,
+                fond_de_caisse=fond_de_caisse.valeur,
             )
         )
         return service

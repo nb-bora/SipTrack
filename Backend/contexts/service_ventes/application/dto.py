@@ -57,7 +57,7 @@ class ServiceDTO:
             id=service.id,
             bar_id=service.bar_id,
             statut=service.statut.value,
-            fond_de_caisse=service.fond_de_caisse.montant,
+            fond_de_caisse=service.fond_de_caisse.valeur,
             ouvert_le=service.ouvert_le.isoformat(),
             clos_le=service.clos_le.isoformat() if service.clos_le is not None else None,
         )
@@ -116,8 +116,8 @@ class VenteDTO:
             service_id=vente.service_id,
             produit_id=vente.produit_id,
             quantite=vente.quantite,
-            prix_unitaire=vente.prix_unitaire.montant,
-            montant_total=vente.montant_total.montant,
+            prix_unitaire=vente.prix_unitaire.valeur,
+            montant_total=vente.montant_total.valeur,
             forme_paiement=vente.forme_paiement.value,
             addition_id=vente.addition_id,
         )

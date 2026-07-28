@@ -46,7 +46,7 @@ class Vente:
 
     @property
     def montant_total(self) -> Montant:
-        return Montant(self.prix_unitaire.montant * self.quantite, self.prix_unitaire.devise)
+        return Montant(self.prix_unitaire.valeur * self.quantite, self.prix_unitaire.devise)
 
     @classmethod
     def enregistrer(
@@ -79,8 +79,8 @@ class Vente:
                 service_id=service_id,
                 produit_id=produit_id,
                 quantite=quantite,
-                prix_unitaire=prix_unitaire.montant,
-                montant_total=vente.montant_total.montant,
+                prix_unitaire=prix_unitaire.valeur,
+                montant_total=vente.montant_total.valeur,
                 forme_paiement=forme_paiement.value,
                 auteur_id=auteur_id,
                 addition_id=addition_id,
