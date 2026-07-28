@@ -52,12 +52,37 @@ class VenteModel(models.Model):
         return f"Vente {self.id} ({self.montant_total} XAF)"
 
 
+class VersementModel(models.Model):
+    id = models.CharField(primary_key=True, max_length=36)
+    service = models.ForeignKey(ServiceModel, on_delete=models.PROTECT, related_name="versements")
+    serveuse_id = models.CharField(max_length=36)
+    attendu = models.PositiveIntegerField()
+    verse = models.PositiveIntegerField()
+    ecart = models.IntegerField()
+    horodatage = models.DateTimeField()
+
+    class Meta:
+        db_table = "service_ventes_versement"
+        ordering = ["horodatage"]
+        # Une serveuse ne verse qu'une fois par service.
+        constraints = [
+            models.UniqueConstraint(
+                fields=["service", "serveuse_id"],
+                name="un_versement_par_serveuse_et_service",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"Versement {self.serveuse_id} ({self.verse} XAF, ecart {self.ecart})"
+
+
 class PaiementModel(models.Model):
     id = models.CharField(primary_key=True, max_length=36)
     addition = models.ForeignKey(
         "AdditionModel", on_delete=models.PROTECT, related_name="paiements"
     )
     service = models.ForeignKey(ServiceModel, on_delete=models.PROTECT, related_name="paiements")
+    auteur_id = models.CharField(max_length=36)
     montant = models.PositiveIntegerField()
     forme_paiement = models.CharField(max_length=20)
     horodatage = models.DateTimeField()

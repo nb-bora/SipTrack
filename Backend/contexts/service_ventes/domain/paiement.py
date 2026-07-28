@@ -29,6 +29,7 @@ class Paiement:
         montant: Montant,
         forme_paiement: FormePaiement,
         horodatage: datetime,
+        auteur_id: str,
     ) -> None:
         self.id = id
         self.addition_id = addition_id
@@ -36,6 +37,8 @@ class Paiement:
         self.montant = montant
         self.forme_paiement = forme_paiement
         self.horodatage = horodatage
+        # Qui a encaisse : c'est ce qui rend la sous-caisse reconciliable.
+        self.auteur_id = auteur_id
         self._evenements: list[DomainEvent] = []
 
     @classmethod
@@ -59,6 +62,7 @@ class Paiement:
             montant=montant,
             forme_paiement=forme_paiement,
             horodatage=horodatage,
+            auteur_id=auteur_id,
         )
         paiement._enregistrer(
             PaiementRecu(

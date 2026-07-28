@@ -12,6 +12,7 @@ from contexts.service_ventes.domain.enums import StatutAddition, StatutService
 from contexts.service_ventes.domain.paiement import Paiement
 from contexts.service_ventes.domain.service import Service
 from contexts.service_ventes.domain.vente import Vente
+from contexts.service_ventes.domain.versement import Versement
 from contexts.service_ventes.infrastructure.django_app.models import (
     AdditionModel,
     ServiceModel,
@@ -71,6 +72,7 @@ def vers_ligne_paiement(paiement: Paiement) -> dict[str, Any]:
         "id": paiement.id,
         "addition_id": paiement.addition_id,
         "service_id": paiement.service_id,
+        "auteur_id": paiement.auteur_id,
         "montant": paiement.montant.valeur,
         "forme_paiement": paiement.forme_paiement.value,
         "horodatage": paiement.horodatage,
@@ -98,3 +100,16 @@ def vers_domaine_addition(ligne: AdditionModel) -> Addition:
         ouvert_le=ligne.ouvert_le,
         ferme_le=ligne.ferme_le,
     )
+
+
+def vers_ligne_versement(versement: Versement) -> dict[str, Any]:
+    """Champs prêts pour VersementModel.objects.create(**...)."""
+    return {
+        "id": versement.id,
+        "service_id": versement.service_id,
+        "serveuse_id": versement.serveuse_id,
+        "attendu": versement.attendu.valeur,
+        "verse": versement.verse.valeur,
+        "ecart": versement.ecart,
+        "horodatage": versement.horodatage,
+    }

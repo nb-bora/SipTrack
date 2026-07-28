@@ -5,15 +5,17 @@ from __future__ import annotations
 from django.db.models import Sum
 
 from contexts.service_ventes.domain.addition import Addition
-from contexts.service_ventes.domain.enums import StatutAddition
+from contexts.service_ventes.domain.enums import FormePaiement, StatutAddition
 from contexts.service_ventes.domain.paiement import Paiement
 from contexts.service_ventes.domain.service import Service
 from contexts.service_ventes.domain.vente import Vente
+from contexts.service_ventes.domain.versement import Versement
 from contexts.service_ventes.infrastructure.django_app.models import (
     AdditionModel,
     PaiementModel,
     ServiceModel,
     VenteModel,
+    VersementModel,
 )
 from contexts.service_ventes.infrastructure.persistence import mapper
 
@@ -54,6 +56,25 @@ class DjangoPaiementRepository:
             somme=Sum("montant")
         )["somme"]
         return int(total or 0)
+
+    def especes_encaissees_par(self, *, service_id: str, auteur_id: str) -> int:
+        total = PaiementModel.objects.filter(
+            service_id=service_id,
+            auteur_id=auteur_id,
+            forme_paiement=FormePaiement.ESPECES.value,
+        ).aggregate(somme=Sum("montant"))["somme"]
+        return int(total or 0)
+
+
+class DjangoVersementRepository:
+    def ajouter(self, versement: Versement) -> None:
+        VersementModel.objects.create(**mapper.vers_ligne_versement(versement))
+
+    def existe_pour(self, *, service_id: str, serveuse_id: str) -> bool:
+        return VersementModel.objects.filter(
+            service_id=service_id,
+            serveuse_id=serveuse_id,
+        ).exists()
 
 
 class DjangoAdditionRepository:

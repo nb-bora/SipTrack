@@ -9,7 +9,7 @@ from types import TracebackType
 from rest_framework.test import APIClient
 
 from contexts.service_ventes.domain.addition import Addition
-from contexts.service_ventes.domain.enums import StatutAddition
+from contexts.service_ventes.domain.enums import FormePaiement, StatutAddition
 from contexts.service_ventes.domain.paiement import Paiement
 from contexts.service_ventes.domain.service import Service
 from contexts.service_ventes.domain.vente import Vente
@@ -154,6 +154,15 @@ class FakePaiementRepository:
             p.montant.valeur for p in self.ajoutes if p.addition_id == addition_id
         )
         return self._deja_encaisse.get(addition_id, 0) + depuis_les_ajouts
+
+    def especes_encaissees_par(self, *, service_id: str, auteur_id: str) -> int:
+        return sum(
+            p.montant.valeur
+            for p in self.ajoutes
+            if p.service_id == service_id
+            and p.auteur_id == auteur_id
+            and p.forme_paiement is FormePaiement.ESPECES
+        )
 
 
 class FakeClock:

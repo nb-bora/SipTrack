@@ -69,6 +69,21 @@ class AdditionNonSoldee(ServiceVentesError):
         self.reste = reste
 
 
+class RecetteDejaVersee(ServiceVentesError):
+    """Une serveuse ne verse qu'une fois par service.
+
+    Un second versement masquerait le premier : une correction s'ecrit par
+    contre-passation, pas en repassant par-dessus.
+    """
+
+    def __init__(self, service_id: str, serveuse_id: str) -> None:
+        super().__init__(
+            f"La recette de {serveuse_id} a deja ete versee sur le service {service_id}."
+        )
+        self.service_id = service_id
+        self.serveuse_id = serveuse_id
+
+
 class AdditionDejaCloturee(ServiceVentesError):
     """Une opération a été tentée sur une addition déjà réglée/abandonnée."""
 

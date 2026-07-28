@@ -12,7 +12,9 @@ from .views import (
     ReglementAdditionView,
     ServiceDetailView,
     ServiceListCreateView,
+    SousCaisseListView,
     VenteCreateView,
+    VersementCreateView,
 )
 
 urlpatterns = [
@@ -31,6 +33,16 @@ urlpatterns = [
         "services/<str:service_id>/cloture/",
         CloturerServiceView.as_view(),
         name="service-cloture",
+    ),
+    path(
+        "services/<str:service_id>/versement/",
+        VersementCreateView.as_view(),
+        name="versement-create",
+    ),
+    path(
+        "services/<str:service_id>/sous-caisses/",
+        SousCaisseListView.as_view(),
+        name="sous-caisse-list",
     ),
     path(
         "services/<str:service_id>/additions/",

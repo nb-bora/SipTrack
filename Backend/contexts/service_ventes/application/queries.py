@@ -60,5 +60,20 @@ class AdditionDetailDTO:
     ferme_le: str | None = None
 
 
+@dataclass(frozen=True)
+class SousCaisseDTO:
+    """Ce qu'une serveuse doit, ce qu'elle a remis, et l'ecart."""
+
+    serveuse_id: str
+    encaisse_especes: int
+    encaisse_mobile_money: int
+    verse: int | None
+    ecart: int | None
+
+
+class SousCaisseQueryService(Protocol):
+    def par_service(self, service_id: str) -> tuple[SousCaisseDTO, ...]: ...
+
+
 class AdditionQueryService(Protocol):
     def detail(self, *, service_id: str, addition_id: str) -> AdditionDetailDTO | None: ...

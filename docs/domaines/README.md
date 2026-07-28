@@ -6,9 +6,9 @@ Chaque domaine (ou *Bounded Context*) en DDD est documenté ici avec ses fonctio
 
 ### ✅ [Service & Ventes](./service-ventes/)
 
-**État** : 8 fonctionnalités livrées  
+**État** : 9 fonctionnalités livrées  
 **Contexte** : Gestion des services, ventes, additions et règlements  
-**Prochaines étapes** : Sous-caisse serveuse, Crédit client
+**Prochaines étapes** : Crédit client, puis Stock & Inventaire
 
 - [Ouvrir un service](./service-ventes/01-ouvrir-un-service.md)
 - [Enregistrer une vente](./service-ventes/02-enregistrer-une-vente.md)
@@ -17,6 +17,7 @@ Chaque domaine (ou *Bounded Context*) en DDD est documenté ici avec ses fonctio
 - [Régler une addition](./service-ventes/05-regler-une-addition.md)
 - [Rattacher une vente à une addition](./service-ventes/06-rattacher-une-vente-a-une-addition.md)
 - [Encaisser un paiement (partiel ou total)](./service-ventes/07-encaisser-un-paiement.md)
+- [Sous-caisse serveuse (réconciliation)](./service-ventes/08-sous-caisse-serveuse.md)
 
 [Voir le domaine complet →](./service-ventes/)
 
