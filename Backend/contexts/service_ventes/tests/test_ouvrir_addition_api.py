@@ -5,11 +5,9 @@ from __future__ import annotations
 import pytest
 from rest_framework.test import APIClient
 
-from contexts.service_ventes.infrastructure.django_app.models import (
-    AdditionModel,
-    MouvementModel,
-)
+from contexts.service_ventes.infrastructure.django_app.models import AdditionModel
 from contexts.service_ventes.tests.conftest import ouvrir_service_via_api
+from shared.infrastructure.journal.models import MouvementModel
 
 
 @pytest.mark.django_db

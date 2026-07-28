@@ -75,6 +75,16 @@ Conséquences concrètes :
   [ADR-0003](./decisions/0003-journal-audit-vs-event-sourcing.md).
 - Métadonnées obligatoires d'un Mouvement : `auteur`, `capacite`, `service`, `bar`,
   **double horodatage** (saisie/réception), **séquence par appareil**, `idempotency_key`.
+- **Le journal n'appartient à aucun bounded context** : tous y écrivent. Il vit donc dans
+  `shared/infrastructure/journal/` (table `journal_mouvement`), derrière le port
+  `shared/application/journal.py`. Le loger dans un contexte obligerait les suivants à le
+  dupliquer ou à violer l'isolation
+  ([ADR-0005](./decisions/0005-isolation-bounded-contexts.md)).
+
+> ⚠️ **État réel** : l'append-only n'est aujourd'hui qu'une **convention**. `MouvementModel`
+> est un modèle Django ordinaire : `UPDATE` et `DELETE` passent, rien ne chaîne un Mouvement
+> au précédent, aucun test ne prouve l'immutabilité. Le durcissement (chaînage d'empreintes,
+> refus au niveau PostgreSQL, commande de vérification) fait l'objet d'un ticket dédié.
 
 ## 6. CQRS (indépendant de l'event sourcing)
 

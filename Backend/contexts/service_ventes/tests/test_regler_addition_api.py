@@ -7,14 +7,12 @@ from typing import TYPE_CHECKING
 import pytest
 from rest_framework.test import APIClient
 
-from contexts.service_ventes.infrastructure.django_app.models import (
-    AdditionModel,
-    MouvementModel,
-)
+from contexts.service_ventes.infrastructure.django_app.models import AdditionModel
 from contexts.service_ventes.tests.conftest import (
     ouvrir_addition_via_api,
     ouvrir_service_via_api,
 )
+from shared.infrastructure.journal.models import MouvementModel
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import User

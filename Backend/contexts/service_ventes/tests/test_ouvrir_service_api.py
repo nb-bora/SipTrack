@@ -7,10 +7,8 @@ from typing import TYPE_CHECKING
 import pytest
 from rest_framework.test import APIClient
 
-from contexts.service_ventes.infrastructure.django_app.models import (
-    MouvementModel,
-    ServiceModel,
-)
+from contexts.service_ventes.infrastructure.django_app.models import ServiceModel
+from shared.infrastructure.journal.models import MouvementModel
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import User

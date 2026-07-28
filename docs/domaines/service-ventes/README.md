@@ -65,7 +65,7 @@ Backend/contexts/service_ventes/
 │   │   ├── repository.py     ← DjangoServiceRepository, etc.
 │   │   ├── query_service.py  ← Lecture (total d'addition)
 │   │   └── mapper.py         ← Traduction domaine ↔ ORM
-│   └── journal/         ← Enregistrement des événements
+│   └── (le journal ne vit plus ici — voir shared/infrastructure/journal/)
 │
 └── interface/rest/      ← API DRF
     ├── views.py         ← Endpoints
