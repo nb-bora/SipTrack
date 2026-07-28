@@ -14,13 +14,8 @@ from shared.domain.attribution import Capacite
 
 class OuvrirServiceInputSerializer(serializers.Serializer):
     bar_id = serializers.CharField(max_length=36)
-    auteur_id = serializers.CharField(max_length=36)
     capacite = serializers.ChoiceField(choices=[c.value for c in Capacite])
     fond_de_caisse = serializers.IntegerField(min_value=0)
-
-
-class CloturerServiceInputSerializer(serializers.Serializer):
-    auteur_id = serializers.CharField(max_length=36)
 
 
 class ServiceOutputSerializer(serializers.Serializer):
@@ -33,7 +28,6 @@ class ServiceOutputSerializer(serializers.Serializer):
 
 
 class EnregistrerVenteInputSerializer(serializers.Serializer):
-    auteur_id = serializers.CharField(max_length=36)
     produit_id = serializers.CharField(max_length=36)
     quantite = serializers.IntegerField(min_value=1)
     prix_unitaire = serializers.IntegerField(min_value=0)
@@ -43,12 +37,7 @@ class EnregistrerVenteInputSerializer(serializers.Serializer):
 
 
 class OuvrirAdditionInputSerializer(serializers.Serializer):
-    auteur_id = serializers.CharField(max_length=36)
     table_numero = serializers.IntegerField(min_value=1)
-
-
-class ReglementAdditionInputSerializer(serializers.Serializer):
-    auteur_id = serializers.CharField(max_length=36)
 
 
 class AdditionOutputSerializer(serializers.Serializer):
