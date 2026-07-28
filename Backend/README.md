@@ -36,18 +36,48 @@ variables — c'est la forme utilisée en production.
 Les tests créent et détruisent leur propre base `test_<DB_NAME>` : le rôle
 utilisé doit avoir le droit `CREATEDB`.
 
+## Authentification
+
+**Toutes les routes exigent un jeton.** L'auteur d'un Fait est déduit du compte
+authentifié, jamais du corps de la requête : sans cela, n'importe qui pourrait signer
+au nom de n'importe qui et le journal ne prouverait rien.
+
+Créer un compte, puis obtenir un jeton :
+
+```bash
+uv run manage.py createsuperuser        # ou createuser via l'admin Django
+
+curl -X POST http://127.0.0.1:8000/api/auth/jeton/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"serveuse1","password":"..."}'
+# {"token":"9c8f..."}
+```
+
+Le jeton se présente ensuite sur chaque appel :
+
+```bash
+curl http://127.0.0.1:8000/api/services/<id>/ -H "Authorization: Token 9c8f..."
+```
+
+Le jeton n'expire pas (l'app mobile est offline-first) ; il se révoque en supprimant
+la ligne correspondante dans l'admin. La route d'obtention est limitée en débit
+(`THROTTLE_OBTENTION_JETON`, 10/min par défaut) contre le bourrinage.
+
 ## Tranche verticale disponible
 
 `Ouvrir un service` de bout en bout (domaine → application → infrastructure → interface) :
 
 ```bash
+JETON=9c8f...
+
 # Ouvrir un service
 curl -X POST http://127.0.0.1:8000/api/services/ \
+  -H "Authorization: Token $JETON" \
   -H "Content-Type: application/json" \
-  -d '{"bar_id":"bar1","auteur_id":"u1","capacite":"operatrice","fond_de_caisse":10000}'
+  -d '{"bar_id":"bar1","capacite":"operatrice","fond_de_caisse":10000}'
 
 # Lire un service
-curl http://127.0.0.1:8000/api/services/<id>/
+curl http://127.0.0.1:8000/api/services/<id>/ -H "Authorization: Token $JETON"
 ```
 
 ## Qualité
