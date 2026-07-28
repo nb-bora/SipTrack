@@ -84,7 +84,7 @@ class DelegationAccordee(DomainEvent):
     # Peut etre un role_id ou une capacite
     quoi: str
     debut: datetime
-    fin: datetime | None
+    fin: datetime | None  # None = « jusqu'a revocation »
     auteur_id: str
 
 
