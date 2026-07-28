@@ -81,10 +81,30 @@ Conséquences concrètes :
   dupliquer ou à violer l'isolation
   ([ADR-0005](./decisions/0005-isolation-bounded-contexts.md)).
 
-> ⚠️ **État réel** : l'append-only n'est aujourd'hui qu'une **convention**. `MouvementModel`
-> est un modèle Django ordinaire : `UPDATE` et `DELETE` passent, rien ne chaîne un Mouvement
-> au précédent, aucun test ne prouve l'immutabilité. Le durcissement (chaînage d'empreintes,
-> refus au niveau PostgreSQL, commande de vérification) fait l'objet d'un ticket dédié.
+### Comment l'inaltérabilité est réellement obtenue
+
+Trois mécanismes, dont un seul suffirait à être contourné :
+
+1. **Refus en base.** Un déclencheur PostgreSQL rejette tout `UPDATE`, `DELETE` et `TRUNCATE`
+   sur `journal_mouvement`. C'est la garantie qui compte : elle protège aussi d'un accès
+   direct à la base, précisément le scénario contre lequel un journal d'audit existe.
+2. **Chaînage d'empreintes.** Chaque Mouvement porte une `sequence` stricte et l'`empreinte`
+   SHA-256 de son contenu, calculée en incluant l'empreinte du précédent. Altérer une ligne
+   ancienne casse toutes les suivantes : réécrire l'histoire discrètement supposerait de
+   recalculer la chaîne entière.
+3. **Garde applicative.** `MouvementModel.save()` et `.delete()` refusent la réécriture, pour
+   échouer tôt avec un message clair plutôt que sur une erreur SQL.
+
+Les écritures concurrentes sont sérialisées par un verrou consultatif PostgreSQL
+(`pg_advisory_xact_lock`), tenu jusqu'au commit de l'Unit of Work : sans lui, deux services
+simultanés liraient le même « dernier Mouvement » et produiraient deux branches.
+
+**Vérifier le journal** : `uv run manage.py verifier_journal` rejoue la chaîne et signale la
+première ligne incohérente (contenu altéré, chaîne rompue, trou dans la séquence). Sortie non
+nulle en cas d'anomalie, donc utilisable dans un contrôle automatisé.
+
+> Une correction ne s'obtient jamais en modifiant un Mouvement, mais par **contre-passation** :
+> un nouveau Fait qui annule le précédent, visible dans le journal.
 
 ## 6. CQRS (indépendant de l'event sourcing)
 
