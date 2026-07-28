@@ -24,6 +24,7 @@ source_modules =
 forbidden_modules =
     contexts.service_ventes.infrastructure
     contexts.service_ventes.interface
+    shared.infrastructure
 
 [importlinter:contract:domaine-sans-application]
 name = Le domaine n'importe pas la couche application

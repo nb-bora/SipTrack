@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import asdict
 
-from contexts.service_ventes.infrastructure.django_app.models import MouvementModel
 from shared.domain.events import DomainEvent
 from shared.domain.identifiers import new_id
+from shared.infrastructure.journal.models import MouvementModel
 
 
 class DjangoJournal:

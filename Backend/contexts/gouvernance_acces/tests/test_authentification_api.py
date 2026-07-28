@@ -9,10 +9,8 @@ from rest_framework.exceptions import NotAuthenticated
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 
-from contexts.service_ventes.infrastructure.django_app.models import (
-    MouvementModel,
-    ServiceModel,
-)
+from contexts.service_ventes.infrastructure.django_app.models import ServiceModel
+from shared.infrastructure.journal.models import MouvementModel
 from shared.interface.rest.attribution import auteur_id_de
 
 if TYPE_CHECKING:

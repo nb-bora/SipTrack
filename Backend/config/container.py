@@ -105,9 +105,7 @@ class Container:
 
     def _journal_adapter(self) -> Journal:
         if self._journal is None:
-            from contexts.service_ventes.infrastructure.journal.journal import (
-                DjangoJournal,
-            )
+            from shared.infrastructure.journal.adapter import DjangoJournal
 
             self._journal = DjangoJournal()
         return self._journal

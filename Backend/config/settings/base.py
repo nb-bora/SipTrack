@@ -41,8 +41,10 @@ THIRD_PARTY_APPS = [
     "drf_spectacular_sidecar",
 ]
 
-# Chaque bounded context expose son app Django via sa couche infrastructure.
+# Le journal est transverse : tous les contextes y écrivent, aucun ne le possède.
 LOCAL_APPS = [
+    "shared.infrastructure.journal",
+    # Chaque bounded context expose son app Django via sa couche infrastructure.
     "contexts.service_ventes.infrastructure.django_app",
 ]
 
