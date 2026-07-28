@@ -44,3 +44,7 @@ class DjangoAdditionRepository:
         except AdditionModel.DoesNotExist:
             return None
         return mapper.vers_domaine_addition(ligne)
+
+    def mettre_a_jour(self, addition: Addition) -> None:
+        data = mapper.vers_ligne_addition(addition)
+        AdditionModel.objects.filter(pk=addition.id).update(**data)

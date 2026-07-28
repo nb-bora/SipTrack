@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from datetime import UTC, datetime
 from types import TracebackType
 
+from contexts.service_ventes.domain.addition import Addition
 from contexts.service_ventes.domain.service import Service
 from shared.domain.attribution import Attribution, Capacite
 from shared.domain.events import DomainEvent
@@ -70,9 +71,46 @@ class FakeJournal:
 
     def __init__(self) -> None:
         self.appels: list[tuple[tuple[DomainEvent, ...], str]] = []
+        self.mouvements: list[dict[str, object]] = []
 
     def enregistrer(self, evenements: Iterable[DomainEvent], *, auteur_id: str) -> None:
         self.appels.append((tuple(evenements), auteur_id))
+        for evt in evenements:
+            self.mouvements.append(
+                {
+                    "type": evt.__class__.__name__,
+                    **evt.__dict__,
+                }
+            )
+
+
+class FakeAdditionRepository:
+    """Implémentation fake du AdditionRepository pour les tests."""
+
+    def __init__(self, additions: list[Addition] | None = None) -> None:
+        self.ajoutes: list[Addition] = []
+        self.mises_a_jour: list[Addition] = []
+        self._additions = additions or []
+
+    def ajouter(self, addition: Addition) -> None:
+        self.ajoutes.append(addition)
+
+    def par_id(self, addition_id: str) -> Addition | None:
+        for add in self._additions + self.ajoutes:
+            if add.id == addition_id:
+                return add
+        return None
+
+    def mettre_a_jour(self, addition: Addition) -> None:
+        self.mises_a_jour.append(addition)
+        for i, add in enumerate(self._additions):
+            if add.id == addition.id:
+                self._additions[i] = addition
+                break
+        for i, add in enumerate(self.ajoutes):
+            if add.id == addition.id:
+                self.ajoutes[i] = addition
+                break
 
 
 class FakeClock:
@@ -85,6 +123,12 @@ class FakeClock:
     def now(self) -> datetime:
         self.appels += 1
         return self.instant
+
+
+class SystemClockFake(FakeClock):
+    """Alias pour compatibility avec les tests."""
+
+    pass
 
 
 def creer_service_ouvert(instant: datetime = INSTANT_TEST) -> Service:

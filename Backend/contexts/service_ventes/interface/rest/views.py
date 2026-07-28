@@ -17,8 +17,11 @@ from contexts.service_ventes.application.dto import (
     EnregistrerVenteCommand,
     OuvrirAdditionCommand,
     OuvrirServiceCommand,
+    ReglementAdditionCommand,
 )
 from contexts.service_ventes.domain.exceptions import (
+    AdditionDejaCloturee,
+    AdditionIntrouvable,
     ServiceDejaCloture,
     ServiceIntrouvable,
     ServiceNonOuvert,
@@ -30,6 +33,7 @@ from .serializers import (
     EnregistrerVenteInputSerializer,
     OuvrirAdditionInputSerializer,
     OuvrirServiceInputSerializer,
+    ReglementAdditionInputSerializer,
     ServiceOutputSerializer,
     VenteOutputSerializer,
 )
@@ -134,4 +138,33 @@ class AdditionListCreateView(APIView):
         return Response(
             AdditionOutputSerializer(dto).data,
             status=status.HTTP_201_CREATED,
+        )
+
+
+class ReglementAdditionView(APIView):
+    def post(self, request: Request, service_id: str, addition_id: str) -> Response:
+        entree = ReglementAdditionInputSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+        commande = ReglementAdditionCommand(
+            service_id=service_id,
+            addition_id=addition_id,
+            **entree.validated_data,
+        )
+
+        try:
+            dto = container.regler_addition().executer(commande)
+        except AdditionIntrouvable:
+            return Response(
+                {"detail": "Addition introuvable."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except AdditionDejaCloturee:
+            return Response(
+                {"detail": "L'addition est déjà clôturée."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response(
+            AdditionOutputSerializer(dto).data,
+            status=status.HTTP_200_OK,
         )

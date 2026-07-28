@@ -12,12 +12,12 @@ Gestion des services, ventes, additions et reglements de tables. Contexte centra
 | 2 | [Enregistrer une vente](./02-enregistrer-une-vente.md) | ✅ LIVRÉ | [Lire](./02-enregistrer-une-vente.md) |
 | 3 | [Clôturer un service](./03-cloturer-un-service.md) | ✅ LIVRÉ | [Lire](./03-cloturer-un-service.md) |
 | 4 | [Ouvrir une addition](./04-ouvrir-une-addition.md) | ✅ LIVRÉ | [Lire](./04-ouvrir-une-addition.md) |
+| 5 | [Régler une addition](./05-regler-une-addition.md) | ✅ LIVRÉ | [Lire](./05-regler-une-addition.md) |
 
 ### 📋 Prévues
 
 | # | Fonctionnalité | Dépendances |
 |---|---|---|
-| 5 | Régler une addition | Dépend de #4 (Ouvrir une addition) |
 | 6 | Paiement partiel | Dépend de #5 (Régler une addition) |
 | 7 | Crédit client | Dépend de #6 (Paiement partiel) |
 | 8 | Sous-caisse serveuse | Dépend de #2 (Enregistrer une vente) |
@@ -26,9 +26,9 @@ Gestion des services, ventes, additions et reglements de tables. Contexte centra
 
 | Métrique | Valeur |
 |---|---|
-| **Tests (total)** | 46 |
+| **Tests (total)** | 60 |
 | **Couverture domaine** | 100% |
-| **Temps CI/CD** | ~1.5 min |
+| **Temps CI/CD** | ~2 min |
 | **Linting** | ✓ Ruff |
 | **Typage** | ✓ MyPy strict |
 | **Architecture** | ✓ Import-linter |

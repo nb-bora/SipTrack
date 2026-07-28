@@ -89,6 +89,13 @@ class OuvrirAdditionCommand:
 
 
 @dataclass(frozen=True)
+class ReglementAdditionCommand:
+    service_id: str
+    addition_id: str
+    auteur_id: str
+
+
+@dataclass(frozen=True)
 class VenteDTO:
     id: str
     service_id: str

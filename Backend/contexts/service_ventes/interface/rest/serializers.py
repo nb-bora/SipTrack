@@ -45,6 +45,10 @@ class OuvrirAdditionInputSerializer(serializers.Serializer):
     table_numero = serializers.IntegerField(min_value=1)
 
 
+class ReglementAdditionInputSerializer(serializers.Serializer):
+    auteur_id = serializers.CharField(max_length=36)
+
+
 class AdditionOutputSerializer(serializers.Serializer):
     id = serializers.CharField()
     service_id = serializers.CharField()

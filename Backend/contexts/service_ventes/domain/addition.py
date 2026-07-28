@@ -12,7 +12,8 @@ from shared.domain.events import DomainEvent
 from shared.domain.identifiers import new_id
 
 from .enums import StatutAddition
-from .events import AdditionOuverte
+from .events import AdditionOuverte, AdditionReglee
+from .exceptions import AdditionDejaCloturee
 
 
 class Addition:
@@ -60,6 +61,22 @@ class Addition:
             )
         )
         return addition
+
+    def regler(self, *, auteur_id: str, horodatage: datetime) -> None:
+        """Régle l'addition (transition Ouverte → Réglée)."""
+        if self.statut is not StatutAddition.OUVERTE:
+            raise AdditionDejaCloturee(self.id)
+
+        self.statut = StatutAddition.REGLEE
+        self.ferme_le = horodatage
+        self._enregistrer(
+            AdditionReglee(
+                addition_id=self.id,
+                service_id=self.service_id,
+                table_numero=self.table_numero,
+                auteur_id=auteur_id,
+            )
+        )
 
     # --- Gestion des événements ------------------------------------------
     def _enregistrer(self, evenement: DomainEvent) -> None:

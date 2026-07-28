@@ -40,3 +40,11 @@ class AdditionOuverte(DomainEvent):
     service_id: str
     table_numero: int
     auteur_id: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class AdditionReglee(DomainEvent):
+    addition_id: str
+    service_id: str
+    table_numero: int
+    auteur_id: str

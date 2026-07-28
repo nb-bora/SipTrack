@@ -7,6 +7,7 @@ from django.urls import path
 from .views import (
     AdditionListCreateView,
     CloturerServiceView,
+    ReglementAdditionView,
     ServiceDetailView,
     ServiceListCreateView,
     VenteCreateView,
@@ -33,5 +34,10 @@ urlpatterns = [
         "services/<str:service_id>/additions/",
         AdditionListCreateView.as_view(),
         name="addition-list-create",
+    ),
+    path(
+        "services/<str:service_id>/additions/<str:addition_id>/reglement/",
+        ReglementAdditionView.as_view(),
+        name="reglement-addition",
     ),
 ]

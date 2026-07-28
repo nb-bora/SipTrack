@@ -10,7 +10,6 @@ from contexts.service_ventes.application.dto import OuvrirAdditionCommand
 from contexts.service_ventes.application.use_cases.ouvrir_addition import (
     OuvrirAdditionHandler,
 )
-from contexts.service_ventes.domain.addition import Addition
 from contexts.service_ventes.domain.events import AdditionOuverte
 from contexts.service_ventes.domain.exceptions import (
     ServiceIntrouvable,
@@ -18,6 +17,7 @@ from contexts.service_ventes.domain.exceptions import (
 )
 from contexts.service_ventes.tests.conftest import (
     INSTANT_TEST,
+    FakeAdditionRepository,
     FakeClock,
     FakeJournal,
     FakeServiceRepository,
@@ -26,17 +26,6 @@ from contexts.service_ventes.tests.conftest import (
 )
 
 _INSTANT = datetime(2026, 7, 28, 10, 0)
-
-
-class FakeAdditionRepository:
-    def __init__(self) -> None:
-        self.ajoutes: list[Addition] = []
-
-    def ajouter(self, addition: Addition) -> None:
-        self.ajoutes.append(addition)
-
-    def par_id(self, addition_id: str) -> Addition | None:
-        return next((a for a in self.ajoutes if a.id == addition_id), None)
 
 
 def _handler(
