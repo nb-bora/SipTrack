@@ -9,6 +9,7 @@ la requête authentifiée (cf. `shared.interface.rest.attribution`).
 
 from __future__ import annotations
 
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -35,6 +36,7 @@ from .serializers import (
     AdditionDetailOutputSerializer,
     AdditionOutputSerializer,
     EnregistrerVenteInputSerializer,
+    ErreurSerializer,
     OuvrirAdditionInputSerializer,
     OuvrirServiceInputSerializer,
     ServiceOutputSerializer,
@@ -45,8 +47,24 @@ _SERVICE_INTROUVABLE = "Service introuvable."
 _ADDITION_INTROUVABLE = "Addition introuvable."
 _ADDITION_CLOTUREE = "L'addition est déjà clôturée."
 
+_ETIQUETTES = ["Service & Ventes"]
+
+
+def _erreur(description: str) -> OpenApiResponse:
+    return OpenApiResponse(response=ErreurSerializer, description=description)
+
 
 class ServiceListCreateView(APIView):
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Ouvrir un service",
+        description=(
+            "Ouvre une période de responsabilité. L'auteur est déduit du compte "
+            "authentifié ; `capacite` est déclarée pour cet acte précis."
+        ),
+        request=OuvrirServiceInputSerializer,
+        responses={201: ServiceOutputSerializer},
+    )
     def post(self, request: Request) -> Response:
         entree = OuvrirServiceInputSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
@@ -64,6 +82,14 @@ class ServiceListCreateView(APIView):
 
 
 class ServiceDetailView(APIView):
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Lire un service",
+        responses={
+            200: ServiceOutputSerializer,
+            404: _erreur("Service introuvable."),
+        },
+    )
     def get(self, request: Request, service_id: str) -> Response:
         dto = container.service_par_id(service_id)
         if dto is None:
@@ -75,6 +101,20 @@ class ServiceDetailView(APIView):
 
 
 class VenteCreateView(APIView):
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Enregistrer une vente",
+        description=(
+            "Enregistre une consommation sur un service ouvert. `addition_id` est "
+            "facultatif : une vente au comptoir n'est rattachée à aucune table."
+        ),
+        request=EnregistrerVenteInputSerializer,
+        responses={
+            201: VenteOutputSerializer,
+            404: _erreur("Service introuvable, ou addition inexistante / d'un autre service."),
+            409: _erreur("Service non ouvert, ou addition déjà clôturée."),
+        },
+    )
     def post(self, request: Request, service_id: str) -> Response:
         entree = EnregistrerVenteInputSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
@@ -114,6 +154,17 @@ class VenteCreateView(APIView):
 
 
 class CloturerServiceView(APIView):
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Clôturer un service",
+        description="Aucun corps de requête : l'auteur vient du compte authentifié.",
+        request=None,
+        responses={
+            200: ServiceOutputSerializer,
+            404: _erreur("Service introuvable."),
+            409: _erreur("Service déjà clôturé ou scellé."),
+        },
+    )
     def post(self, request: Request, service_id: str) -> Response:
         commande = CloturerServiceCommand(
             service_id=service_id,
@@ -140,6 +191,16 @@ class CloturerServiceView(APIView):
 
 
 class AdditionListCreateView(APIView):
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Ouvrir une addition",
+        request=OuvrirAdditionInputSerializer,
+        responses={
+            201: AdditionOutputSerializer,
+            404: _erreur("Service introuvable."),
+            409: _erreur("Service non ouvert."),
+        },
+    )
     def post(self, request: Request, service_id: str) -> Response:
         entree = OuvrirAdditionInputSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
@@ -171,6 +232,15 @@ class AdditionListCreateView(APIView):
 class AdditionDetailView(APIView):
     """Lecture d'une addition : ses lignes et son total, calculé à la volée."""
 
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Lire une addition (lignes et total)",
+        description="Le total est recalculé à chaque lecture depuis les ventes rattachées.",
+        responses={
+            200: AdditionDetailOutputSerializer,
+            404: _erreur("Addition inexistante, ou rattachée à un autre service."),
+        },
+    )
     def get(self, request: Request, service_id: str, addition_id: str) -> Response:
         dto = container.addition_detail(service_id=service_id, addition_id=addition_id)
         if dto is None:
@@ -182,6 +252,17 @@ class AdditionDetailView(APIView):
 
 
 class ReglementAdditionView(APIView):
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Régler une addition",
+        description="Aucun corps de requête : l'auteur vient du compte authentifié.",
+        request=None,
+        responses={
+            200: AdditionOutputSerializer,
+            404: _erreur("Addition inexistante, ou rattachée à un autre service."),
+            409: _erreur("Addition déjà réglée ou abandonnée."),
+        },
+    )
     def post(self, request: Request, service_id: str, addition_id: str) -> Response:
         commande = ReglementAdditionCommand(
             service_id=service_id,

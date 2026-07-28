@@ -36,6 +36,23 @@ variables — c'est la forme utilisée en production.
 Les tests créent et détruisent leur propre base `test_<DB_NAME>` : le rôle
 utilisé doit avoir le droit `CREATEDB`.
 
+## Documentation de l'API (Swagger)
+
+Serveur démarré :
+
+| URL | Quoi |
+|---|---|
+| http://127.0.0.1:8000/api/doc/ | **Swagger UI** — essayer les routes depuis le navigateur |
+| http://127.0.0.1:8000/api/redoc/ | ReDoc — lecture du contrat |
+| http://127.0.0.1:8000/api/schema/ | Schéma OpenAPI 3 brut (YAML) |
+
+Pour appeler les routes depuis Swagger : cliquer **Authorize** et saisir
+`Token <votre-jeton>` (voir la section suivante pour l'obtenir).
+
+En développement la doc est ouverte ; ailleurs elle exige un jeton — la carte
+complète de l'API n'a pas à être publique. Les assets sont servis en local, donc
+tout fonctionne sans réseau.
+
 ## Authentification
 
 **Toutes les routes exigent un jeton.** L'auteur d'un Fait est déduit du compte

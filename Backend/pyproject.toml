@@ -8,6 +8,7 @@ dependencies = [
     "djangorestframework>=3.15",
     "django-environ>=0.11",
     "psycopg[binary]>=3.2",
+    "drf-spectacular[sidecar]>=0.27",
 ]
 
 # PEP 735 — groupes de dépendances (gérés par uv)
@@ -46,7 +47,7 @@ select = ["E", "F", "W", "I", "UP", "B", "DJ", "C4", "SIM"]
 DJANGO_SETTINGS_MODULE = "config.settings.dev"
 python_files = ["test_*.py"]
 pythonpath = ["."]
-testpaths = ["contexts"]
+testpaths = ["contexts", "tests"]
 addopts = "-ra"
 
 # ---------------------------------------------------------------------------

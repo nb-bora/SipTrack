@@ -12,6 +12,12 @@ from contexts.service_ventes.domain.enums import FormePaiement
 from shared.domain.attribution import Capacite
 
 
+class ErreurSerializer(serializers.Serializer):
+    """Corps renvoyé avec les erreurs métier (404, 409)."""
+
+    detail = serializers.CharField()
+
+
 class OuvrirServiceInputSerializer(serializers.Serializer):
     bar_id = serializers.CharField(max_length=36)
     capacite = serializers.ChoiceField(choices=[c.value for c in Capacite])
