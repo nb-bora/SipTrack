@@ -124,6 +124,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+# Cible de `collectstatic`. Nécessaire dès qu'un serveur autre que celui de
+# développement sert les fichiers (admin Django, assets Swagger embarqués).
+STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {

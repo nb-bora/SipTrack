@@ -9,6 +9,7 @@ Bienvenue ! Cette documentation est organisée par **domaines métier** et **tes
 - **[01 — Glossaire ubiquitaire](./01-glossaire-ubiquitaire.md)** — Langage commun de SipTrack
 - **[02 — Modèle métier](./02-modele-metier.md)** — Domaine, agrégats, invariants
 - **[03 — Architecture backend](./03-architecture-backend.md)** — DDD + Clean Architecture
+- **[06 — Déploiement et outillage](./06-deploiement.md)** — Render, CI/CD, pgAdmin, Portainer
 
 ### 🏢 Domaines métier
 
@@ -166,6 +167,7 @@ docs/
 ├── 01-glossaire-ubiquitaire.md
 ├── 02-modele-metier.md
 ├── 03-architecture-backend.md
+├── 06-deploiement.md
 │
 ├── domaines/
 │   └── service-ventes/
