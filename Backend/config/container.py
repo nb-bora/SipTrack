@@ -16,6 +16,10 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from contexts.service_ventes.application.dto import ServiceDTO
+    from contexts.service_ventes.application.queries import (
+        AdditionDetailDTO,
+        AdditionQueryService,
+    )
     from contexts.service_ventes.application.use_cases.cloturer_service import (
         CloturerServiceHandler,
     )
@@ -60,6 +64,7 @@ class Container:
         self._services: ServiceRepository | None = None
         self._ventes: VenteRepository | None = None
         self._additions: AdditionRepository | None = None
+        self._additions_lecture: AdditionQueryService | None = None
         self._journal: Journal | None = None
 
     def _service_repository(self) -> ServiceRepository:
@@ -88,6 +93,15 @@ class Container:
 
             self._additions = DjangoAdditionRepository()
         return self._additions
+
+    def _addition_query_service(self) -> AdditionQueryService:
+        if self._additions_lecture is None:
+            from contexts.service_ventes.infrastructure.persistence.query_service import (
+                DjangoAdditionQueryService,
+            )
+
+            self._additions_lecture = DjangoAdditionQueryService()
+        return self._additions_lecture
 
     def _journal_adapter(self) -> Journal:
         if self._journal is None:
@@ -121,6 +135,7 @@ class Container:
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
             services=self._service_repository(),
             ventes=self._vente_repository(),
+            additions=self._addition_repository(),
             journal=self._journal_adapter(),
             clock=self._clock,
         )
@@ -163,6 +178,12 @@ class Container:
             additions=self._addition_repository(),
             journal=self._journal_adapter(),
             clock=self._clock,
+        )
+
+    def addition_detail(self, *, service_id: str, addition_id: str) -> AdditionDetailDTO | None:
+        return self._addition_query_service().detail(
+            service_id=service_id,
+            addition_id=addition_id,
         )
 
     def service_par_id(self, service_id: str) -> ServiceDTO | None:

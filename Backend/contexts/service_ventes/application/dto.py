@@ -37,6 +37,9 @@ class EnregistrerVenteCommand:
     quantite: int
     prix_unitaire: int
     forme_paiement: str
+    # Absent pour une vente au comptoir : toutes les consommations ne passent
+    # pas par une table.
+    addition_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -104,6 +107,7 @@ class VenteDTO:
     prix_unitaire: int
     montant_total: int
     forme_paiement: str
+    addition_id: str | None = None
 
     @classmethod
     def depuis(cls, vente: Vente) -> VenteDTO:
@@ -115,4 +119,5 @@ class VenteDTO:
             prix_unitaire=vente.prix_unitaire.montant,
             montant_total=vente.montant_total.montant,
             forme_paiement=vente.forme_paiement.value,
+            addition_id=vente.addition_id,
         )

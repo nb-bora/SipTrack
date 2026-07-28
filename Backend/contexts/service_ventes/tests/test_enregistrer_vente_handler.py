@@ -10,12 +10,19 @@ from contexts.service_ventes.application.dto import EnregistrerVenteCommand
 from contexts.service_ventes.application.use_cases.enregistrer_vente import (
     EnregistrerVenteHandler,
 )
+from contexts.service_ventes.domain.addition import Addition
 from contexts.service_ventes.domain.enums import StatutService
 from contexts.service_ventes.domain.events import VenteEnregistree
-from contexts.service_ventes.domain.exceptions import ServiceIntrouvable, ServiceNonOuvert
+from contexts.service_ventes.domain.exceptions import (
+    AdditionDejaCloturee,
+    AdditionIntrouvable,
+    ServiceIntrouvable,
+    ServiceNonOuvert,
+)
 from contexts.service_ventes.domain.service import Service
 from contexts.service_ventes.domain.vente import Vente
 from contexts.service_ventes.tests.conftest import (
+    FakeAdditionRepository,
     FakeClock,
     FakeJournal,
     FakeServiceRepository,
@@ -47,7 +54,7 @@ def _service_cloture() -> Service:
     )
 
 
-def _commande(service_id: str) -> EnregistrerVenteCommand:
+def _commande(service_id: str, addition_id: str | None = None) -> EnregistrerVenteCommand:
     return EnregistrerVenteCommand(
         service_id=service_id,
         auteur_id="u1",
@@ -55,11 +62,13 @@ def _commande(service_id: str) -> EnregistrerVenteCommand:
         quantite=2,
         prix_unitaire=650,
         forme_paiement="especes",
+        addition_id=addition_id,
     )
 
 
 def _handler(
     service: Service | None,
+    additions: list[Addition] | None = None,
 ) -> tuple[EnregistrerVenteHandler, FakeUnitOfWork, FakeVenteRepository, FakeJournal]:
     uow = FakeUnitOfWork()
     ventes = FakeVenteRepository()
@@ -68,6 +77,7 @@ def _handler(
         uow=uow,
         services=FakeServiceRepository(service),
         ventes=ventes,
+        additions=FakeAdditionRepository(additions),
         journal=journal,
         clock=FakeClock(_INSTANT),
     )
@@ -106,3 +116,78 @@ def test_un_service_non_ouvert_leve_service_non_ouvert() -> None:
 
     with pytest.raises(ServiceNonOuvert):
         handler.executer(commande)
+
+
+def _addition_ouverte(service_id: str) -> Addition:
+    return Addition.ouvrir(
+        service_id=service_id,
+        table_numero=5,
+        horodatage=_INSTANT,
+        auteur_id="u1",
+    )
+
+
+def test_une_vente_peut_etre_rattachee_a_une_addition_ouverte() -> None:
+    service = creer_service_ouvert(_INSTANT)
+    addition = _addition_ouverte(service.id)
+    handler, uow, ventes, journal = _handler(service, [addition])
+
+    dto = handler.executer(_commande(service.id, addition.id))
+
+    assert dto.addition_id == addition.id
+    assert ventes.ajoutes[0].addition_id == addition.id
+    evenements, _auteur_id = journal.appels[0]
+    evenement = evenements[0]
+    assert isinstance(evenement, VenteEnregistree)
+    # Le rattachement doit être visible dans le journal, pas seulement en base.
+    assert evenement.addition_id == addition.id
+    assert uow.committed is True
+
+
+def test_une_vente_sans_addition_reste_possible() -> None:
+    """Encaissement mixte : une consommation au comptoir ne passe par aucune table."""
+    service = creer_service_ouvert(_INSTANT)
+    handler, uow, ventes, _journal = _handler(service)
+
+    dto = handler.executer(_commande(service.id))
+
+    assert dto.addition_id is None
+    assert ventes.ajoutes[0].addition_id is None
+    assert uow.committed is True
+
+
+def test_une_addition_introuvable_leve_addition_introuvable() -> None:
+    service = creer_service_ouvert(_INSTANT)
+    handler, _uow, ventes, _journal = _handler(service)
+    commande = _commande(service.id, "add-inexistante")
+
+    with pytest.raises(AdditionIntrouvable):
+        handler.executer(commande)
+
+    assert ventes.ajoutes == []
+
+
+def test_une_addition_d_un_autre_service_leve_addition_introuvable() -> None:
+    service = creer_service_ouvert(_INSTANT)
+    addition_ailleurs = _addition_ouverte("svc-autre")
+    handler, _uow, ventes, _journal = _handler(service, [addition_ailleurs])
+    commande = _commande(service.id, addition_ailleurs.id)
+
+    with pytest.raises(AdditionIntrouvable):
+        handler.executer(commande)
+
+    assert ventes.ajoutes == []
+
+
+def test_une_addition_deja_reglee_refuse_la_vente() -> None:
+    service = creer_service_ouvert(_INSTANT)
+    addition = _addition_ouverte(service.id)
+    addition.regler(auteur_id="u1", horodatage=_INSTANT)
+    handler, uow, ventes, _journal = _handler(service, [addition])
+    commande = _commande(service.id, addition.id)
+
+    with pytest.raises(AdditionDejaCloturee):
+        handler.executer(commande)
+
+    assert ventes.ajoutes == []
+    assert uow.committed is False
