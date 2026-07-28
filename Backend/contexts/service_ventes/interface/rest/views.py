@@ -58,6 +58,7 @@ from .serializers import (
 _SERVICE_INTROUVABLE = "Service introuvable."
 _ADDITION_INTROUVABLE = "Addition introuvable."
 _ADDITION_CLOTUREE = "L'addition est déjà clôturée."
+_SERVICE_NON_OUVERT = "Le service n'est pas ouvert."
 
 _ETIQUETTES = ["Service & Ventes"]
 
@@ -167,7 +168,7 @@ class VenteCreateView(APIView):
             )
         except ServiceNonOuvert:
             return Response(
-                {"detail": "Le service n'est pas ouvert."},
+                {"detail": _SERVICE_NON_OUVERT},
                 status=status.HTTP_409_CONFLICT,
             )
         except AdditionDejaCloturee:
@@ -262,7 +263,7 @@ class AdditionListCreateView(APIView):
             )
         except ServiceNonOuvert:
             return Response(
-                {"detail": "Le service n'est pas ouvert."},
+                {"detail": _SERVICE_NON_OUVERT},
                 status=status.HTTP_409_CONFLICT,
             )
 
@@ -424,7 +425,7 @@ class VersementCreateView(APIView):
             )
         except ServiceNonOuvert:
             return Response(
-                {"detail": "Le service n'est pas ouvert."},
+                {"detail": _SERVICE_NON_OUVERT},
                 status=status.HTTP_409_CONFLICT,
             )
         except RecetteDejaVersee:
