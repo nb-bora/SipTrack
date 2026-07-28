@@ -27,6 +27,7 @@ from contexts.service_ventes.application.dto import (
 from contexts.service_ventes.domain.exceptions import (
     AdditionDejaCloturee,
     AdditionIntrouvable,
+    AdditionsEncoreOuvertes,
     ServiceDejaCloture,
     ServiceIntrouvable,
     ServiceNonOuvert,
@@ -175,12 +176,15 @@ class CloturerServiceView(APIView):
     @extend_schema(
         tags=_ETIQUETTES,
         summary="Clôturer un service",
-        description="Aucun corps de requête : l'auteur vient du compte authentifié.",
+        description=(
+            "Aucun corps de requête : l'auteur vient du compte authentifié. "
+            "La clôture est refusée tant qu'une addition reste ouverte."
+        ),
         request=None,
         responses={
             200: ServiceOutputSerializer,
             404: _erreur("Service introuvable."),
-            409: _erreur("Service déjà clôturé ou scellé."),
+            409: _erreur("Service déjà clôturé, ou additions encore ouvertes."),
         },
     )
     def post(self, request: Request, service_id: str) -> Response:
@@ -199,6 +203,16 @@ class CloturerServiceView(APIView):
         except ServiceDejaCloture:
             return Response(
                 {"detail": "Le service est déjà clôturé."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except AdditionsEncoreOuvertes as erreur:
+            # On dit combien : une gérante doit savoir ce qui lui reste à faire.
+            return Response(
+                {
+                    "detail": (
+                        f"Impossible de clôturer : {erreur.nombre} addition(s) encore ouverte(s)."
+                    )
+                },
                 status=status.HTTP_409_CONFLICT,
             )
 

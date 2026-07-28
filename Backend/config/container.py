@@ -147,6 +147,7 @@ class Container:
         return CloturerServiceHandler(
             uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
             services=self._service_repository(),
+            additions=self._addition_repository(),
             journal=self._journal_adapter(),
             clock=self._clock,
         )

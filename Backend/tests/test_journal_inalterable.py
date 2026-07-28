@@ -13,7 +13,10 @@ import pytest
 from django.db import DatabaseError, connection, transaction
 from rest_framework.test import APIClient
 
-from contexts.service_ventes.tests.conftest import ouvrir_service_via_api
+from contexts.service_ventes.tests.conftest import (
+    ouvrir_addition_via_api,
+    ouvrir_service_via_api,
+)
 from shared.infrastructure.journal.empreinte import GENESE, calculer_empreinte
 from shared.infrastructure.journal.models import JournalInalterable, MouvementModel
 from shared.infrastructure.journal.verification import verifier_journal
@@ -51,8 +54,11 @@ def _ecrire_mouvement(sequence: int, *, empreinte_precedente: str, type_: str = 
 def test_les_faits_ecrits_par_l_api_forment_une_chaine_verifiable(client_api: APIClient) -> None:
     """Le vrai test d'intégration : ce que l'API écrit doit se vérifier."""
     service_id = ouvrir_service_via_api(client_api)
-    client_api.post(f"/api/services/{service_id}/additions/", {"table_numero": 5}, format="json")
-    client_api.post(f"/api/services/{service_id}/cloture/", format="json")
+    addition_id = ouvrir_addition_via_api(client_api, service_id)
+    client_api.post(
+        f"/api/services/{service_id}/additions/{addition_id}/reglement/",
+        format="json",
+    )
 
     mouvements = list(MouvementModel.objects.order_by("sequence"))
 

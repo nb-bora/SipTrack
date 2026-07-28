@@ -6,7 +6,10 @@ import pytest
 from rest_framework.test import APIClient
 
 from contexts.service_ventes.infrastructure.django_app.models import ServiceModel
-from contexts.service_ventes.tests.conftest import ouvrir_service_via_api
+from contexts.service_ventes.tests.conftest import (
+    ouvrir_addition_via_api,
+    ouvrir_service_via_api,
+)
 from shared.infrastructure.journal.models import MouvementModel
 
 
@@ -46,3 +49,32 @@ def test_cloturer_un_service_deja_cloture_retourne_409(client_api: APIClient) ->
     reponse2 = client_api.post(f"/api/services/{service_id}/cloture/", format="json")
 
     assert reponse2.status_code == 409
+
+
+@pytest.mark.django_db
+def test_cloturer_avec_une_addition_ouverte_retourne_409(client_api: APIClient) -> None:
+    """Sans ce garde-fou, des consommations servies disparaissent du décompte."""
+    service_id = ouvrir_service_via_api(client_api)
+    ouvrir_addition_via_api(client_api, service_id)
+
+    reponse = client_api.post(f"/api/services/{service_id}/cloture/", format="json")
+
+    assert reponse.status_code == 409
+    assert "1 addition(s) encore ouverte(s)" in reponse.json()["detail"]
+    assert ServiceModel.objects.get(pk=service_id).statut == "ouvert"
+    assert MouvementModel.objects.filter(type="ServiceCloture").count() == 0
+
+
+@pytest.mark.django_db
+def test_cloturer_apres_reglement_de_toutes_les_additions_reussit(client_api: APIClient) -> None:
+    service_id = ouvrir_service_via_api(client_api)
+    addition_id = ouvrir_addition_via_api(client_api, service_id)
+    client_api.post(
+        f"/api/services/{service_id}/additions/{addition_id}/reglement/",
+        format="json",
+    )
+
+    reponse = client_api.post(f"/api/services/{service_id}/cloture/", format="json")
+
+    assert reponse.status_code == 200
+    assert reponse.json()["statut"] == "cloture"
