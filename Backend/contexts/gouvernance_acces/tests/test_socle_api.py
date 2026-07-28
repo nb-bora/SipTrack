@@ -90,3 +90,34 @@ def test_accorder_une_capacite(client_api: APIClient, auteur: Any, django_user_m
 
     assert reponse.status_code == 200
     assert "encaisser" in reponse.json()["capacites"]
+
+
+@pytest.mark.django_db
+def test_idempotence_creer_bar(client_api: APIClient) -> None:
+    """Créer le même bar deux fois : 201 puis 409."""
+    payload = {"nom": "Le Relais"}
+
+    reponse1 = client_api.post("/api/bars/", payload, format="json")
+    assert reponse1.status_code == 201
+
+    reponse2 = client_api.post("/api/bars/", payload, format="json")
+    assert reponse2.status_code == 409
+
+
+@pytest.mark.django_db
+def test_idempotence_creer_compte(client_api: APIClient, django_user_model: Any) -> None:
+    """Créer le même compte deux fois : 201 puis 409."""
+    bar = client_api.post("/api/bars/", {"nom": "Le Relais"}, format="json").json()
+    autre = django_user_model.objects.create_user(username="alice", password="secret")
+
+    payload = {
+        "bar_id": bar["id"],
+        "user_id": str(autre.pk),
+        "capacites_initiales": [],
+    }
+
+    reponse1 = client_api.post("/api/comptes/", payload, format="json")
+    assert reponse1.status_code == 201
+
+    reponse2 = client_api.post("/api/comptes/", payload, format="json")
+    assert reponse2.status_code == 409

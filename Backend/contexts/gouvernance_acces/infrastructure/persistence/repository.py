@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+from django.db import IntegrityError
+
 from contexts.gouvernance_acces.domain.bar import Bar
 from contexts.gouvernance_acces.domain.compte import Compte
+from contexts.gouvernance_acces.domain.exceptions import (
+    BarDejaExistant,
+    CompteDejaExistant,
+)
 from contexts.gouvernance_acces.infrastructure.django_app.models import (
     BarModel,
     CompteModel,
@@ -37,11 +43,16 @@ class DjangoBarRepository:
 
         # Le proprietaire_id est un str (id Django User), converti en int pour la clé étrangère.
         proprietaire = User.objects.get(pk=int(bar.proprietaire_id))
-        BarModel.objects.create(
-            id=bar.id,
-            nom=bar.nom,
-            proprietaire=proprietaire,
-        )
+        try:
+            BarModel.objects.create(
+                id=bar.id,
+                nom=bar.nom,
+                proprietaire=proprietaire,
+            )
+        except IntegrityError as e:
+            if "unique constraint" in str(e).lower():
+                raise BarDejaExistant(bar.nom) from e
+            raise
 
     def par_id(self, bar_id: str) -> Bar | None:
         modele = BarModel.objects.filter(id=bar_id).first()
@@ -60,12 +71,17 @@ class DjangoCompteRepository:
 
         bar = BarModel.objects.get(id=compte.bar_id)
         user = User.objects.get(pk=compte.user_id)
-        CompteModel.objects.create(
-            id=compte.id,
-            bar=bar,
-            user=user,
-            capacites=list(compte.capacites),
-        )
+        try:
+            CompteModel.objects.create(
+                id=compte.id,
+                bar=bar,
+                user=user,
+                capacites=list(compte.capacites),
+            )
+        except IntegrityError as e:
+            if "unique constraint" in str(e).lower():
+                raise CompteDejaExistant(compte.bar_id, compte.user_id) from e
+            raise
 
     def par_id(self, compte_id: str) -> Compte | None:
         modele = CompteModel.objects.filter(id=compte_id).first()
