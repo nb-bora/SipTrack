@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 from rest_framework.test import APIClient
 
@@ -14,9 +16,15 @@ from contexts.service_ventes.tests.conftest import (
     ouvrir_service_via_api,
 )
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import User
+
 
 @pytest.mark.django_db
-def test_regler_une_addition_cree_un_mouvement_et_retourne_200(client_api: APIClient) -> None:
+def test_regler_une_addition_cree_un_mouvement_et_retourne_200(
+    client_api: APIClient,
+    auteur: User,
+) -> None:
     service_id = ouvrir_service_via_api(client_api)
     addition_id = ouvrir_addition_via_api(client_api, service_id)
 
@@ -33,7 +41,9 @@ def test_regler_une_addition_cree_un_mouvement_et_retourne_200(client_api: APICl
     addition_en_db = AdditionModel.objects.get(pk=addition_id)
     assert addition_en_db.statut == "reglee"
     assert addition_en_db.ferme_le is not None
-    assert MouvementModel.objects.filter(type="AdditionReglee").count() == 1
+    mouvement = MouvementModel.objects.get(type="AdditionReglee")
+    # Qui a encaissé cette table : l'auteur authentifié, pas un id déclaré.
+    assert mouvement.auteur_id == str(auteur.pk)
 
 
 @pytest.mark.django_db

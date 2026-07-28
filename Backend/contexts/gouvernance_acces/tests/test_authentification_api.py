@@ -5,12 +5,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from rest_framework.test import APIClient
+from rest_framework.exceptions import NotAuthenticated
+from rest_framework.request import Request
+from rest_framework.test import APIClient, APIRequestFactory
 
 from contexts.service_ventes.infrastructure.django_app.models import (
     MouvementModel,
     ServiceModel,
 )
+from shared.interface.rest.attribution import auteur_id_de
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import User
@@ -124,3 +127,18 @@ def test_un_auteur_ne_peut_pas_signer_au_nom_d_un_autre(
     mouvement = MouvementModel.objects.get(type="ServiceOuvert")
     assert mouvement.auteur_id == str(auteur.pk)
     assert mouvement.auteur_id != "la-gerante"
+
+
+def test_une_requete_anonyme_ne_peut_pas_produire_d_auteur() -> None:
+    """Filet sous `IsAuthenticated` : refuser d'écrire plutôt que mal attribuer.
+
+    Si une vue oubliait la permission, `request.user.pk` vaudrait `None` et le
+    journal enregistrerait un fait attribué à « None ».
+    """
+    from django.contrib.auth.models import AnonymousUser
+
+    requete = Request(APIRequestFactory().post("/"))
+    requete.user = AnonymousUser()
+
+    with pytest.raises(NotAuthenticated):
+        auteur_id_de(requete)

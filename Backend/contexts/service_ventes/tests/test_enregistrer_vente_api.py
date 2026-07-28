@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 from rest_framework.test import APIClient
 
@@ -11,9 +13,15 @@ from contexts.service_ventes.infrastructure.django_app.models import (
 )
 from contexts.service_ventes.tests.conftest import ouvrir_service_via_api
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import User
+
 
 @pytest.mark.django_db
-def test_enregistrer_une_vente_cree_la_vente_et_journalise(client_api: APIClient) -> None:
+def test_enregistrer_une_vente_cree_la_vente_et_journalise(
+    client_api: APIClient,
+    auteur: User,
+) -> None:
     service_id = ouvrir_service_via_api(client_api)
 
     reponse = client_api.post(
@@ -33,7 +41,9 @@ def test_enregistrer_une_vente_cree_la_vente_et_journalise(client_api: APIClient
     assert corps["service_id"] == service_id
 
     assert VenteModel.objects.count() == 1
-    assert MouvementModel.objects.filter(type="VenteEnregistree").count() == 1
+    mouvement = MouvementModel.objects.get(type="VenteEnregistree")
+    # La vente est attribuée à l'auteur authentifié, jamais à un id déclaré.
+    assert mouvement.auteur_id == str(auteur.pk)
 
 
 @pytest.mark.django_db
