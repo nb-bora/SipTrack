@@ -8,6 +8,7 @@ from .views import (
     AdditionDetailView,
     AdditionListCreateView,
     CloturerServiceView,
+    PaiementCreateView,
     ReglementAdditionView,
     ServiceDetailView,
     ServiceListCreateView,
@@ -40,6 +41,11 @@ urlpatterns = [
         "services/<str:service_id>/additions/<str:addition_id>/",
         AdditionDetailView.as_view(),
         name="addition-detail",
+    ),
+    path(
+        "services/<str:service_id>/additions/<str:addition_id>/paiements/",
+        PaiementCreateView.as_view(),
+        name="paiement-create",
     ),
     path(
         "services/<str:service_id>/additions/<str:addition_id>/reglement/",

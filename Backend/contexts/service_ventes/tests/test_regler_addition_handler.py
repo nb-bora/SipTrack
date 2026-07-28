@@ -22,7 +22,9 @@ from contexts.service_ventes.domain.exceptions import (
 from contexts.service_ventes.tests.conftest import (
     FakeAdditionRepository,
     FakeJournal,
+    FakePaiementRepository,
     FakeUnitOfWork,
+    FakeVenteRepository,
     SystemClockFake,
 )
 
@@ -45,6 +47,8 @@ def test_regler_une_addition_la_met_a_jour_et_la_journalise() -> None:
     handler = ReglementAdditionHandler(
         uow=uow,
         additions=additions_repo,
+        paiements=FakePaiementRepository(),
+        ventes=FakeVenteRepository(),
         journal=journal,
         clock=clock,
     )
@@ -80,6 +84,8 @@ def test_l_evenement_addition_reglee_est_journalise() -> None:
     handler = ReglementAdditionHandler(
         uow=uow,
         additions=additions_repo,
+        paiements=FakePaiementRepository(),
+        ventes=FakeVenteRepository(),
         journal=journal,
         clock=clock,
     )
@@ -106,6 +112,8 @@ def test_regler_une_addition_introuvable_leve_l_erreur() -> None:
     handler = ReglementAdditionHandler(
         uow=uow,
         additions=additions_repo,
+        paiements=FakePaiementRepository(),
+        ventes=FakeVenteRepository(),
         journal=journal,
         clock=clock,
     )
@@ -136,6 +144,8 @@ def test_regler_une_addition_deja_reglee_leve_l_erreur() -> None:
     handler = ReglementAdditionHandler(
         uow=uow,
         additions=additions_repo,
+        paiements=FakePaiementRepository(),
+        ventes=FakeVenteRepository(),
         journal=journal,
         clock=clock,
     )
@@ -164,6 +174,8 @@ def test_regler_une_addition_avec_mauvais_service_id_leve_l_erreur() -> None:
     handler = ReglementAdditionHandler(
         uow=uow,
         additions=additions_repo,
+        paiements=FakePaiementRepository(),
+        ventes=FakeVenteRepository(),
         journal=journal,
         clock=clock,
     )

@@ -76,6 +76,27 @@ class LigneAdditionOutputSerializer(serializers.Serializer):
     horodatage = serializers.CharField()
 
 
+class EnregistrerPaiementInputSerializer(serializers.Serializer):
+    montant = serializers.IntegerField(min_value=1)
+    forme_paiement = serializers.ChoiceField(choices=[f.value for f in FormePaiement])
+
+
+class PaiementOutputSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    addition_id = serializers.CharField()
+    service_id = serializers.CharField()
+    montant = serializers.IntegerField()
+    forme_paiement = serializers.CharField()
+    reste_a_payer = serializers.IntegerField()
+
+
+class PaiementLigneOutputSerializer(serializers.Serializer):
+    paiement_id = serializers.CharField()
+    montant = serializers.IntegerField()
+    forme_paiement = serializers.CharField()
+    horodatage = serializers.CharField()
+
+
 class AdditionDetailOutputSerializer(serializers.Serializer):
     id = serializers.CharField()
     service_id = serializers.CharField()
@@ -85,3 +106,6 @@ class AdditionDetailOutputSerializer(serializers.Serializer):
     ferme_le = serializers.CharField(required=False, allow_null=True)
     lignes = LigneAdditionOutputSerializer(many=True)
     total = serializers.IntegerField()
+    paiements = PaiementLigneOutputSerializer(many=True)
+    paye = serializers.IntegerField()
+    reste_a_payer = serializers.IntegerField()

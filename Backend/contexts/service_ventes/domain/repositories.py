@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from .addition import Addition
+from .paiement import Paiement
 from .service import Service
 from .vente import Vente
 
@@ -24,6 +25,10 @@ class ServiceRepository(Protocol):
 class VenteRepository(Protocol):
     def ajouter(self, vente: Vente) -> None: ...
 
+    def total_addition(self, addition_id: str) -> int:
+        """Somme des consommations rattachées à cette addition."""
+        ...
+
 
 class AdditionRepository(Protocol):
     def ajouter(self, addition: Addition) -> None: ...
@@ -34,4 +39,12 @@ class AdditionRepository(Protocol):
 
     def compter_ouvertes(self, service_id: str) -> int:
         """Combien de tables attendent encore leur règlement sur ce service."""
+        ...
+
+
+class PaiementRepository(Protocol):
+    def ajouter(self, paiement: Paiement) -> None: ...
+
+    def total_encaisse(self, addition_id: str) -> int:
+        """Somme déjà encaissée sur cette addition."""
         ...

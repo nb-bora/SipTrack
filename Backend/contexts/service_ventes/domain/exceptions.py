@@ -48,6 +48,27 @@ class AdditionsEncoreOuvertes(ServiceVentesError):
         self.nombre = nombre
 
 
+class PaiementSuperieurAuReste(ServiceVentesError):
+    """Encaissement refusé : il dépasse ce que la table doit encore.
+
+    Rendre la monnaie est un autre Fait, pas un paiement négatif déguisé.
+    """
+
+    def __init__(self, addition_id: str, reste: int) -> None:
+        super().__init__(f"L'addition {addition_id} ne doit plus que {reste}.")
+        self.addition_id = addition_id
+        self.reste = reste
+
+
+class AdditionNonSoldee(ServiceVentesError):
+    """Clôture d'addition refusée : il reste quelque chose à encaisser."""
+
+    def __init__(self, addition_id: str, reste: int) -> None:
+        super().__init__(f"L'addition {addition_id} n'est pas soldée : reste {reste}.")
+        self.addition_id = addition_id
+        self.reste = reste
+
+
 class AdditionDejaCloturee(ServiceVentesError):
     """Une opération a été tentée sur une addition déjà réglée/abandonnée."""
 

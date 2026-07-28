@@ -44,6 +44,16 @@ class AdditionOuverte(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
+class PaiementRecu(DomainEvent):
+    paiement_id: str
+    addition_id: str
+    service_id: str
+    montant: int
+    forme_paiement: str
+    auteur_id: str
+
+
+@dataclass(frozen=True, kw_only=True)
 class AdditionReglee(DomainEvent):
     addition_id: str
     service_id: str

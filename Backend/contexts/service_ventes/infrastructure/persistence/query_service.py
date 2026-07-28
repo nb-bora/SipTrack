@@ -7,8 +7,16 @@ total est agrégé ici, à partir des lignes — il n'est stocké nulle part.
 
 from __future__ import annotations
 
-from contexts.service_ventes.application.queries import AdditionDetailDTO, LigneAdditionDTO
-from contexts.service_ventes.infrastructure.django_app.models import AdditionModel, VenteModel
+from contexts.service_ventes.application.queries import (
+    AdditionDetailDTO,
+    LigneAdditionDTO,
+    PaiementLigneDTO,
+)
+from contexts.service_ventes.infrastructure.django_app.models import (
+    AdditionModel,
+    PaiementModel,
+    VenteModel,
+)
 
 
 class DjangoAdditionQueryService:
@@ -31,6 +39,21 @@ class DjangoAdditionQueryService:
             for vente in VenteModel.objects.filter(addition_id=addition_id).order_by("horodatage")
         )
 
+        paiements = tuple(
+            PaiementLigneDTO(
+                paiement_id=paiement.id,
+                montant=paiement.montant,
+                forme_paiement=paiement.forme_paiement,
+                horodatage=paiement.horodatage.isoformat(),
+            )
+            for paiement in PaiementModel.objects.filter(addition_id=addition_id).order_by(
+                "horodatage"
+            )
+        )
+
+        total = sum(ligne.montant_total for ligne in lignes)
+        paye = sum(paiement.montant for paiement in paiements)
+
         return AdditionDetailDTO(
             id=addition.id,
             service_id=addition.service_id,
@@ -39,5 +62,8 @@ class DjangoAdditionQueryService:
             ouvert_le=addition.ouvert_le.isoformat(),
             ferme_le=addition.ferme_le.isoformat() if addition.ferme_le is not None else None,
             lignes=lignes,
-            total=sum(ligne.montant_total for ligne in lignes),
+            total=total,
+            paiements=paiements,
+            paye=paye,
+            reste_a_payer=total - paye,
         )
