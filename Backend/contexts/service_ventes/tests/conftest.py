@@ -9,6 +9,7 @@ from types import TracebackType
 from rest_framework.test import APIClient
 
 from contexts.service_ventes.domain.addition import Addition
+from contexts.service_ventes.domain.enums import StatutAddition
 from contexts.service_ventes.domain.service import Service
 from shared.domain.attribution import Attribution, Capacite
 from shared.domain.events import DomainEvent
@@ -113,6 +114,13 @@ class FakeAdditionRepository:
             if add.id == addition.id:
                 self.ajoutes[i] = addition
                 break
+
+    def compter_ouvertes(self, service_id: str) -> int:
+        return sum(
+            1
+            for add in self._additions + self.ajoutes
+            if add.service_id == service_id and add.statut is StatutAddition.OUVERTE
+        )
 
 
 class FakeClock:

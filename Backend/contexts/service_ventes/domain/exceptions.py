@@ -35,6 +35,19 @@ class AdditionIntrouvable(ServiceVentesError):
         self.addition_id = addition_id
 
 
+class AdditionsEncoreOuvertes(ServiceVentesError):
+    """Clôture refusée : des tables n'ont pas réglé.
+
+    Clôturer malgré tout ferait disparaître du décompte de la journée des
+    consommations servies mais non réglées (invariant 9 du modèle métier).
+    """
+
+    def __init__(self, service_id: str, nombre: int) -> None:
+        super().__init__(f"Le service {service_id} a encore {nombre} addition(s) ouverte(s).")
+        self.service_id = service_id
+        self.nombre = nombre
+
+
 class AdditionDejaCloturee(ServiceVentesError):
     """Une opération a été tentée sur une addition déjà réglée/abandonnée."""
 

@@ -14,6 +14,7 @@ Gestion des services, ventes, additions et reglements de tables. Contexte centra
 | 4 | [Ouvrir une addition](./04-ouvrir-une-addition.md) | ✅ LIVRÉ | [Lire](./04-ouvrir-une-addition.md) |
 | 5 | [Régler une addition](./05-regler-une-addition.md) | ✅ LIVRÉ | [Lire](./05-regler-une-addition.md) |
 | 6 | [Rattacher une vente à une addition](./06-rattacher-une-vente-a-une-addition.md) | ✅ LIVRÉ | [Lire](./06-rattacher-une-vente-a-une-addition.md) |
+| 7 | Garde-fou de clôture (aucune addition ouverte) | ✅ LIVRÉ | [Lire](./03-cloturer-un-service.md) |
 
 ### 📋 Prévues
 
@@ -22,13 +23,12 @@ Gestion des services, ventes, additions et reglements de tables. Contexte centra
 | 7 | Paiement partiel | Dépend de #6 (Rattacher une vente à une addition) |
 | 8 | Crédit client | Dépend de #7 (Paiement partiel) |
 | 9 | Sous-caisse serveuse | Dépend de #6 (Rattacher une vente à une addition) |
-| 10 | Garde-fou de clôture (aucune addition ouverte) | Dépend de #4 (Ouvrir une addition) |
 
 ## 📊 Métriques
 
 | Métrique | Valeur |
 |---|---|
-| **Tests (total)** | 78 |
+| **Tests (total)** | 108 |
 | **Couverture domaine** | 100% |
 | **Temps CI/CD** | ~2 min |
 | **Linting** | ✓ Ruff |
@@ -115,7 +115,7 @@ test_ouvrir_service_api.py
 Lancer les tests :
 ```bash
 cd Backend
-uv run pytest                                    # Tous les tests (78)
+uv run pytest                                    # Tous les tests (108)
 uv run pytest -k domain                          # Domaine uniquement
 uv run pytest -k api                             # API + E2E
 ```
@@ -145,7 +145,8 @@ Les invariants inter-agrégats sont gardés au use case, pas dans l'agrégat :
 - « Une vente ne se rattache qu'à une addition du même service, encore ouverte »
   → vérifié par `EnregistrerVenteHandler`, pas par `Vente`
 - « Ne clôturer un service que si aucune Addition n'est ouverte »
-  → **pas encore implémenté** : garde-fou à ajouter dans `CloturerServiceHandler`
+  → gardé par `CloturerServiceHandler`, qui compte les additions ouvertes avant d'émettre
+  `ServiceCloture`
 
 ### Lecture séparée de l'écriture (CQRS)
 

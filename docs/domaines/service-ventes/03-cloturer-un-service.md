@@ -67,13 +67,29 @@ ServiceCloture
 |---|---|---|
 | 404 | ServiceIntrouvable | Service n'existe pas |
 | 409 | ServiceDejaCloture | Service déjà clôturé ou scellé |
+| 409 | AdditionsEncoreOuvertes | Des tables n'ont pas réglé |
 
-## Garde-fou métier (à implémenter)
+## Garde-fou métier ✅
 
-⚠️ **Attention** : cette fonctionnalité n'implémente **pas** le garde-fou complet défini en ADR-0004 :
-- ❌ Ne vérifie pas si des `Addition` sont ouvertes
-- ⚠️ Pourra être clôturé même si des clients attendent leurs additions
-- ✅ Le garde-fou viendra avec l'implémentation de la fonctionnalité « Ouvrir une addition »
+**La clôture est refusée tant qu'une addition reste ouverte** (invariant 9 du modèle métier).
+Clôturer malgré tout ferait disparaître du décompte de la journée des consommations servies
+mais non réglées — précisément ce que le produit doit rendre impossible.
+
+```json
+{ "detail": "Impossible de clôturer : 2 addition(s) encore ouverte(s)." }
+```
+
+La réponse dit **combien** : une gérante doit savoir ce qui lui reste à faire, pas seulement
+qu'on lui refuse quelque chose.
+
+Une addition `REGLEE` ou `ABANDONNEE` ne bloque pas.
+
+### Où vit cette règle
+
+Dans `CloturerServiceHandler`, **pas** dans l'agrégat `Service` : c'est un invariant
+**inter-agrégats**, et `Service` n'a pas à connaître les additions
+([ADR-0004](../../decisions/0004-petits-agregats-coherence-eventual.md)). Le handler interroge
+le port `AdditionRepository.compter_ouvertes()`.
 
 ## Exemple local (curl)
 
