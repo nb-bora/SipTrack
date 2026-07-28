@@ -109,3 +109,24 @@ class AdditionDetailOutputSerializer(serializers.Serializer):
     paiements = PaiementLigneOutputSerializer(many=True)
     paye = serializers.IntegerField()
     reste_a_payer = serializers.IntegerField()
+
+
+class VerserRecetteInputSerializer(serializers.Serializer):
+    montant = serializers.IntegerField(min_value=0)
+
+
+class VersementOutputSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    service_id = serializers.CharField()
+    serveuse_id = serializers.CharField()
+    attendu = serializers.IntegerField()
+    verse = serializers.IntegerField()
+    ecart = serializers.IntegerField()
+
+
+class SousCaisseOutputSerializer(serializers.Serializer):
+    serveuse_id = serializers.CharField()
+    encaisse_especes = serializers.IntegerField()
+    encaisse_mobile_money = serializers.IntegerField()
+    verse = serializers.IntegerField(allow_null=True)
+    ecart = serializers.IntegerField(allow_null=True)

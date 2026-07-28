@@ -12,6 +12,7 @@ from .addition import Addition
 from .paiement import Paiement
 from .service import Service
 from .vente import Vente
+from .versement import Versement
 
 
 class ServiceRepository(Protocol):
@@ -48,3 +49,17 @@ class PaiementRepository(Protocol):
     def total_encaisse(self, addition_id: str) -> int:
         """Somme déjà encaissée sur cette addition."""
         ...
+
+    def especes_encaissees_par(self, *, service_id: str, auteur_id: str) -> int:
+        """Espèces encaissées par cette personne sur ce service.
+
+        Seules les espèces : le mobile money ne se remet pas de la main à la
+        main, il n'a rien à faire dans ce qu'une serveuse doit rapporter.
+        """
+        ...
+
+
+class VersementRepository(Protocol):
+    def ajouter(self, versement: Versement) -> None: ...
+
+    def existe_pour(self, *, service_id: str, serveuse_id: str) -> bool: ...

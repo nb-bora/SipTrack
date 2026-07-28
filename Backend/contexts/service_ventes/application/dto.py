@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from contexts.service_ventes.domain.paiement import Paiement
     from contexts.service_ventes.domain.service import Service
     from contexts.service_ventes.domain.vente import Vente
+    from contexts.service_ventes.domain.versement import Versement
 
 
 @dataclass(frozen=True)
@@ -151,4 +152,32 @@ class VenteDTO:
             montant_total=vente.montant_total.valeur,
             forme_paiement=vente.forme_paiement.value,
             addition_id=vente.addition_id,
+        )
+
+
+@dataclass(frozen=True)
+class VerserRecetteCommand:
+    service_id: str
+    serveuse_id: str
+    montant: int
+
+
+@dataclass(frozen=True)
+class VersementDTO:
+    id: str
+    service_id: str
+    serveuse_id: str
+    attendu: int
+    verse: int
+    ecart: int
+
+    @classmethod
+    def depuis(cls, versement: Versement) -> VersementDTO:
+        return cls(
+            id=versement.id,
+            service_id=versement.service_id,
+            serveuse_id=versement.serveuse_id,
+            attendu=versement.attendu.valeur,
+            verse=versement.verse.valeur,
+            ecart=versement.ecart,
         )

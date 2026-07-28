@@ -19,6 +19,8 @@ if TYPE_CHECKING:
     from contexts.service_ventes.application.queries import (
         AdditionDetailDTO,
         AdditionQueryService,
+        SousCaisseDTO,
+        SousCaisseQueryService,
     )
     from contexts.service_ventes.application.use_cases.cloturer_service import (
         CloturerServiceHandler,
@@ -38,11 +40,15 @@ if TYPE_CHECKING:
     from contexts.service_ventes.application.use_cases.regler_addition import (
         ReglementAdditionHandler,
     )
+    from contexts.service_ventes.application.use_cases.verser_recette import (
+        VerserRecetteHandler,
+    )
     from contexts.service_ventes.domain.repositories import (
         AdditionRepository,
         PaiementRepository,
         ServiceRepository,
         VenteRepository,
+        VersementRepository,
     )
     from shared.application.journal import Journal
 
@@ -69,6 +75,8 @@ class Container:
         self._ventes: VenteRepository | None = None
         self._additions: AdditionRepository | None = None
         self._paiements: PaiementRepository | None = None
+        self._versements: VersementRepository | None = None
+        self._sous_caisses: SousCaisseQueryService | None = None
         self._additions_lecture: AdditionQueryService | None = None
         self._journal: Journal | None = None
 
@@ -107,6 +115,24 @@ class Container:
 
             self._paiements = DjangoPaiementRepository()
         return self._paiements
+
+    def _versement_repository(self) -> VersementRepository:
+        if self._versements is None:
+            from contexts.service_ventes.infrastructure.persistence.repository import (
+                DjangoVersementRepository,
+            )
+
+            self._versements = DjangoVersementRepository()
+        return self._versements
+
+    def _sous_caisse_query_service(self) -> SousCaisseQueryService:
+        if self._sous_caisses is None:
+            from contexts.service_ventes.infrastructure.persistence.sous_caisse import (
+                DjangoSousCaisseQueryService,
+            )
+
+            self._sous_caisses = DjangoSousCaisseQueryService()
+        return self._sous_caisses
 
     def _addition_query_service(self) -> AdditionQueryService:
         if self._additions_lecture is None:
@@ -209,6 +235,24 @@ class Container:
             journal=self._journal_adapter(),
             clock=self._clock,
         )
+
+    def verser_recette(self) -> VerserRecetteHandler:
+        from contexts.service_ventes.application.use_cases.verser_recette import (
+            VerserRecetteHandler,
+        )
+        from contexts.service_ventes.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return VerserRecetteHandler(
+            uow=DjangoUnitOfWork(),  # fraîche à chaque appel (transaction)
+            services=self._service_repository(),
+            versements=self._versement_repository(),
+            paiements=self._paiement_repository(),
+            journal=self._journal_adapter(),
+            clock=self._clock,
+        )
+
+    def sous_caisses_du_service(self, service_id: str) -> tuple[SousCaisseDTO, ...]:
+        return self._sous_caisse_query_service().par_service(service_id)
 
     def addition_detail(self, *, service_id: str, addition_id: str) -> AdditionDetailDTO | None:
         return self._addition_query_service().detail(

@@ -24,6 +24,7 @@ from contexts.service_ventes.application.dto import (
     OuvrirAdditionCommand,
     OuvrirServiceCommand,
     ReglementAdditionCommand,
+    VerserRecetteCommand,
 )
 from contexts.service_ventes.domain.exceptions import (
     AdditionDejaCloturee,
@@ -31,6 +32,7 @@ from contexts.service_ventes.domain.exceptions import (
     AdditionNonSoldee,
     AdditionsEncoreOuvertes,
     PaiementSuperieurAuReste,
+    RecetteDejaVersee,
     ServiceDejaCloture,
     ServiceIntrouvable,
     ServiceNonOuvert,
@@ -47,7 +49,10 @@ from .serializers import (
     OuvrirServiceInputSerializer,
     PaiementOutputSerializer,
     ServiceOutputSerializer,
+    SousCaisseOutputSerializer,
     VenteOutputSerializer,
+    VersementOutputSerializer,
+    VerserRecetteInputSerializer,
 )
 
 _SERVICE_INTROUVABLE = "Service introuvable."
@@ -381,3 +386,72 @@ class ReglementAdditionView(APIView):
             AdditionOutputSerializer(dto).data,
             status=status.HTTP_200_OK,
         )
+
+
+class VersementCreateView(APIView):
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Verser sa recette",
+        description=(
+            "La serveuse remet sa recette en espèces. Elle verse **pour elle-même** : "
+            "l'identité vient du jeton. L'attendu est la somme de ses encaissements en "
+            "espèces — le mobile money n'est pas remis de la main à la main. Tout écart, "
+            "même d'un franc, part au journal comme Fait."
+        ),
+        request=VerserRecetteInputSerializer,
+        responses={
+            201: VersementOutputSerializer,
+            400: _validation(),
+            404: _erreur("Service introuvable."),
+            409: _erreur("Service non ouvert, ou recette déjà versée."),
+        },
+    )
+    def post(self, request: Request, service_id: str) -> Response:
+        entree = VerserRecetteInputSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+        commande = VerserRecetteCommand(
+            service_id=service_id,
+            serveuse_id=auteur_id_de(request),
+            **entree.validated_data,
+        )
+
+        try:
+            dto = container.verser_recette().executer(commande)
+        except ServiceIntrouvable:
+            return Response(
+                {"detail": _SERVICE_INTROUVABLE},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except ServiceNonOuvert:
+            return Response(
+                {"detail": "Le service n'est pas ouvert."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except RecetteDejaVersee:
+            return Response(
+                {"detail": "Votre recette a déjà été versée sur ce service."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        return Response(
+            VersementOutputSerializer(dto).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class SousCaisseListView(APIView):
+    """La réconciliation quotidienne, vue par la gérante."""
+
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Lire les sous-caisses d'un service",
+        description=(
+            "Par personne ayant encaissé : ce qu'elle doit rapporter en espèces, ce "
+            "qu'elle a remis, et l'écart. `verse` et `ecart` sont nuls tant qu'elle "
+            "n'a pas versé."
+        ),
+        responses={200: SousCaisseOutputSerializer(many=True)},
+    )
+    def get(self, request: Request, service_id: str) -> Response:
+        dtos = container.sous_caisses_du_service(service_id)
+        return Response(SousCaisseOutputSerializer(dtos, many=True).data)

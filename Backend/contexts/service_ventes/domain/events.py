@@ -54,6 +54,27 @@ class PaiementRecu(DomainEvent):
 
 
 @dataclass(frozen=True, kw_only=True)
+class RecetteVersee(DomainEvent):
+    versement_id: str
+    service_id: str
+    serveuse_id: str
+    attendu: int
+    verse: int
+    auteur_id: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class EcartConstate(DomainEvent):
+    """Un écart de caisse, positif ou négatif. Jamais absorbé en silence."""
+
+    versement_id: str
+    service_id: str
+    serveuse_id: str
+    ecart: int
+    auteur_id: str
+
+
+@dataclass(frozen=True, kw_only=True)
 class AdditionReglee(DomainEvent):
     addition_id: str
     service_id: str
