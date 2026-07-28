@@ -35,6 +35,19 @@ forbidden_modules =
     shared.application
     contexts.service_ventes.application
 
+[importlinter:contract:contextes-isoles]
+name = Les bounded contexts ne se connaissent pas (ADR-0005)
+type = independence
+modules =
+    contexts.service_ventes
+    contexts.gouvernance_acces
+ignore_imports =
+    # Exception assumée : le test d'authentification verifie de bout en bout
+    # qu'aucun Fait n'atteint le journal sans auteur authentifie. Il doit donc
+    # observer le journal de service_ventes. Aucun code de production ne
+    # franchit cette frontiere.
+    contexts.gouvernance_acces.tests.* -> contexts.service_ventes.**
+
 [importlinter:contract:interface-sans-infrastructure-directe]
 name = L'interface n'importe pas directement l'infrastructure (elle passe par le composition root)
 type = forbidden
