@@ -45,9 +45,10 @@ def test_le_changement_de_tarif_retient_l_ancien_prix() -> None:
 def test_reappliquer_le_meme_prix_est_refuse() -> None:
     """Un Fait « le prix passe de 1 000 à 1 000 » ne dit rien."""
     produit = _produit(1_000)
+    meme_prix = Montant(1_000)
 
     with pytest.raises(TarifInchange):
-        produit.changer_le_tarif(nouveau_prix=Montant(1_000), auteur_id="gerante1")
+        produit.changer_le_tarif(nouveau_prix=meme_prix, auteur_id="gerante1")
 
 
 def test_un_produit_retire_ne_se_vend_plus() -> None:
