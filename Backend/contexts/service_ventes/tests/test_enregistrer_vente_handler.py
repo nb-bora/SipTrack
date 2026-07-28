@@ -25,6 +25,7 @@ from contexts.service_ventes.tests.conftest import (
     FakeClock,
     FakeJournal,
     FakeServiceRepository,
+    FakeTarifs,
     FakeUnitOfWork,
     FakeVenteRepository,
     creer_service_ouvert,
@@ -52,7 +53,6 @@ def _commande(service_id: str, addition_id: str | None = None) -> EnregistrerVen
         auteur_id="u1",
         produit_id="33export",
         quantite=2,
-        prix_unitaire=650,
         forme_paiement="especes",
         addition_id=addition_id,
     )
@@ -70,6 +70,7 @@ def _handler(
         services=FakeServiceRepository(service),
         ventes=ventes,
         additions=FakeAdditionRepository(additions),
+        tarifs=FakeTarifs(prix_par_defaut=650),
         journal=journal,
         clock=FakeClock(_INSTANT),
     )

@@ -6,7 +6,7 @@ Chaque domaine (ou *Bounded Context*) en DDD est documenté ici avec ses fonctio
 
 ### ✅ [Service & Ventes](./service-ventes/)
 
-**État** : 10 fonctionnalités livrées  
+**État** : 11 fonctionnalités livrées  
 **Contexte** : Gestion des services, ventes, additions et règlements  
 **Prochaines étapes** : Stock & Inventaire (l'ancre anti-vol)
 
@@ -22,6 +22,10 @@ Chaque domaine (ou *Bounded Context*) en DDD est documenté ici avec ses fonctio
 ### Crédit & Créances
 
 - [Crédit client](./credit-creances/01-credit-client.md)
+
+### Catalogue
+
+- [Le prix vient du catalogue](./catalogue/01-prix-fait-autorite.md)
 
 [Voir le domaine complet →](./service-ventes/)
 

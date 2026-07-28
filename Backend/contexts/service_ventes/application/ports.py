@@ -7,7 +7,30 @@ qui branche un adaptateur derrière chaque port.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Protocol
+
+
+@dataclass(frozen=True)
+class ArticleVendable:
+    """Ce que Service & Ventes a besoin de savoir d'un produit : son prix."""
+
+    produit_id: str
+    prix_unitaire: int
+
+
+class TarifDuProduit(Protocol):
+    """Donner le prix à appliquer à une vente saisie maintenant.
+
+    Le prix ne vient **jamais** de la requête. S'il en venait, la personne qui
+    saisit dicterait ce que la consommation a valu : elle pourrait minorer un
+    prix, encaisser le vrai, et la réconciliation de fin de service tomberait
+    juste — puisqu'elle compare deux chiffres qu'elle a elle-même choisis.
+    """
+
+    def prix_de(self, *, produit_id: str, bar_id: str) -> ArticleVendable:
+        """Lève si le produit est inconnu, ou retiré de la vente."""
+        ...
 
 
 class OuvertureDeCreance(Protocol):

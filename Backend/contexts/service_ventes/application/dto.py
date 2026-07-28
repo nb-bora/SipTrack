@@ -37,8 +37,9 @@ class EnregistrerVenteCommand:
     auteur_id: str
     produit_id: str
     quantite: int
-    prix_unitaire: int
     forme_paiement: str
+    # Pas de prix : il est lu au catalogue, seule source d'autorité (cf. le port
+    # `TarifDuProduit`). L'accepter ici rouvrirait le trou qu'on ferme.
     # Absent pour une vente au comptoir : toutes les consommations ne passent
     # pas par une table.
     addition_id: str | None = None

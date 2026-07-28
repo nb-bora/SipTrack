@@ -110,3 +110,16 @@ class ClientInconnu(ServiceVentesError):
     def __init__(self, client_id: str) -> None:
         super().__init__(f"Client introuvable : {client_id}.")
         self.client_id = client_id
+
+
+class ProduitNonVendable(ServiceVentesError):
+    """Vente refusée : le produit est inconnu du catalogue, ou retiré.
+
+    Vendre un article dont le prix ne fait pas autorité reviendrait à laisser la
+    personne qui saisit décider de ce que la consommation a valu.
+    """
+
+    def __init__(self, produit_id: str, raison: str) -> None:
+        super().__init__(f"Produit {produit_id} non vendable : {raison}")
+        self.produit_id = produit_id
+        self.raison = raison

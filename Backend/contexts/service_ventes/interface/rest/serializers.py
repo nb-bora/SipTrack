@@ -36,7 +36,8 @@ class ServiceOutputSerializer(serializers.Serializer):
 class EnregistrerVenteInputSerializer(serializers.Serializer):
     produit_id = serializers.CharField(max_length=36)
     quantite = serializers.IntegerField(min_value=1)
-    prix_unitaire = serializers.IntegerField(min_value=0)
+    # Pas de `prix_unitaire` : il vient du catalogue. L'accepter ici laisserait
+    # la personne qui saisit décider de ce que la consommation a valu.
     forme_paiement = serializers.ChoiceField(choices=[f.value for f in FormePaiement])
     # Absent pour une vente au comptoir, qui n'est rattachée à aucune table.
     addition_id = serializers.CharField(max_length=36, required=False, allow_null=True)

@@ -5,12 +5,14 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import UTC, datetime
 from types import TracebackType
+from uuid import uuid4
 
 from rest_framework.test import APIClient
 
+from contexts.service_ventes.application.ports import ArticleVendable
 from contexts.service_ventes.domain.addition import Addition
 from contexts.service_ventes.domain.enums import FormePaiement, StatutAddition
-from contexts.service_ventes.domain.exceptions import ClientInconnu
+from contexts.service_ventes.domain.exceptions import ClientInconnu, ProduitNonVendable
 from contexts.service_ventes.domain.paiement import Paiement
 from contexts.service_ventes.domain.service import Service
 from contexts.service_ventes.domain.vente import Vente
@@ -166,6 +168,35 @@ class FakePaiementRepository:
         )
 
 
+class FakeTarifs:
+    """Implémentation fake du port TarifDuProduit pour les tests.
+
+    Par défaut, tout produit vaut `prix_par_defaut` : les tests qui ne parlent
+    pas de prix n'ont pas à monter un catalogue.
+    """
+
+    def __init__(
+        self,
+        prix: dict[str, int] | None = None,
+        *,
+        prix_par_defaut: int = 1_000,
+        retires: set[str] | None = None,
+    ) -> None:
+        self._prix = prix or {}
+        self._prix_par_defaut = prix_par_defaut
+        self._retires = retires or set()
+        self.demandes: list[tuple[str, str]] = []
+
+    def prix_de(self, *, produit_id: str, bar_id: str) -> ArticleVendable:
+        self.demandes.append((produit_id, bar_id))
+        if produit_id in self._retires:
+            raise ProduitNonVendable(produit_id, "retiré de la vente")
+        return ArticleVendable(
+            produit_id=produit_id,
+            prix_unitaire=self._prix.get(produit_id, self._prix_par_defaut),
+        )
+
+
 class FakeCreances:
     """Implémentation fake du port OuvertureDeCreance pour les tests.
 
@@ -231,6 +262,28 @@ def ouvrir_service_via_api(client: APIClient, fond_de_caisse: int = 10_000) -> s
     assert reponse.status_code == 201
     service_id: str = reponse.json()["id"]
     return service_id
+
+
+def inscrire_produit_via_api(
+    client: APIClient,
+    *,
+    prix: int,
+    bar_id: str = "bar1",
+    nom: str | None = None,
+) -> str:
+    """Inscrit un produit au catalogue et renvoie son id.
+
+    Le prix d'une vente vient désormais du catalogue : un test qui veut vendre
+    pour un montant donné inscrit d'abord un produit à ce prix.
+    """
+    reponse = client.post(
+        "/api/produits/",
+        {"bar_id": bar_id, "nom": nom or f"produit-{uuid4().hex[:8]}", "prix": prix},
+        format="json",
+    )
+    assert reponse.status_code == 201
+    produit_id: str = reponse.json()["id"]
+    return produit_id
 
 
 def ouvrir_addition_via_api(client: APIClient, service_id: str, table_numero: int = 5) -> str:

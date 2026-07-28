@@ -34,6 +34,7 @@ from contexts.service_ventes.domain.exceptions import (
     ClientInconnu,
     ClientRequisPourUnCredit,
     PaiementSuperieurAuReste,
+    ProduitNonVendable,
     RecetteDejaVersee,
     ServiceDejaCloture,
     ServiceIntrouvable,
@@ -137,14 +138,20 @@ class VenteCreateView(APIView):
         summary="Enregistrer une vente",
         description=(
             "Enregistre une consommation sur un service ouvert. `addition_id` est "
-            "facultatif : une vente au comptoir n'est rattachée à aucune table."
+            "facultatif : une vente au comptoir n'est rattachée à aucune table.\n\n"
+            "Le prix **n'est pas** fourni : il est lu au catalogue du bar, seule "
+            "source d'autorité. L'accepter ici laisserait la personne qui saisit "
+            "décider de ce que la consommation a valu."
         ),
         request=EnregistrerVenteInputSerializer,
         responses={
             201: VenteOutputSerializer,
             400: _validation(),
             404: _erreur("Service introuvable, ou addition inexistante / d'un autre service."),
-            409: _erreur("Service non ouvert, ou addition déjà clôturée."),
+            409: _erreur(
+                "Service non ouvert, addition déjà clôturée, ou produit inconnu "
+                "du catalogue de ce bar / retiré de la vente."
+            ),
         },
     )
     def post(self, request: Request, service_id: str) -> Response:
@@ -173,6 +180,8 @@ class VenteCreateView(APIView):
                 {"detail": _SERVICE_NON_OUVERT},
                 status=status.HTTP_409_CONFLICT,
             )
+        except ProduitNonVendable as erreur:
+            return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
         except AdditionDejaCloturee:
             return Response(
                 {"detail": _ADDITION_CLOTUREE},
