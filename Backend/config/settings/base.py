@@ -5,6 +5,7 @@ Les réglages spécifiques vivent dans dev.py / prod.py.
 """
 
 from pathlib import Path
+from urllib.parse import quote
 
 import environ
 
@@ -73,12 +74,30 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # --- Base de données --------------------------------------------------------
+# PostgreSQL est la base de référence, en dev comme en prod : on ne veut pas
+# découvrir en production les différences de comportement de SQLite (types,
+# contraintes, transactions).
+#
+# `DATABASE_URL` reste la source unique de vérité (12-factor) ; à défaut, elle
+# est reconstruite depuis les variables DB_* pour rester lisible en local.
+DB_USER = env("DB_USER", default="postgres")
+DB_PASSWORD = env("DB_PASSWORD", default="")
+DB_HOST = env("DB_HOST", default="127.0.0.1")
+DB_PORT = env("DB_PORT", default="5432")
+DB_NAME = env("DB_NAME", default="siptrack")
+
+# Un mot de passe peut contenir des caractères réservés (@, /, :) : on les encode.
+_DEFAULT_DATABASE_URL = (
+    f"postgres://{quote(DB_USER, safe='')}:{quote(DB_PASSWORD, safe='')}"
+    f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
+
 DATABASES = {
-    "default": env.db_url(
-        "DATABASE_URL",
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-    ),
+    "default": env.db_url("DATABASE_URL", default=_DEFAULT_DATABASE_URL),
 }
+# Réutiliser la connexion entre requêtes : ouvrir une connexion Postgres coûte
+# bien plus cher qu'un fichier SQLite.
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
 
 # --- Divers -----------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
