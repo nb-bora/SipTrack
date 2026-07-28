@@ -21,12 +21,6 @@ if TYPE_CHECKING:
         GererLeCatalogueHandler,
     )
     from contexts.catalogue.domain.repositories import ProduitRepository
-    from contexts.stock_inventaire.application.use_cases.gerer_stock import (
-        GererStockHandler,
-    )
-    from contexts.stock_inventaire.domain.repositories import (
-        ProduitRepository as StockProduitRepository,
-    )
     from contexts.credit_creances.application.queries import (
         EncoursClientDTO,
         EncoursQueryService,
@@ -93,6 +87,12 @@ if TYPE_CHECKING:
         ServiceRepository,
         VenteRepository,
         VersementRepository,
+    )
+    from contexts.stock_inventaire.application.use_cases.gerer_stock import (
+        GererStockHandler,
+    )
+    from contexts.stock_inventaire.domain.repositories import (
+        ProduitRepository as StockProduitRepository,
     )
     from shared.application.journal import Journal
 

@@ -18,7 +18,12 @@ class ProduitModel(models.Model):
     modifie_le = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("bar", "nom")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("bar", "nom"),
+                name="unique_bar_produit_nom",
+            )
+        ]
         ordering = ["nom"]
 
     def __str__(self) -> str:

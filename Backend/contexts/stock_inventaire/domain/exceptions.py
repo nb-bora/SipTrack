@@ -19,9 +19,7 @@ class QuantiteInsuffisante(Exception):
     """Levée si la quantité disponible ne suffit pas pour la vente."""
 
     def __init__(self, produit_id: str, disponible: int, demandee: int) -> None:
-        super().__init__(
-            f"Produit {produit_id}: {disponible} disponible, {demandee} demandée"
-        )
+        super().__init__(f"Produit {produit_id}: {disponible} disponible, {demandee} demandée")
 
 
 class QuantiteNegative(Exception):

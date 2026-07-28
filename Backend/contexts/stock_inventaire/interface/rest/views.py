@@ -113,9 +113,7 @@ class StockAjouterView(APIView):
                 )
             )
         except ProduitIntrouvable:
-            return Response(
-                {"detail": "Produit introuvable."}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"detail": "Produit introuvable."}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(InventaireProduitOutputSerializer(dto).data)
 
@@ -144,9 +142,7 @@ class VendreView(APIView):
                 )
             )
         except ProduitIntrouvable:
-            return Response(
-                {"detail": "Produit introuvable."}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"detail": "Produit introuvable."}, status=status.HTTP_404_NOT_FOUND)
         except QuantiteInsuffisante as erreur:
             return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
 
@@ -178,9 +174,7 @@ class CorrigerInventaireView(APIView):
                 )
             )
         except ProduitIntrouvable:
-            return Response(
-                {"detail": "Produit introuvable."}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"detail": "Produit introuvable."}, status=status.HTTP_404_NOT_FOUND)
         except QuantiteNegative as erreur:
             return Response({"detail": str(erreur)}, status=status.HTTP_400_BAD_REQUEST)
 

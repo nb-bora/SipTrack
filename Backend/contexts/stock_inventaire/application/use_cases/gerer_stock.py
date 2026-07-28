@@ -37,9 +37,7 @@ class GererStockHandler:
         """Crée un produit dans le catalogue d'un bar."""
         with self._uow:
             # Vérifier qu'aucun produit de ce bar n'a ce nom.
-            existant = self._produits.du_bar_et_nom(
-                bar_id=commande.bar_id, nom=commande.nom
-            )
+            existant = self._produits.du_bar_et_nom(bar_id=commande.bar_id, nom=commande.nom)
             if existant is not None:
                 raise ProduitDejaExistant(commande.bar_id, commande.nom)
 
@@ -49,9 +47,7 @@ class GererStockHandler:
                 quantite_initiale=commande.quantite_initiale,
             )
             self._produits.ajouter(produit)
-            self._journal.enregistrer(
-                produit.evenements_non_publies(), auteur_id="system"
-            )
+            self._journal.enregistrer(produit.evenements_non_publies(), auteur_id="system")
             produit.purger_evenements()
             self._uow.commit()
 

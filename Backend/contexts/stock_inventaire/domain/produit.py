@@ -11,7 +11,7 @@ from .events import (
     StockAjoute,
     VenteEnregistree,
 )
-from .exceptions import QuantiteNegative, QuantiteInsuffisante
+from .exceptions import QuantiteInsuffisante, QuantiteNegative
 
 
 class Produit:
@@ -96,9 +96,7 @@ class Produit:
             )
         )
 
-    def corriger_inventaire(
-        self, *, quantite_nouvelle: int, raison: str, auteur_id: str
-    ) -> None:
+    def corriger_inventaire(self, *, quantite_nouvelle: int, raison: str, auteur_id: str) -> None:
         """Corrige l'inventaire à la quantité déclarée.
 
         Utilisé lors d'inventaires physiques. Levée si négatif.
