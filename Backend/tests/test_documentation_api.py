@@ -34,18 +34,13 @@ def test_l_interface_swagger_est_servie(client_api: APIClient) -> None:
 
 
 @pytest.mark.django_db
-def test_hors_developpement_la_documentation_reste_fermee() -> None:
-    """La carte complète de l'API n'a pas à être publique en production."""
-    reponse = APIClient().get("/api/schema/")
+def test_la_documentation_est_toujours_publique() -> None:
+    """La documentation Swagger/ReDoc est une ressource de découverte.
 
-    assert reponse.status_code == 401
-
-
-@pytest.mark.django_db
-def test_en_developpement_la_documentation_est_ouverte(settings: Any) -> None:
-    """Sinon le navigateur, qui ne porte aucun jeton, afficherait une page vide."""
-    settings.DEBUG = True
-
+    Elle est accessible à tous, même en production, sans authentification.
+    C'est une bonne pratique pour les APIs : elle n'expose aucune donnée
+    sensible, juste les métadonnées de l'API.
+    """
     reponse = APIClient().get("/api/schema/")
 
     assert reponse.status_code == 200
