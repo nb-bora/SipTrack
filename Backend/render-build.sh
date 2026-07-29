@@ -11,17 +11,19 @@ set -euo pipefail
 UV_VERSION="0.11.21"
 
 echo "--> Installation de uv ${UV_VERSION}"
-pip install --quiet "uv==${UV_VERSION}"
+# --only-binary :all: : uniquement des roues déjà construites. Sans ce garde-fou,
+# pip accepterait une distribution source, dont le script d'installation
+# s'exécuterait avec les droits du build — et le build a accès à DATABASE_URL.
+pip install --quiet --only-binary :all: "uv==${UV_VERSION}"
 
 echo "--> Dépendances (lockfile figé, sans les outils de développement)"
-# --no-build : uniquement des roues déjà construites, donc aucun script
-# d'installation d'une dépendance ne s'exécute pendant le build.
+# --no-build : même garde-fou côté uv, pour les mêmes raisons.
 uv sync --locked --no-dev --no-build
 
 echo "--> Fichiers statiques"
-uv run --frozen --no-dev python manage.py collectstatic --no-input
+uv run --frozen --no-dev --no-build python manage.py collectstatic --no-input
 
 echo "--> Migrations"
-uv run --frozen --no-dev python manage.py migrate --no-input
+uv run --frozen --no-dev --no-build python manage.py migrate --no-input
 
 echo "--> Build terminé"

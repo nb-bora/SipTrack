@@ -17,7 +17,7 @@ services:
     rootDir: Backend
     autoDeploy: false
     buildCommand: "./render-build.sh"
-    startCommand: "uv run --frozen --no-dev gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
+    startCommand: "uv run --frozen --no-dev --no-build gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.prod

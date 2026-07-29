@@ -15,9 +15,10 @@ on:
       - "render.yaml"
       - ".github/workflows/ci.yml"
 
-permissions:
-  contents: read
-  pull-requests: write
+# Aucun droit accordé par défaut : chaque job déclare le strict nécessaire.
+# Le bloc doit rester présent — le supprimer ferait retomber sur les droits par
+# défaut du dépôt, qui sont souvent bien plus larges.
+permissions: {}
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -31,6 +32,9 @@ jobs:
   backend:
     name: Backend — quality gate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout
+      pull-requests: write # commentaire de résultat sur la PR
     defaults:
       run:
         working-directory: Backend
@@ -175,6 +179,9 @@ jobs:
     needs: backend
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    # Ce job ne fait qu'un POST vers une URL : il ne lit ni n'écrit rien du
+    # dépôt, donc il n'a besoin d'aucun droit sur le jeton GitHub.
+    permissions: {}
     environment:
       name: production
       url: ${{ vars.RENDER_SERVICE_URL }}
