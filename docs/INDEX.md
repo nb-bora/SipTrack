@@ -56,6 +56,7 @@ Chaque domaine a une suite de tests organisée par niveau (domaine, application,
   - [ADR-0005](./decisions/0005-isolation-bounded-contexts.md) — Isolation des contextes
   - [ADR-0006](./decisions/0006-autorisation-a-la-frontiere.md) — Autorisation à la frontière
   - [ADR-0007](./decisions/0007-comptes-plateforme.md) — Comptes plateforme : lire, jamais écrire
+  - [ADR-0008](./decisions/0008-observabilite.md) — Observabilité : ce qui casse, sans les données
 
 ---
 
@@ -194,7 +195,8 @@ docs/
     ├── 0004-petits-agregats-coherence-eventual.md
     ├── 0005-isolation-bounded-contexts.md
     ├── 0006-autorisation-a-la-frontiere.md
-    └── 0007-comptes-plateforme.md
+    ├── 0007-comptes-plateforme.md
+    └── 0008-observabilite.md
 ```
 
 ---
