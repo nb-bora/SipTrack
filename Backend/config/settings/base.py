@@ -44,6 +44,7 @@ THIRD_PARTY_APPS = [
 # Le journal est transverse : tous les contextes y écrivent, aucun ne le possède.
 LOCAL_APPS = [
     "shared.infrastructure.journal",
+    "shared.infrastructure.observabilite",
     # Chaque bounded context expose son app Django via sa couche infrastructure.
     "contexts.service_ventes.infrastructure.django_app",
     "contexts.credit_creances.infrastructure.django_app",
@@ -56,6 +57,10 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Placé tôt : il mesure la durée réellement subie par l'appelant, en
+    # englobant le travail des middlewares suivants. Mais après la sécurité, qui
+    # doit pouvoir refuser avant qu'on ne mesure quoi que ce soit.
+    "shared.infrastructure.observabilite.middleware.ObservabiliteMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -167,4 +172,50 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "REDOC_DIST": "SIDECAR",
+}
+
+
+# Nombre de pannes conservées en base. Réglable sans redéploiement : c'est le
+# curseur qu'on veut pouvoir baisser pendant l'incident, pas après.
+OBSERVABILITE_ERREURS_MAX = env.int("OBSERVABILITE_ERREURS_MAX", default=5_000)
+
+
+# ---------------------------------------------------------------------------
+# Journalisation technique
+#
+# Distincte du journal des Mouvements : celui-ci consigne des Faits métier,
+# chaînés et opposables ; ceci sert à comprendre une panne. Les confondre
+# affaiblirait le premier.
+#
+# Sortie standard uniquement : Render l'agrège. Écrire dans un fichier sur un
+# système de fichiers éphémère donnerait des logs qui disparaissent au
+# redéploiement — exactement quand on en a besoin.
+# ---------------------------------------------------------------------------
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": "shared.infrastructure.observabilite.journalisation.FormatteurJSON",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": env("NIVEAU_LOG", default="INFO"),
+    },
+    "loggers": {
+        # Le journal d'accès de Django double la ligne que produit notre
+        # middleware, sans l'auteur ni la corrélation. On garde la nôtre.
+        "django.server": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        # `django.request` émet un WARNING pour chaque 4xx. Un client qui envoie
+        # n'importe quoi n'est pas un incident : le bruit masquerait les vraies
+        # pannes, que notre middleware relève déjà en ERROR.
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+    },
 }

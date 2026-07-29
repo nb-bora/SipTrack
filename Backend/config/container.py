@@ -96,6 +96,7 @@ if TYPE_CHECKING:
     )
     from shared.application.controle_acces import ControleAcces
     from shared.application.journal import Journal
+    from shared.application.journal_acces import JournalDesAcces
 
 
 class SystemClock:
@@ -131,6 +132,7 @@ class Container:
         self._bars: BarRepository | None = None
         self._comptes: CompteRepository | None = None
         self._controle_acces: ControleAcces | None = None
+        self._acces: JournalDesAcces | None = None
         self._catalogue_lecture: CatalogueQueryService | None = None
         self._produits_stock: StockProduitRepository | None = None
         self._journal: Journal | None = None
@@ -480,6 +482,27 @@ class Container:
             journal=self._journal_adapter(),
         )
 
+    def _journal_des_acces(self) -> JournalDesAcces:
+        if self._acces is None:
+            from contexts.gouvernance_acces.infrastructure.journal_acces import (
+                DjangoJournalDesAcces,
+            )
+
+            self._acces = DjangoJournalDesAcces()
+        return self._acces
+
+    def acces_du_bar(self, bar_id: str, limite: int = 200) -> list[Any]:
+        """Les consultations plateforme d'un bar, de la plus récente à la plus ancienne.
+
+        Bornée : cette liste est faite pour être regardée, pas exportée. L'index
+        `(bar_id, -horodatage)` sert exactement cette requête.
+        """
+        from contexts.gouvernance_acces.infrastructure.django_app.models import (
+            AccesPlateformeModel,
+        )
+
+        return list(AccesPlateformeModel.objects.filter(bar_id=bar_id)[:limite])
+
     def controle_acces(self) -> ControleAcces:
         """Le garde que consultent toutes les frontières HTTP.
 
@@ -492,7 +515,9 @@ class Container:
                 ControleAccesParCompte,
             )
 
-            self._controle_acces = ControleAccesParCompte(self._compte_repository())
+            self._controle_acces = ControleAccesParCompte(
+                self._compte_repository(), self._journal_des_acces()
+            )
         return self._controle_acces
 
     # -- Résolution du bar concerné ---------------------------------------
