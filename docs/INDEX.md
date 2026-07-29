@@ -10,6 +10,7 @@ Bienvenue ! Cette documentation est organisée par **domaines métier** et **tes
 - **[02 — Modèle métier](./02-modele-metier.md)** — Domaine, agrégats, invariants
 - **[03 — Architecture backend](./03-architecture-backend.md)** — DDD + Clean Architecture
 - **[06 — Déploiement et outillage](./06-deploiement.md)** — Render, CI/CD, pgAdmin, Portainer
+- **[07 — Audit de sécurité](./07-audit-securite.md)** — **🔴 Blockers critiques avant production**
 
 ### 🏢 Domaines métier
 
@@ -168,6 +169,7 @@ docs/
 ├── 02-modele-metier.md
 ├── 03-architecture-backend.md
 ├── 06-deploiement.md
+├── 07-audit-securite.md (🔴 LIRE EN PRIORITÉ)
 │
 ├── domaines/
 │   └── service-ventes/

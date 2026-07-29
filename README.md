@@ -2,8 +2,13 @@
 
 [![CI](https://github.com/nb-bora/SipTrack/workflows/CI/badge.svg)](https://github.com/nb-bora/SipTrack/actions?query=workflow:CI)
 [![API Status](https://img.shields.io/endpoint?url=https%3A%2F%2Fsiptrack-api.onrender.com%2Fapi%2Fdoc%2F&label=API%20Docs&color=brightgreen)](https://siptrack-api.onrender.com/api/doc/)
+[![Status](https://img.shields.io/badge/Status-PoC%2FNon--prod-red)](./docs/07-audit-securite.md)
 
 > Le registre incontestable du bar.
+
+⚠️ **STATUS ACTUEL: PoC (Proof of Concept) — NON PRÊT POUR PRODUCTION**
+
+**3 blockers critiques identifiés** qui empêchent la préproduction. Voir [07-audit-securite.md](./docs/07-audit-securite.md) pour le détail.
 
 **SipTrack** est un outil de **gestion et d'audit** pour bars au Cameroun : il trace chaque
 mouvement de stock, d'argent, de vidanges, de casiers et de créances, de façon **vérifiable et
