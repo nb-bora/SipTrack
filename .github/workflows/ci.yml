@@ -264,8 +264,14 @@ jobs:
           TENTATIVES=40
           ATTENTE=15
 
+          # La reponse est ecrite dans un fichier, puis lue depuis ce fichier.
+          # Jamais un tube de curl vers l'interpreteur : on ne traite que des
+          # donnees, et le corps reste consultable quand la boucle echoue.
+          LECTURE='import json;print(json.load(open("sante.json")).get("commit",""))'
+
           for i in $(seq 1 "$TENTATIVES"); do
-            servi=$(curl --silent --max-time 10 "$URL_SANTE/api/sante/"                     | python3 -c "import json,sys; print(json.load(sys.stdin).get('commit',''))"                     2>/dev/null || echo "")
+            curl --silent --max-time 10 -o sante.json "$URL_SANTE/api/sante/" || true
+            servi=$(python3 -c "$LECTURE" 2>/dev/null || echo "")
 
             if [ "$servi" = "$ATTENDU" ]; then
               echo "Commit ${ATTENDU:0:7} servi en production."
