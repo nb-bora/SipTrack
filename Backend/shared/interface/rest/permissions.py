@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.conf import settings
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 
