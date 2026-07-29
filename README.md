@@ -1,6 +1,7 @@
 # SipTrack
 
 [![CI](https://github.com/nb-bora/SipTrack/workflows/CI/badge.svg)](https://github.com/nb-bora/SipTrack/actions?query=workflow:CI)
+[![API Status](https://img.shields.io/endpoint?url=https%3A%2F%2Fsiptrack-api.onrender.com%2Fapi%2Fdoc%2F&label=API%20Docs&color=brightgreen)](https://siptrack-api.onrender.com/api/doc/)
 
 > Le registre incontestable du bar.
 
@@ -8,23 +9,146 @@
 mouvement de stock, d'argent, de vidanges, de casiers et de créances, de façon **vérifiable et
 attribuable** — même hors ligne, même quand le propriétaire n'est pas là.
 
-## Structure du dépôt
+---
+
+## 🚀 **Liens importants**
+
+| Ressource | Lien |
+|---|---|
+| **📚 Documentation complète** | [docs/](./docs/INDEX.md) |
+| **📊 Swagger UI (API)** | [siptrack-api.onrender.com/api/doc/](https://siptrack-api.onrender.com/api/doc/) |
+| **🔧 Déploiement & Infrastructure** | [docs/06-deploiement.md](./docs/06-deploiement.md) |
+
+---
+
+## 📂 **Structure du dépôt**
 
 | Dossier | Rôle |
 |---|---|
-| [`Backend/`](./Backend/) | API (Django, DDD + Clean Architecture) |
+| [`Backend/`](./Backend/) | API (Django, DDD + Clean Architecture, **204 tests**) |
 | [`Frontend/`](./Frontend/) | Application web |
 | [`Mobile/`](./Mobile/) | Application mobile (offline-first) |
-| [`docs/`](./docs/) | **Documentation de référence** : métier, langage commun, architecture, décisions (ADR) |
+| [`docs/`](./docs/) | **Documentation de référence** : métier, langage, architecture, décisions |
+| [`render.yaml`](./render.yaml) | Infrastructure-as-Code (Blueprint Render) |
 
-## Par où commencer
+---
 
-👉 Lire d'abord la [documentation de référence](./docs/README.md) : elle fige le modèle métier
-et l'architecture, et sert de **contrat partagé** par les trois briques du projet.
+## 🎯 **Pour débuter**
 
-## Principes fondateurs
+### 1️⃣ **Comprendre le projet**
+Lire la [documentation de référence](./docs/INDEX.md) :
+- [01 — Glossaire ubiquitaire](./docs/01-glossaire-ubiquitaire.md) — Vocabulaire métier
+- [02 — Modèle métier](./docs/02-modele-metier.md) — Domaine, invariants
+- [03 — Architecture backend](./docs/03-architecture-backend.md) — DDD + Clean Architecture
+
+### 2️⃣ **Explorer l'API**
+```bash
+# API en ligne :
+curl https://siptrack-api.onrender.com/api/doc/
+
+# Ou en local (dev) :
+cd Backend
+uv run pytest              # Tous les tests (204)
+python manage.py runserver # Démarrer le serveur
+# Puis : http://localhost:8000/api/doc/
+```
+
+### 3️⃣ **Développer localement**
+
+**Prérequis :**
+- Python 3.13+
+- Docker & Docker Compose (pour PostgreSQL + pgAdmin + Portainer)
+
+**Setup :**
+```bash
+# 1. Base de données locale
+cp .env.docker.example .env.docker
+# Remplacer les mots de passe dans .env.docker
+docker compose --env-file .env.docker up -d
+
+# 2. Backend
+cd Backend
+uv sync                          # Installer les dépendances
+python manage.py migrate         # Initialiser la base
+python manage.py runserver       # Démarrer sur http://localhost:8000
+```
+
+**Outils locaux :**
+- **pgAdmin** (admin DB) : http://127.0.0.1:5050
+- **Portainer** (Docker UI) : https://127.0.0.1:9443
+
+---
+
+## 🚀 **Déploiement**
+
+### Production (Render)
+
+**Adresse :** https://siptrack-api.onrender.com
+
+**Pipeline CI/CD automatique :**
+```
+git push (main)
+  → GitHub Actions (quality gate : tests, lint, types)
+    → ✓ vert → Render build & deploy
+    → ✗ rouge → Rien ne se passe
+```
+
+**Configuration requise :**
+1. Render → siptrack-api → Deploy Hook (secret `RENDER_DEPLOY_HOOK_URL` sur GitHub)
+2. GitHub → Auto-Deploy : **"After CI Checks Pass"**
+
+Voir [docs/06-deploiement.md](./docs/06-deploiement.md) pour la procédure complète.
+
+### Développement local
+
+```bash
+cd Backend
+uv run pytest                              # Tests (204)
+uv run ruff check .                        # Lint
+uv run ruff format --check .               # Format
+uv run mypy .                              # Types (strict)
+uv run lint-imports                        # Architecture
+```
+
+---
+
+## 💡 **Principes fondateurs**
 
 1. **La confiance ne se décrète pas, elle se prouve** — on rend les faits incontestables,
    et personne n'échappe au journal.
 2. **Le journal des mouvements est la seule vérité** — tous les états sont calculés.
 3. **La personne honnête est protégée** autant que le propriétaire est renseigné.
+
+---
+
+## 📊 **État du projet**
+
+| Aspect | État |
+|---|---|
+| **Tests** | 204 ✓ (100% domaine) |
+| **Quality gates** | ✓ ruff, mypy strict, lint-imports, pytest |
+| **CI/CD** | ✓ GitHub Actions → Render (auto) |
+| **Documentation** | ✓ Complète (métier + architecture + déploiement) |
+| **API** | ✓ Swagger public : https://siptrack-api.onrender.com/api/doc/ |
+
+---
+
+## 🔒 **À savoir avant la production**
+
+⚠️ **Trous de sécurité connus à boucher :**
+- Aucun cloisonnement inter-bars (autorizations non câblées)
+- Capacités partiellement implémentées
+
+Voir [docs/06-deploiement.md](./docs/06-deploiement.md) pour les détails.
+
+---
+
+## 📝 **Contribuer**
+
+1. Créer une branche : `git checkout -b feat/nom-feature`
+2. Coder et tester
+3. Push et créer une PR
+4. La CI tourne automatiquement
+5. Merge → redéploiement automatique sur Render
+
+Voir [CONTRIBUTING.md](./CONTRIBUTING.md) pour le workflow complet.
