@@ -10,7 +10,7 @@ Bienvenue ! Cette documentation est organisée par **domaines métier** et **tes
 - **[02 — Modèle métier](./02-modele-metier.md)** — Domaine, agrégats, invariants
 - **[03 — Architecture backend](./03-architecture-backend.md)** — DDD + Clean Architecture
 - **[06 — Déploiement et outillage](./06-deploiement.md)** — Render, CI/CD, pgAdmin, Portainer
-- **[07 — Audit de sécurité](./07-audit-securite.md)** — **🔴 Blockers critiques avant production**
+- **[07 — Audit de sécurité](./07-audit-securite.md)** — **⚠️ Blocker restant avant production**
 
 ### 🏢 Domaines métier
 
@@ -54,6 +54,7 @@ Chaque domaine a une suite de tests organisée par niveau (domaine, application,
   - [ADR-0003](./decisions/0003-journal-audit-vs-event-sourcing.md) — Journal d'audit
   - [ADR-0004](./decisions/0004-petits-agregats-coherence-eventual.md) — Petits agrégats
   - [ADR-0005](./decisions/0005-isolation-bounded-contexts.md) — Isolation des contextes
+  - [ADR-0006](./decisions/0006-autorisation-a-la-frontiere.md) — Autorisation à la frontière
 
 ---
 
@@ -169,7 +170,7 @@ docs/
 ├── 02-modele-metier.md
 ├── 03-architecture-backend.md
 ├── 06-deploiement.md
-├── 07-audit-securite.md (🔴 LIRE EN PRIORITÉ)
+├── 07-audit-securite.md (⚠️ LIRE EN PRIORITÉ)
 │
 ├── domaines/
 │   └── service-ventes/
@@ -190,7 +191,8 @@ docs/
     ├── 0002-domaine-independant-de-django.md
     ├── 0003-journal-audit-vs-event-sourcing.md
     ├── 0004-petits-agregats-coherence-eventual.md
-    └── 0005-isolation-bounded-contexts.md
+    ├── 0005-isolation-bounded-contexts.md
+    └── 0006-autorisation-a-la-frontiere.md
 ```
 
 ---

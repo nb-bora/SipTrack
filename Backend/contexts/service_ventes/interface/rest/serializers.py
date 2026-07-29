@@ -9,7 +9,6 @@ from __future__ import annotations
 from rest_framework import serializers
 
 from contexts.service_ventes.domain.enums import FormePaiement
-from shared.domain.attribution import Capacite
 
 
 class ErreurSerializer(serializers.Serializer):
@@ -20,7 +19,10 @@ class ErreurSerializer(serializers.Serializer):
 
 class OuvrirServiceInputSerializer(serializers.Serializer):
     bar_id = serializers.CharField(max_length=36)
-    capacite = serializers.ChoiceField(choices=[c.value for c in Capacite])
+    # Pas de `capacite` : elle se déduit des capacités réellement accordées au
+    # compte. L'accepter ici laissait signer une soirée « opératrice » tout en
+    # agissant en supervision — et un registre qu'on peut annoter à sa guise
+    # n'est plus un registre.
     fond_de_caisse = serializers.IntegerField(min_value=0)
 
 

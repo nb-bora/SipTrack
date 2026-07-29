@@ -246,3 +246,109 @@ def test_avec_la_capacite_l_acte_passe(patronne: Any, django_user_model: Any) ->
     )
 
     assert service.status_code == 201
+
+
+# ---------------------------------------------------------------------------
+# Garde-fous durables
+# ---------------------------------------------------------------------------
+
+
+def test_le_vocabulaire_des_capacites_ne_peut_pas_diverger() -> None:
+    """`CapaciteRequise` est le miroir de `CapaciteAtomique` — à l'identique.
+
+    Le miroir existe pour qu'une vue nomme ce qu'elle exige sans importer
+    Gouvernance (ADR-0005). Sans ce test, ajouter une capacité d'un seul côté
+    passerait inaperçu jusqu'au jour où un endpoint exigerait une capacité que
+    personne ne peut détenir — donc un refus permanent, ou pire, une faute de
+    frappe qui n'exige plus rien.
+    """
+    from contexts.gouvernance_acces.domain.enums import CapaciteAtomique
+    from shared.application.controle_acces import CapaciteRequise
+
+    assert {c.value for c in CapaciteRequise} == CapaciteAtomique.toutes()
+
+
+@pytest.mark.django_db
+def test_aucun_endpoint_ne_repond_a_un_inconnu(django_user_model: Any) -> None:
+    """Une personne authentifiée mais sans aucun compte n'obtient rien, nulle part.
+
+    Ce test énumère les routes réellement déclarées, plutôt que d'en tenir une
+    liste à la main. C'est ce qui le rend utile : le jour où un contexte
+    supplémentaire arrive avec un endpoint non gardé, il échoue ici — sans que
+    personne ait eu à y penser.
+
+    Un inconnu peut légitimement recevoir 401, 403, 404, 400 ou 405. Ce qu'il ne
+    doit jamais recevoir, c'est un succès.
+    """
+    from django.urls import get_resolver
+
+    inconnu = django_user_model.objects.create_user(username="inconnu-total")
+    client = _client_de(inconnu)
+
+    hors_perimetre = {
+        # Délivre le jeton : exiger un compte pour l'obtenir serait circulaire.
+        "/api/auth/jeton/",
+        # Documentation publique, volontairement ouverte.
+        "/api/schema/",
+        "/api/doc/",
+        "/api/redoc/",
+        # Créer son premier bar et lister les siens : le seul point d'entrée de
+        # quelqu'un qui n'a encore de compte nulle part. La réponse est bornée à
+        # l'appelant — `test_lister_les_bars_ne_montre_que_les_siens` le prouve.
+        "/api/bars/",
+    }
+
+    testees = 0
+    for motif in get_resolver().url_patterns:
+        for chemin in _chemins_de(motif, prefixe=""):
+            # L'admin Django a son propre contrôle d'accès, hors du périmètre
+            # des capacités métier.
+            if not chemin.startswith("/api/") or chemin in hors_perimetre:
+                continue
+            for methode in ("get", "post"):
+                reponse = getattr(client, methode)(chemin, {}, format="json")
+                assert not str(reponse.status_code).startswith("2"), (
+                    f"{methode.upper()} {chemin} répond {reponse.status_code} "
+                    f"à un compte qui n'existe dans aucun bar."
+                )
+                testees += 1
+
+    # Sans cette borne, une énumération qui ne trouverait rien ferait passer le
+    # test en silence — le pire des faux verts.
+    assert testees > 20, f"Seules {testees} routes éprouvées : l'énumération a échoué."
+
+
+def _chemins_de(motif: Any, *, prefixe: str) -> list[str]:
+    """Aplatit l'arbre des URLs en chemins concrets, paramètres substitués."""
+    import re
+
+    from django.urls import URLPattern, URLResolver
+
+    brut = prefixe + str(motif.pattern)
+    if isinstance(motif, URLResolver):
+        chemins: list[str] = []
+        for enfant in motif.url_patterns:
+            chemins.extend(_chemins_de(enfant, prefixe=brut))
+        return chemins
+    if not isinstance(motif, URLPattern):
+        return []
+
+    # `<str:service_id>` → un identifiant qui n'existe pas : ce qui compte est
+    # le refus, et il doit tomber avant toute recherche en base.
+    concret = re.sub(r"<[^>]+>", "inexistant", brut)
+    if "(?P<" in concret or "\\" in concret:
+        return []
+    return ["/" + concret.lstrip("/")]
+
+
+@pytest.mark.django_db
+def test_lister_les_bars_ne_montre_que_les_siens(patronne: Any, bar_du_voisin: str) -> None:
+    """La seule route ouverte à qui n'a de compte nulle part reste bornée.
+
+    Elle est exemptée du balayage ci-dessus parce qu'un 200 y est légitime ; ce
+    test est la contrepartie qui interdit qu'elle en dise trop.
+    """
+    reponse = _client_de(patronne).get("/api/bars/", format="json")
+
+    assert reponse.status_code == 200
+    assert bar_du_voisin not in {bar["id"] for bar in reponse.json()}

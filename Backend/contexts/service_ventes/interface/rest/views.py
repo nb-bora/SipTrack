@@ -40,7 +40,8 @@ from contexts.service_ventes.domain.exceptions import (
     ServiceIntrouvable,
     ServiceNonOuvert,
 )
-from shared.interface.rest.attribution import auteur_id_de
+from shared.application.controle_acces import CapaciteRequise
+from shared.interface.rest.acces import exiger, exiger_sur_service
 
 from .serializers import (
     AdditionDetailOutputSerializer,
@@ -100,9 +101,19 @@ class ServiceListCreateView(APIView):
     def post(self, request: Request) -> Response:
         entree = OuvrirServiceInputSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
+        donnees = dict(entree.validated_data)
+        bar_id = str(donnees["bar_id"])
+
+        auteur_id = exiger(
+            request,
+            bar_id=bar_id,
+            capacite=CapaciteRequise.OUVRIR_SERVICE,
+            operation="ouvrir un service",
+        )
         commande = OuvrirServiceCommand(
-            auteur_id=auteur_id_de(request),
-            **entree.validated_data,
+            auteur_id=auteur_id,
+            capacite=container.controle_acces().qualite(auteur_id=auteur_id, bar_id=bar_id),
+            **donnees,
         )
 
         dto = container.ouvrir_service().executer(commande)
@@ -123,6 +134,9 @@ class ServiceDetailView(APIView):
         },
     )
     def get(self, request: Request, service_id: str) -> Response:
+        exiger_sur_service(
+            request, service_id=service_id, capacite=None, operation="lire un service"
+        )
         dto = container.service_par_id(service_id)
         if dto is None:
             return Response(
@@ -159,7 +173,12 @@ class VenteCreateView(APIView):
         entree.is_valid(raise_exception=True)
         commande = EnregistrerVenteCommand(
             service_id=service_id,
-            auteur_id=auteur_id_de(request),
+            auteur_id=exiger_sur_service(
+                request,
+                service_id=service_id,
+                capacite=CapaciteRequise.ENREGISTRER_VENTE,
+                operation="enregistrer une vente",
+            ),
             **entree.validated_data,
         )
 
@@ -212,7 +231,12 @@ class CloturerServiceView(APIView):
     def post(self, request: Request, service_id: str) -> Response:
         commande = CloturerServiceCommand(
             service_id=service_id,
-            auteur_id=auteur_id_de(request),
+            auteur_id=exiger_sur_service(
+                request,
+                service_id=service_id,
+                capacite=CapaciteRequise.CLOTURER_SERVICE,
+                operation="cloturer le service",
+            ),
         )
 
         try:
@@ -261,7 +285,12 @@ class AdditionListCreateView(APIView):
         entree.is_valid(raise_exception=True)
         commande = OuvrirAdditionCommand(
             service_id=service_id,
-            auteur_id=auteur_id_de(request),
+            auteur_id=exiger_sur_service(
+                request,
+                service_id=service_id,
+                capacite=CapaciteRequise.ENREGISTRER_VENTE,
+                operation="ouvrir une addition",
+            ),
             **entree.validated_data,
         )
 
@@ -297,6 +326,9 @@ class AdditionDetailView(APIView):
         },
     )
     def get(self, request: Request, service_id: str, addition_id: str) -> Response:
+        exiger_sur_service(
+            request, service_id=service_id, capacite=None, operation="lire une addition"
+        )
         dto = container.addition_detail(service_id=service_id, addition_id=addition_id)
         if dto is None:
             return Response(
@@ -335,7 +367,12 @@ class PaiementCreateView(APIView):
         commande = EnregistrerPaiementCommand(
             service_id=service_id,
             addition_id=addition_id,
-            auteur_id=auteur_id_de(request),
+            auteur_id=exiger_sur_service(
+                request,
+                service_id=service_id,
+                capacite=CapaciteRequise.ENCAISSER,
+                operation="encaisser un paiement",
+            ),
             **entree.validated_data,
         )
 
@@ -381,7 +418,12 @@ class ReglementAdditionView(APIView):
         commande = ReglementAdditionCommand(
             service_id=service_id,
             addition_id=addition_id,
-            auteur_id=auteur_id_de(request),
+            auteur_id=exiger_sur_service(
+                request,
+                service_id=service_id,
+                capacite=CapaciteRequise.ENCAISSER,
+                operation="regler une addition",
+            ),
         )
 
         try:
@@ -431,7 +473,12 @@ class VersementCreateView(APIView):
         entree.is_valid(raise_exception=True)
         commande = VerserRecetteCommand(
             service_id=service_id,
-            serveuse_id=auteur_id_de(request),
+            serveuse_id=exiger_sur_service(
+                request,
+                service_id=service_id,
+                capacite=CapaciteRequise.VERSER_RECETTE,
+                operation="verser la recette",
+            ),
             **entree.validated_data,
         )
 
@@ -473,5 +520,8 @@ class SousCaisseListView(APIView):
         responses={200: SousCaisseOutputSerializer(many=True)},
     )
     def get(self, request: Request, service_id: str) -> Response:
+        exiger_sur_service(
+            request, service_id=service_id, capacite=None, operation="lire les sous-caisses"
+        )
         dtos = container.sous_caisses_du_service(service_id)
         return Response(SousCaisseOutputSerializer(dtos, many=True).data)

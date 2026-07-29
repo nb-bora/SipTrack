@@ -94,6 +94,7 @@ if TYPE_CHECKING:
     from contexts.stock_inventaire.domain.repositories import (
         ProduitRepository as StockProduitRepository,
     )
+    from shared.application.controle_acces import ControleAcces
     from shared.application.journal import Journal
 
 
@@ -129,6 +130,7 @@ class Container:
         self._produits: ProduitRepository | None = None
         self._bars: BarRepository | None = None
         self._comptes: CompteRepository | None = None
+        self._controle_acces: ControleAcces | None = None
         self._catalogue_lecture: CatalogueQueryService | None = None
         self._produits_stock: StockProduitRepository | None = None
         self._journal: Journal | None = None
@@ -477,6 +479,47 @@ class Container:
             comptes=self._compte_repository(),
             journal=self._journal_adapter(),
         )
+
+    def controle_acces(self) -> ControleAcces:
+        """Le garde que consultent toutes les frontières HTTP.
+
+        Gouvernance est le seul contexte à savoir ce qu'est une capacité ; il
+        est donc naturel qu'il réponde. Les autres passent par ce port et ne
+        l'importent jamais.
+        """
+        if self._controle_acces is None:
+            from contexts.gouvernance_acces.infrastructure.controle_acces import (
+                ControleAccesParCompte,
+            )
+
+            self._controle_acces = ControleAccesParCompte(self._compte_repository())
+        return self._controle_acces
+
+    # -- Résolution du bar concerné ---------------------------------------
+    #
+    # Le garde d'autorisation raisonne toujours sur un bar. Quand l'URL désigne
+    # un produit, un client ou un crédit, le bar se lit sur l'objet visé — jamais
+    # sur ce que l'appelant en dit. `None` signifie « introuvable », que le garde
+    # traite comme un refus.
+
+    def bar_du_produit_catalogue(self, produit_id: str) -> str | None:
+        produit = self._produit_repository().par_id(produit_id)
+        return None if produit is None else produit.bar_id
+
+    def bar_du_produit_stock(self, produit_id: str) -> str | None:
+        produit = self._stock_produit_repository().par_id(produit_id)
+        return None if produit is None else produit.bar_id
+
+    def bar_du_client(self, client_id: str) -> str | None:
+        client = self._client_repository().par_id(client_id)
+        return None if client is None else client.bar_id
+
+    def bar_du_credit(self, credit_id: str) -> str | None:
+        """Un crédit ne porte pas de bar : il tient celui de son débiteur."""
+        credit = self._credit_repository().par_id(credit_id)
+        if credit is None:
+            return None
+        return self.bar_du_client(credit.client_id)
 
     def gerer_comptes(self) -> GererComptesHandler:
         from contexts.gouvernance_acces.application.use_cases.gerer_comptes import (

@@ -80,6 +80,12 @@ ignore_imports =
     # un import *direct* d'un contexte a l'autre reste refuse, y compris apres
     # cette exception.
     contexts.*.interface.rest.views -> config.container
+    # Meme nature, pour le garde d'autorisation : chaque vue doit demander
+    # « cet appelant a-t-il le droit ? » avant d'agir. La reponse ne peut venir
+    # que de Gouvernance, seul contexte a savoir ce qu'est une capacite. Le
+    # garde passe donc par le composition root, exactement comme les vues pour
+    # obtenir un cas d'usage. Aucun contexte n'importe l'autre directement.
+    shared.interface.rest.acces -> config.container
 
 [importlinter:contract:interface-sans-infrastructure-directe]
 name = L'interface n'importe pas directement l'infrastructure (elle passe par le composition root)

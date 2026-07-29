@@ -22,7 +22,8 @@ from contexts.stock_inventaire.domain.exceptions import (
     QuantiteInsuffisante,
     QuantiteNegative,
 )
-from shared.interface.rest.attribution import auteur_id_de
+from shared.application.controle_acces import CapaciteRequise
+from shared.interface.rest.acces import exiger, exiger_sur_bar_resolu
 
 from .serializers import (
     AjouterStockInputSerializer,
@@ -61,6 +62,12 @@ class ProduitListCreateView(APIView):
         entree = CreerProduitInputSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
 
+        exiger(
+            request,
+            bar_id=entree.validated_data["bar_id"],
+            capacite=CapaciteRequise.INSCRIRE_PRODUIT,
+            operation="inscrire un produit au stock",
+        )
         try:
             dto = container.gerer_stock().creer_produit(
                 CreerProduitCommand(
@@ -85,6 +92,7 @@ class ProduitListCreateView(APIView):
             return Response(
                 {"detail": "Paramètre bar_id requis"}, status=status.HTTP_400_BAD_REQUEST
             )
+        exiger(request, bar_id=bar_id, capacite=None, operation="lire le stock")
 
         produits = container.gerer_stock().lister_produits(bar_id)
         return Response(InventaireProduitOutputSerializer(produits, many=True).data)
@@ -109,7 +117,13 @@ class StockAjouterView(APIView):
                 AjouterStockCommand(
                     produit_id=produit_id,
                     quantite=entree.validated_data["quantite"],
-                    auteur_id=auteur_id_de(request),
+                    auteur_id=exiger_sur_bar_resolu(
+                        request,
+                        bar_id=container.bar_du_produit_stock(produit_id),
+                        capacite=CapaciteRequise.ENREGISTRER_VENTE,
+                        operation="mouvementer le stock",
+                        introuvable="Produit introuvable.",
+                    ),
                 )
             )
         except ProduitIntrouvable:
@@ -138,7 +152,13 @@ class VendreView(APIView):
                 VendreCommand(
                     produit_id=produit_id,
                     quantite=entree.validated_data["quantite"],
-                    auteur_id=auteur_id_de(request),
+                    auteur_id=exiger_sur_bar_resolu(
+                        request,
+                        bar_id=container.bar_du_produit_stock(produit_id),
+                        capacite=CapaciteRequise.ENREGISTRER_VENTE,
+                        operation="mouvementer le stock",
+                        introuvable="Produit introuvable.",
+                    ),
                 )
             )
         except ProduitIntrouvable:
@@ -170,7 +190,13 @@ class CorrigerInventaireView(APIView):
                     produit_id=produit_id,
                     quantite_nouvelle=entree.validated_data["quantite_nouvelle"],
                     raison=entree.validated_data["raison"],
-                    auteur_id=auteur_id_de(request),
+                    auteur_id=exiger_sur_bar_resolu(
+                        request,
+                        bar_id=container.bar_du_produit_stock(produit_id),
+                        capacite=CapaciteRequise.ENREGISTRER_VENTE,
+                        operation="mouvementer le stock",
+                        introuvable="Produit introuvable.",
+                    ),
                 )
             )
         except ProduitIntrouvable:

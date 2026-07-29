@@ -254,7 +254,6 @@ def ouvrir_service_via_api(client: APIClient, fond_de_caisse: int = 10_000) -> s
         "/api/services/",
         {
             "bar_id": "bar1",
-            "capacite": "operatrice",
             "fond_de_caisse": fond_de_caisse,
         },
         format="json",
