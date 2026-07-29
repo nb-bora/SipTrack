@@ -27,6 +27,12 @@ GitHub Actions — job « deploy »
 Render : build (uv sync → collectstatic → migrate) puis démarrage gunicorn
 ```
 
+Le job de déploiement ne s'arrête pas à l'appel du hook : il **interroge
+`/api/sante/` jusqu'à y lire le commit attendu**. Sans cela, il se déclarait vert
+sur la seule réponse `sync started` de Render — ce qui est arrivé sur la PR #56,
+où la production a servi l'ancienne version pendant près d'une heure derrière un
+pipeline tout vert.
+
 Le point important est `autoDeploy: false` dans [`render.yaml`](../render.yaml).
 Par défaut Render déploie dès qu'il voit un commit, **sans attendre la CI**. On
 le désactive pour que le seul chemin vers la production passe par la quality
@@ -132,10 +138,10 @@ l'observation passe par le tableau de bord Render.
 
 ## 3. Reste à faire
 
-- **Aucun health check applicatif.** Render se contente de vérifier que le port
-  répond. Un endpoint qui teste réellement l'accès à la base permettrait de
-  détecter « application démarrée mais base injoignable ». Il faudrait une route
-  publique, donc une décision de sécurité — d'où son absence ici.
+- ~~Aucun health check applicatif~~ — **livré**. `GET /api/sante/` rend le
+  commit servi et éprouve l'accès à la base par une requête réelle. La décision
+  de sécurité qui bloquait est tranchée : le dépôt est public, donc publier le
+  commit ne révèle rien.
 - **Pas de sauvegarde automatisée** de la base.
 - **Pas de retour arrière outillé.** Render sait redéployer un commit antérieur,
   mais une migration déjà appliquée ne se défait pas toute seule.

@@ -9,11 +9,14 @@ from drf_spectacular.views import SpectacularAPIView as VueSchema
 from drf_spectacular.views import SpectacularRedocView, SpectacularSwaggerView
 
 from shared.interface.rest.permissions import AccesDocumentation
+from shared.interface.rest.sante import SanteView
 
 _ACCES_DOC = [AccesDocumentation]
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # Exploitation : quel commit tourne, et la base repond-elle.
+    path("api/sante/", SanteView.as_view(), name="sante"),
     path("api/", include("contexts.gouvernance_acces.interface.rest.urls")),
     path("api/", include("contexts.service_ventes.interface.rest.urls")),
     path("api/", include("contexts.credit_creances.interface.rest.urls")),

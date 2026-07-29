@@ -88,6 +88,7 @@ jobs:
         run: uv sync --locked --no-build
 
       - name: 🧹 Lint & Format
+        id: lint
         run: |
           echo "::group::Ruff check"
           uv run --frozen --no-build ruff check .
@@ -97,42 +98,64 @@ jobs:
           echo "::endgroup::"
 
       - name: 🔍 Types (mypy strict)
+        id: types
         run: uv run --frozen --no-build mypy .
 
       - name: 🏗️ Contrats d'architecture (import-linter)
+        id: archi
         run: uv run --frozen --no-build lint-imports
 
       - name: 🧪 Tests (pytest)
+        id: tests
         run: uv run --frozen --no-build pytest --tb=short --junit-xml=.pytest-results.xml
 
-      - name: 🔐 Audit dependencies
+      # Toléré parce qu'un avis de vulnérabilité peut tomber sans qu'on y soit
+      # pour rien — mais son résultat réel est publié, jamais présumé.
+      - name: 🔐 Audit des dépendances (pip-audit)
+        id: audit
         if: always()
         run: uv run --frozen --no-build pip-audit --desc
         continue-on-error: true
 
-      - name: 📊 Publish quality summary
+      - name: 📊 Publier le rapport de qualité
         if: always()
+        env:
+          # Chaque étape rend son résultat mesuré. Une coche écrite en dur a
+          # affirmé pendant des semaines que pip-audit tournait, alors qu'il
+          # n'était même pas installé.
+          LINT: ${{ steps.lint.outcome }}
+          TYPES: ${{ steps.types.outcome }}
+          ARCHI: ${{ steps.archi.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+          AUDIT: ${{ steps.audit.outcome }}
         run: |
-          echo "## ✅ Quality Gate Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Tests" >> $GITHUB_STEP_SUMMARY
+          marque() {
+            case "$1" in
+              success) printf '✅' ;;
+              failure) printf '❌' ;;
+              skipped) printf '⏭️ non exécuté' ;;
+              *)       printf '❔ %s' "$1" ;;
+            esac
+          }
+
+          {
+            echo "## Rapport de qualité"
+            echo ""
+            echo "| Contrôle | Résultat |"
+            echo "|---|---|"
+            echo "| Ruff (lint + format) | $(marque "$LINT") |"
+            echo "| MyPy (strict) | $(marque "$TYPES") |"
+            echo "| Import-linter (architecture) | $(marque "$ARCHI") |"
+            echo "| Pytest | $(marque "$TESTS") |"
+            echo "| pip-audit (dépendances) | $(marque "$AUDIT") |"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
           if [ -f .pytest-results.xml ]; then
-            TEST_COUNT=$(grep -oP 'tests="\K[0-9]+' .pytest-results.xml | head -1)
-            echo "- **${TEST_COUNT:-0}** tests executed ✓" >> $GITHUB_STEP_SUMMARY
+            NOMBRE=$(grep -oP 'tests="\K[0-9]+' .pytest-results.xml | head -1)
+            echo "**${NOMBRE:-0}** tests exécutés." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "- **0** tests (no results file)" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Checks" >> $GITHUB_STEP_SUMMARY
-          echo "- Ruff (lint + format) ✓" >> $GITHUB_STEP_SUMMARY
-          echo "- MyPy (strict typing) ✓" >> $GITHUB_STEP_SUMMARY
-          echo "- Import-linter (architecture) ✓" >> $GITHUB_STEP_SUMMARY
-          echo "- Pip-audit (dependencies) ✓" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "**All checks passed!** 🎉" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "**⚠️ Some checks failed** — review details above" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ Aucun fichier de résultats : les tests n'ont pas produit de rapport." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Upload test results
@@ -209,15 +232,71 @@ jobs:
           # --fail-with-body : un 4xx/5xx fait échouer l'étape tout en affichant
           # la réponse, sinon curl renvoie 0 et le déploiement raté passe pour
           # un succès.
-          reponse=$(curl --silent --show-error --fail-with-body \
-                         --retry 3 --retry-delay 5 --max-time 30 \
-                         -X POST "$HOOK_URL")
-
+          reponse=$(curl --silent --show-error --fail-with-body                          --retry 3 --retry-delay 5 --max-time 30                          -X POST "$HOOK_URL")
           echo "Réponse Render : $reponse"
+
+      # -----------------------------------------------------------------
+      # Constater, pas supposer.
+      #
+      # Le hook répond « sync started » et s'arrête là. Sur la PR #56, cette
+      # réponse a suffi à déclarer le job vert alors que la production a servi
+      # l'ancienne version pendant près d'une heure. Un pipeline qui affirme
+      # sans vérifier ferme la question au lieu de la poser.
+      #
+      # On interroge donc l'instance jusqu'à y lire le commit attendu.
+      # -----------------------------------------------------------------
+      - name: 🔎 Constater que le commit est bien servi
+        env:
+          # Le contexte `secrets` n'est pas utilisable dans un `if` : la
+          # condition vit donc dans le script, comme a l'etape precedente.
+          HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          URL_SANTE: ${{ vars.RENDER_SERVICE_URL || 'https://siptrack-api.onrender.com' }}
+          ATTENDU: ${{ github.sha }}
+        run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "Aucun deploiement declenche : rien a constater."
+            exit 0
+          fi
+
+          # Le plan gratuit met le service en veille et reconstruit lentement :
+          # la fenêtre est large à dessein, l'échec doit signaler un vrai
+          # problème, pas de l'impatience.
+          TENTATIVES=40
+          ATTENTE=15
+
+          # La reponse est ecrite dans un fichier, puis lue depuis ce fichier.
+          # Jamais un tube de curl vers l'interpreteur : on ne traite que des
+          # donnees, et le corps reste consultable quand la boucle echoue.
+          LECTURE='import json;print(json.load(open("sante.json")).get("commit",""))'
+
+          for i in $(seq 1 "$TENTATIVES"); do
+            curl --silent --max-time 10 -o sante.json "$URL_SANTE/api/sante/" || true
+            servi=$(python3 -c "$LECTURE" 2>/dev/null || echo "")
+
+            if [ "$servi" = "$ATTENDU" ]; then
+              echo "Commit ${ATTENDU:0:7} servi en production."
+              {
+                echo "## 🚀 Déploiement constaté"
+                echo ""
+                echo "Le commit \`${ATTENDU:0:7}\` est **servi par l'instance**, vérifié sur \`/api/sante/\`."
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+
+            echo "($i/$TENTATIVES) servi=${servi:-injoignable} attendu=${ATTENDU:0:7}"
+            sleep "$ATTENTE"
+          done
+
+          echo "::error title=Déploiement non constaté::Le commit attendu n'est pas servi après $((TENTATIVES * ATTENTE))s."
           {
-            echo "## 🚀 Déploiement déclenché"
+            echo "## ❌ Déploiement non constaté"
             echo ""
-            echo "Commit \`${GITHUB_SHA:0:7}\` envoyé à Render après quality gate verte."
+            echo "Le hook a été appelé, mais \`/api/sante/\` sert encore un autre commit"
+            echo "après $((TENTATIVES * ATTENTE)) secondes."
             echo ""
-            echo "Le déploiement se poursuit côté Render ; suivez-le dans son tableau de bord."
+            echo "Attendu : \`${ATTENDU:0:7}\` — servi : \`${servi:-injoignable}\`"
+            echo ""
+            echo "À regarder sur Render → \`siptrack-api\` → **Events**, puis **Logs** :"
+            echo "le build a-t-il démarré, et a-t-il échoué ?"
           } >> "$GITHUB_STEP_SUMMARY"
+          exit 1

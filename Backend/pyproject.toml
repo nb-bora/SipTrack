@@ -23,6 +23,9 @@ dev = [
     "django-stubs[compatible-mypy]>=5.1",
     "djangorestframework-stubs>=3.15",
     "import-linter>=2.1",
+    # Absent jusqu'ici : l'etape de CI echouait a chaque execution, masquee par
+    # `continue-on-error`, pendant que le resume affichait une coche codee en dur.
+    "pip-audit>=2.7",
 ]
 
 # Projet applicatif (pas une bibliothèque) : pas de build-system → uv ne le "package" pas.
