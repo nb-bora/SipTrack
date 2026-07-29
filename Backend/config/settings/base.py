@@ -45,6 +45,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "shared.infrastructure.journal",
     "shared.infrastructure.observabilite",
+    "shared.infrastructure.idempotence",
     # Chaque bounded context expose son app Django via sa couche infrastructure.
     "contexts.service_ventes.infrastructure.django_app",
     "contexts.credit_creances.infrastructure.django_app",
@@ -61,6 +62,10 @@ MIDDLEWARE = [
     # englobant le travail des middlewares suivants. Mais après la sécurité, qui
     # doit pouvoir refuser avant qu'on ne mesure quoi que ce soit.
     "shared.infrastructure.observabilite.middleware.ObservabiliteMiddleware",
+    # Après l'observabilité, pour qu'un rejeu apparaisse dans les logs comme
+    # n'importe quelle requête — c'est ainsi qu'on verra un client qui rejoue en
+    # boucle. Avant tout le reste, pour ne pas exécuter la vue deux fois.
+    "shared.infrastructure.idempotence.middleware.IdempotenceMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -178,6 +183,10 @@ SPECTACULAR_SETTINGS = {
 # Nombre de pannes conservées en base. Réglable sans redéploiement : c'est le
 # curseur qu'on veut pouvoir baisser pendant l'incident, pas après.
 OBSERVABILITE_ERREURS_MAX = env.int("OBSERVABILITE_ERREURS_MAX", default=5_000)
+
+# Nombre de clés d'idempotence conservées. Une clé couvre un rejeu qui suit de
+# près la requête d'origine : la mémoire n'a pas à être longue.
+IDEMPOTENCE_CLES_MAX = env.int("IDEMPOTENCE_CLES_MAX", default=20_000)
 
 
 # ---------------------------------------------------------------------------

@@ -44,7 +44,15 @@ def test_lire_sans_jeton_est_refuse() -> None:
 
 @pytest.mark.django_db
 def test_un_jeton_invalide_est_refuse() -> None:
-    client = APIClient()
+    """La clé d'idempotence est fournie pour que ce test éprouve bien le jeton.
+
+    Sans elle, le refus viendrait du middleware d'idempotence (400) avant que
+    l'authentification n'ait son mot à dire — et le test ne prouverait plus rien
+    sur les jetons.
+    """
+    from conftest import ClientAvecCleIdempotente
+
+    client = ClientAvecCleIdempotente()
     client.credentials(HTTP_AUTHORIZATION="Token jeton-fabrique-de-toutes-pieces")
 
     reponse = client.post("/api/services/", _OUVERTURE_SERVICE, format="json")
@@ -93,7 +101,9 @@ def test_le_jeton_obtenu_ouvre_l_acces_et_attribue_le_fait(
     bar_de_test: str,
 ) -> None:
     """Le parcours réel : j'obtiens un jeton, j'écris, le journal porte mon identité."""
-    client = APIClient()
+    from conftest import ClientAvecCleIdempotente
+
+    client = ClientAvecCleIdempotente()
     reponse_jeton = client.post(
         "/api/auth/jeton/",
         {"username": auteur_identifie.username, "password": mot_de_passe},

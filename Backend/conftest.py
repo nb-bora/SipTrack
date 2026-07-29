@@ -6,7 +6,7 @@ L'authentification n'appartient à aucun contexte en particulier : tout test qui
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from rest_framework.test import APIClient
@@ -102,6 +102,29 @@ def autre_bar_de_test(auteur: User, bar_de_test: str) -> str:
     return "bar2"
 
 
+class ClientAvecCleIdempotente(APIClient):
+    """Un client qui n'oublie jamais sa clé d'idempotence.
+
+    Les écritures l'exigent : sans clé, un rejeu créerait un doublon. Un vrai
+    client en génère une par opération ; ce client de test fait de même, une
+    neuve à chaque appel — deux saisies distinctes restent donc deux faits.
+
+    Une clé explicitement fournie l'emporte : c'est ainsi que les tests de rejeu
+    envoient deux fois la même.
+    """
+
+    def generic(  # type: ignore[override]
+        self, method: str, path: str, *args: Any, **kwargs: Any
+    ) -> Any:
+        from uuid import uuid4
+
+        entetes = dict(kwargs.get("headers") or {})
+        if not any(cle.lower() == "idempotency-key" for cle in entetes):
+            entetes["Idempotency-Key"] = f"test-{uuid4()}"
+        kwargs["headers"] = entetes
+        return super().generic(method, path, *args, **kwargs)
+
+
 @pytest.fixture
 def client_api(auteur: User, bar_de_test: str) -> APIClient:
     """Client REST authentifié par jeton, comme le sera l'app mobile.
@@ -112,6 +135,6 @@ def client_api(auteur: User, bar_de_test: str) -> APIClient:
     from rest_framework.authtoken.models import Token
 
     jeton = Token.objects.create(user=auteur)
-    client = APIClient()
+    client = ClientAvecCleIdempotente()
     client.credentials(HTTP_AUTHORIZATION=f"Token {jeton.key}")
     return client

@@ -25,8 +25,10 @@ def _client_de(utilisateur: Any) -> APIClient:
     """Un client REST authentifié au nom de cet utilisateur."""
     from rest_framework.authtoken.models import Token
 
+    from conftest import ClientAvecCleIdempotente
+
     jeton, _ = Token.objects.get_or_create(user=utilisateur)
-    client = APIClient()
+    client = ClientAvecCleIdempotente()
     client.credentials(HTTP_AUTHORIZATION=f"Token {jeton.key}")
     return client
 

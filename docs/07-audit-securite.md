@@ -1,8 +1,8 @@
 # 🔴 AUDIT DE SÉCURITÉ - BLOCKERS CRITIQUES
 
 **Date**: 2026-07-29  
-**Status**: ⚠️ **1 blocker restant** — mis a jour le 2026-07-29  
-**Verdict**: 2 des 3 blockers fermes (PR #52). Reste l'idempotence.
+**Status**: ✅ **Les 3 blockers sont fermes** — mis a jour le 2026-07-29  
+**Verdict**: #52 (cloisonnement, capacites) et #56 (idempotence).
 
 ---
 
@@ -92,7 +92,7 @@ def cloture_service(self, commande: ClotureServiceCommand):
 
 ---
 
-## 🔴 BLOCKER #3 — OUVERT : PAS D'IDEMPOTENCE (APP MOBILE = DOUBLONS)
+## ✅ BLOCKER #3 — FERME (PR #56) : PAS D'IDEMPOTENCE
 
 ### Problème
 L'application mobile est **offline-first** (vu dans le README). Quand elle se reconnecte :
@@ -137,15 +137,13 @@ mouvement = self._journal.enregistrer(..., idempotency_key=commande.idempotency_
 - **Impact**: N'importe qui voit le contrat complet de l'API (endpoints, schémas, paramètres)
 - **Recommandation**: Placer derrière `IsAuthenticated` permission
 
-### Stock & Inventaire = Coquille Vide
-- **État**: 911 lignes de code dans `contexts/stock_inventaire/`
-- **Réalité**: Seuls models + repository + views. Zéro logique métier.
-- **Manque**:
-  - Mouvements de stock (entrée/sortie/casse/offert)
-  - Inventaire physique
-  - Conservation de la matière (invariant #6)
-- **Conséquence**: Ne peut pas tracer où va la marchandise
-- **Recommandation**: Priorité faible (peut être omis en préproduction) ou implémenter complètement
+### ~~Stock & Inventaire = Coquille Vide~~ — AFFIRMATION FAUSSE
+
+> **Correctif du 2026-07-29.** C'est la **troisieme erreur de ce rapport**, apres Swagger (rendu public deliberement, a la demande) et mypy (desactive par erreur de diagnostic, pas par incompatibilite Django).
+>
+> Le domaine de `stock_inventaire` porte bien `creer`, `ajouter_stock`, `vendre` et `corriger_inventaire`, avec leurs invariants et leurs evenements. Ce n'est pas une coquille vide.
+>
+> Ce qui manque reellement : les vidanges, les casiers et les consignes — soit la conservation de la matiere (invariant 6), pas la logique de base.
 
 ### MyPy Désactivé
 - **État**: Complètement en commentaire dans `pyproject.toml`
@@ -170,7 +168,7 @@ mouvement = self._journal.enregistrer(..., idempotency_key=commande.idempotency_
 |---|---|---|---|
 | ✅ FAIT | Cloisonnement bar | — | PR #52 |
 | ✅ FAIT | Capacités appliquées | — | PR #52 |
-| 🔴 P0 | Idempotency_key (journal + dédup) | 2-3j | Moyen (100+ lignes) |
+| ✅ FAIT | Idempotence des écritures | — | PR #56 |
 | 🟠 P1 | Swagger sécurisé (IsAuthenticated) | 1j | Faible (5 lignes) |
 | 🟠 P2 | Stock & Inventaire minimal (optionnel) | 5-7j | Élevé |
 
@@ -181,7 +179,7 @@ mouvement = self._journal.enregistrer(..., idempotency_key=commande.idempotency_
 
 ## 🎯 RECOMMANDATION
 
-**⚠️ UN BLOCKER RESTE : l'idempotence.**
+**Les trois blockers sont fermes.**
 
 Le cloisonnement et les capacites sont fermes. L'app mobile etant offline-first,
 un rejeu de requete cree encore des doublons que le journal immuable ne peut pas
