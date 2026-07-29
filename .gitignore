@@ -29,7 +29,11 @@ db.sqlite3-journal
 # Secrets / configuration locale
 .env
 .env.*
+# Les modèles ne contiennent aucun secret et doivent suivre le dépôt : sans
+# cette exception, `.env.*` les avalerait et la procédure d'installation
+# documentée échouerait sur une machine fraîchement clonée.
 !.env.example
+!.env.docker.example
 *.pem
 
 # Tests / couverture
@@ -64,3 +68,9 @@ build/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Artefact de collectstatic (regénéré à chaque build)
+Backend/staticfiles/
+
+# Volumes et secrets du docker-compose local
+.env.docker

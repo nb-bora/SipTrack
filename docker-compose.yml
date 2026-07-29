@@ -1,0 +1,70 @@
+# Outillage local — base de données et interfaces d'administration.
+#
+# Rien ici ne part en production : Render fait tourner l'application et sa base.
+# Ce fichier sert au développement et à l'exploitation depuis votre machine.
+#
+# Pourquoi Portainer n'est pas sur Render : Portainer pilote un démon Docker via
+# son socket. Render n'expose pas le socket Docker de ses hôtes, donc Portainer
+# n'y aurait rien à gérer. Ici, il gère vos conteneurs locaux — ce pour quoi il
+# est fait.
+#
+#   docker compose --env-file .env.docker up -d
+#
+# Toutes les interfaces sont volontairement publiées sur 127.0.0.1 uniquement :
+# elles restent injoignables depuis le réseau local.
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: siptrack-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-siptrack}
+      POSTGRES_USER: ${DB_USER:-siptrack}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?definir DB_PASSWORD dans .env.docker}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # pgAdmin ne doit pas démarrer avant que la base réponde vraiment.
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-siptrack} -d ${DB_NAME:-siptrack}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:8.14
+    container_name: siptrack-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?definir PGADMIN_EMAIL dans .env.docker}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?definir PGADMIN_PASSWORD dans .env.docker}
+      # Interface locale : le mode « master password » n'ajoute qu'une saisie.
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "127.0.0.1:5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  portainer:
+    image: portainer/portainer-ce:2.21.4
+    container_name: siptrack-portainer
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9443:9443"
+    volumes:
+      # ATTENTION : monter le socket Docker donne à Portainer un contrôle total
+      # du démon, donc l'équivalent de root sur cette machine. C'est inhérent à
+      # l'outil. D'où la publication sur 127.0.0.1 seulement, et un mot de passe
+      # administrateur solide à la première connexion.
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  portainer_data:
