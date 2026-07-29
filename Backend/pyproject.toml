@@ -55,8 +55,25 @@ addopts = "-ra"
 # ---------------------------------------------------------------------------
 # mypy (+ django-stubs)
 # ---------------------------------------------------------------------------
-# MyPy : désactivé temporairement
-# Les modèles Django + mypy strict = problème connu sans solution pragmatique.
-# djangorestframework-stubs et django-stubs ne couvrent pas tous les cas.
-# À réactiver quand on aura des annotations correctes ou une meilleure solution.
-# Pour l'instant : ruff lint + ruff format + pytest + lint-imports suffisent.
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = ["mypy_django_plugin.main"]
+exclude = ['migrations/']
+
+[[tool.mypy.overrides]]
+module = "*.migrations.*"
+ignore_errors = true
+
+# django-environ ne fournit pas de stubs.
+[[tool.mypy.overrides]]
+module = "environ.*"
+ignore_missing_imports = true
+
+# Friction connue DRF + mypy strict : les Serializer génériques sans modèle.
+[[tool.mypy.overrides]]
+module = "contexts.service_ventes.interface.rest.serializers"
+disable_error_code = ["type-arg"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings.dev"
