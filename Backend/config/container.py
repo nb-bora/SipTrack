@@ -12,7 +12,7 @@ ORM avant que les applications Django ne soient prêtes.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from contexts.catalogue.application.dto import ProduitDTO
@@ -498,28 +498,47 @@ class Container:
     # -- Résolution du bar concerné ---------------------------------------
     #
     # Le garde d'autorisation raisonne toujours sur un bar. Quand l'URL désigne
-    # un produit, un client ou un crédit, le bar se lit sur l'objet visé — jamais
-    # sur ce que l'appelant en dit. `None` signifie « introuvable », que le garde
-    # traite comme un refus.
+    # un service, un produit, un client ou un crédit, le bar se lit sur l'objet
+    # visé — jamais sur ce que l'appelant en dit. `None` signifie « introuvable ».
+    #
+    # Ces lectures ne reconstruisent **pas** l'agrégat : elles ne ramènent que la
+    # colonne `bar_id`, par la clé primaire. Charger l'objet entier serait du
+    # travail perdu — le cas d'usage le rechargera de toute façon juste après, et
+    # ce coût se paierait sur *chaque* requête du système.
+
+    @staticmethod
+    def _bar_de(modele: type[Any], identifiant: str, colonne: str = "bar_id") -> str | None:
+        valeur = modele.objects.filter(pk=identifiant).values_list(colonne, flat=True).first()
+        return None if valeur is None else str(valeur)
+
+    def bar_du_service(self, service_id: str) -> str | None:
+        from contexts.service_ventes.infrastructure.django_app.models import ServiceModel
+
+        return self._bar_de(ServiceModel, service_id)
 
     def bar_du_produit_catalogue(self, produit_id: str) -> str | None:
-        produit = self._produit_repository().par_id(produit_id)
-        return None if produit is None else produit.bar_id
+        from contexts.catalogue.infrastructure.django_app.models import ProduitModel
+
+        return self._bar_de(ProduitModel, produit_id)
 
     def bar_du_produit_stock(self, produit_id: str) -> str | None:
-        produit = self._stock_produit_repository().par_id(produit_id)
-        return None if produit is None else produit.bar_id
+        from contexts.stock_inventaire.infrastructure.django_app.models import (
+            ProduitModel as ProduitStockModel,
+        )
+
+        return self._bar_de(ProduitStockModel, produit_id, colonne="bar_id")
 
     def bar_du_client(self, client_id: str) -> str | None:
-        client = self._client_repository().par_id(client_id)
-        return None if client is None else client.bar_id
+        from contexts.credit_creances.infrastructure.django_app.models import ClientModel
+
+        return self._bar_de(ClientModel, client_id)
 
     def bar_du_credit(self, credit_id: str) -> str | None:
         """Un crédit ne porte pas de bar : il tient celui de son débiteur."""
-        credit = self._credit_repository().par_id(credit_id)
-        if credit is None:
-            return None
-        return self.bar_du_client(credit.client_id)
+        from contexts.credit_creances.infrastructure.django_app.models import CreditModel
+
+        client_id = self._bar_de(CreditModel, credit_id, colonne="client_id")
+        return None if client_id is None else self.bar_du_client(client_id)
 
     def gerer_comptes(self) -> GererComptesHandler:
         from contexts.gouvernance_acces.application.use_cases.gerer_comptes import (

@@ -27,7 +27,9 @@ class ControleAccesParCompte:
     def __init__(self, comptes: CompteRepository) -> None:
         self._comptes = comptes
 
-    def exiger(self, *, auteur_id: str, bar_id: str, capacite: str | None, operation: str) -> None:
+    def exiger(
+        self, *, auteur_id: str, bar_id: str, capacite: str | None, operation: str
+    ) -> Capacite:
         """Lève `AccesRefuse` si l'auteur ne peut pas faire cet acte dans ce bar."""
         if capacite is not None and not CapaciteAtomique.valide(capacite):
             # Une capacité mal orthographiée dans un appelant ne doit pas devenir
@@ -39,28 +41,17 @@ class ControleAccesParCompte:
         if compte is None:
             raise AccesRefuse(f"Aucun compte pour {operation} dans ce bar.")
 
-        if capacite is None:
-            return
+        if capacite is not None:
+            try:
+                compte.verifier_capacite(capacite, operation)
+            except CapaciteRequiseManquante as manque:
+                # Traduit vers le vocabulaire partagé : les autres contextes ne
+                # connaissent pas les exceptions de Gouvernance.
+                raise AccesRefuse(str(manque)) from manque
 
-        try:
-            compte.verifier_capacite(capacite, operation)
-        except CapaciteRequiseManquante as manque:
-            # Traduit vers le vocabulaire partagé : les autres contextes ne
-            # connaissent pas les exceptions de Gouvernance.
-            raise AccesRefuse(str(manque)) from manque
-
-    def qualite(self, *, auteur_id: str, bar_id: str) -> Capacite:
-        """Supervision dès lors que la personne peut clôturer un service.
-
-        Clôturer est l'acte qui fige les écarts de la soirée : qui en répond
-        supervise, par définition. Le reste est de l'opération. La règle est
-        volontairement tirée d'une capacité réelle plutôt que d'un champ envoyé
-        avec la requête — c'est tout l'objet du changement.
-        """
-        compte = self._comptes.du_bar_et_user(bar_id=bar_id, user_id=auteur_id)
-        if compte is None:
-            raise AccesRefuse("Aucun compte dans ce bar.")
-
+        # Supervision dès lors que la personne peut clôturer un service :
+        # clôturer est l'acte qui fige les écarts de la soirée, donc qui en
+        # répond supervise. Le reste est de l'opération.
         if compte.possede(CapaciteAtomique.CLOTURER_SERVICE):
             return Capacite.SUPERVISEUSE
         return Capacite.OPERATRICE

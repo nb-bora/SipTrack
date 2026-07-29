@@ -70,7 +70,9 @@ class ControleAcces(Protocol):
     Un booléen se serait ignoré par oubli — une exception, non.
     """
 
-    def exiger(self, *, auteur_id: str, bar_id: str, capacite: str | None, operation: str) -> None:
+    def exiger(
+        self, *, auteur_id: str, bar_id: str, capacite: str | None, operation: str
+    ) -> Capacite:
         """Lève `AccesRefuse` si l'auteur ne peut pas faire cet acte dans ce bar.
 
         `capacite` à `None` n'exige que l'appartenance au bar. C'est le cas des
@@ -81,16 +83,9 @@ class ControleAcces(Protocol):
 
         `operation` est le libellé métier de l'acte (« clôturer le service »),
         destiné au message d'erreur. Il n'entre pas dans la décision.
-        """
-        ...
 
-    def qualite(self, *, auteur_id: str, bar_id: str) -> Capacite:
-        """En quelle qualité cette personne agit dans ce bar.
-
-        Distinct de `exiger` : celui-ci décide si l'acte est permis, celle-ci
-        note ce qu'on inscrit au journal à côté du fait. La qualité se **déduit**
-        des capacités réellement accordées ; la laisser déclarer par l'appelant
-        permettrait de signer une soirée « opératrice » tout en agissant en
-        supervision, et le registre cesserait d'être incontestable.
+        Rend la **qualité** en laquelle l'auteur agit. Le compte vient d'être
+        chargé pour décider ; la déduire au passage évite à l'appelant une
+        seconde recherche identique — mesurée, elle avait bel et bien lieu.
         """
         ...

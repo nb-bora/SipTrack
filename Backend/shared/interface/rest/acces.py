@@ -3,9 +3,16 @@
 `attribution.auteur_id_de` dit **qui** écrit. Ce module dit **s'il a le droit** :
 il consulte le port `ControleAcces` et traduit un refus en 403.
 
-Une seule fonction, appelée en première ligne de chaque vue qui agit sur un bar.
-Elle renvoie l'`auteur_id` plutôt que `None` : la vue en a besoin juste après, et
-le lui rendre ici évite un appel séparé qu'on pourrait faire *sans* le garde.
+Deux gardes, jamais un seul :
+
+- `exiger_lecture` — consulter. Suppose d'appartenir au bar.
+- `exiger_capacite` — agir. Suppose une capacité nommée, accordée.
+
+La séparation n'est pas cosmétique. Un paramètre unique valant tantôt « lecture »
+tantôt « écriture » se remplit mal un jour de fatigue, et l'erreur ne se voit pas
+en revue. Deux fonctions dont le nom porte l'intention rendent la confusion
+visible à la lecture — et permettront d'attacher un privilège de consultation au
+seul chemin de lecture, sans qu'aucune écriture ne puisse l'atteindre.
 
 Le passage par la composition root est le même chemin que les vues empruntent
 déjà pour obtenir un cas d'usage — il n'ouvre aucune porte nouvelle entre
@@ -19,11 +26,46 @@ from rest_framework.request import Request
 
 from config.container import container
 from shared.application.controle_acces import AccesRefuse
+from shared.domain.attribution import Capacite
 from shared.interface.rest.attribution import auteur_id_de
 
 
-def exiger(request: Request, *, bar_id: str, capacite: str | None, operation: str) -> str:
-    """Autorise l'acte, ou lève une 403. Renvoie l'identifiant de l'auteur.
+def exiger_lecture(request: Request, *, bar_id: str, operation: str) -> str:
+    """Autorise une consultation, ou lève une 403. Renvoie l'identifiant du lecteur.
+
+    Appartenir au bar suffit : aucune capacité de lecture n'existe dans
+    l'énumération, et en inventer une par endpoint donnerait une liste que
+    personne ne tiendrait à jour.
+    """
+    return _exiger(request, bar_id=bar_id, capacite=None, operation=operation)
+
+
+def exiger_capacite(request: Request, *, bar_id: str, capacite: str, operation: str) -> str:
+    """Autorise un acte, ou lève une 403. Renvoie l'identifiant de l'auteur.
+
+    Renvoie l'auteur plutôt que `None` : la vue en a besoin juste après, et le
+    lui rendre ici évite un appel séparé qu'on pourrait faire *sans* le garde.
+    """
+    return _exiger(request, bar_id=bar_id, capacite=capacite, operation=operation)
+
+
+def exiger_capacite_et_qualite(
+    request: Request, *, bar_id: str, capacite: str, operation: str
+) -> tuple[str, Capacite]:
+    """Autorise l'acte **et** rend la qualité en laquelle l'auteur agit.
+
+    Réservé au seul acte qui inscrit cette qualité au journal — l'ouverture d'un
+    service. Le contrôle a déjà chargé le compte pour décider ; la redemander
+    ensuite déclenchait une seconde recherche identique, mesurée par
+    `tests/test_cout_du_garde.py`.
+    """
+    auteur = auteur_id_de(request)
+    qualite = _autoriser(auteur, bar_id=bar_id, capacite=capacite, operation=operation)
+    return auteur, qualite
+
+
+def _exiger(request: Request, *, bar_id: str, capacite: str | None, operation: str) -> str:
+    """Chemin commun. Privé : les vues passent par l'une des deux portes nommées.
 
     Le message rendu au client reste volontairement muet sur la cause exacte :
     « ce bar n'existe pas » et « il existe mais vous n'y avez pas de compte »
@@ -31,55 +73,50 @@ def exiger(request: Request, *, bar_id: str, capacite: str | None, operation: st
     des autres.
     """
     auteur = auteur_id_de(request)
+    _autoriser(auteur, bar_id=bar_id, capacite=capacite, operation=operation)
+    return auteur
+
+
+def _autoriser(auteur_id: str, *, bar_id: str, capacite: str | None, operation: str) -> Capacite:
+    """Consulte le port et traduit un refus en 403."""
     try:
-        container.controle_acces().exiger(
-            auteur_id=auteur,
+        return container.controle_acces().exiger(
+            auteur_id=auteur_id,
             bar_id=bar_id,
             capacite=capacite,
             operation=operation,
         )
     except AccesRefuse as refus:
         raise PermissionDenied(str(refus)) from refus
-    return auteur
 
 
-def exiger_sur_bar_resolu(
-    request: Request,
-    *,
-    bar_id: str | None,
-    capacite: str | None,
-    operation: str,
-    introuvable: str,
-) -> str:
-    """Garde pour les actes désignés par l'objet visé plutôt que par le bar.
-
-    Le bar est résolu en amont depuis le produit, le client ou le crédit ; il ne
-    vient jamais de l'appelant. `bar_id` à `None` signifie que l'objet n'existe
-    pas : c'est un 404, pour la même raison que côté service — le contrat le
-    publie déjà, et masquer l'absence derrière un 403 ne protégerait que d'une
-    énumération d'UUID, qui n'est pas praticable.
-    """
-    if bar_id is None:
-        raise NotFound(introuvable)
-    return exiger(request, bar_id=bar_id, capacite=capacite, operation=operation)
+# ---------------------------------------------------------------------------
+# Résolution du bar concerné
+#
+# Séparée de l'autorisation, et non fondue dedans : une fonction par couple
+# (objet visé × lecture/écriture) en aurait fait six. Composer deux briques
+# nommées se lit mieux, et l'oubli du garde reste impossible — sans lui, la vue
+# n'obtient aucun `auteur_id`.
+# ---------------------------------------------------------------------------
 
 
-def exiger_sur_service(
-    request: Request, *, service_id: str, capacite: str | None, operation: str
-) -> str:
-    """Même garde, pour les actes désignés par un service plutôt qu'un bar.
-
-    La plupart des endpoints de Service & Ventes reçoivent `service_id` dans
-    l'URL : le bar concerné se lit sur le service, il n'est jamais fourni par
-    l'appelant.
+def bar_du_service(service_id: str) -> str:
+    """Le bar d'un service, ou 404.
 
     Un service **inconnu** reste un 404, conformément au contrat déjà publié.
     Masquer son absence derrière un 403 protégerait d'une énumération, mais les
     identifiants sont des UUID : les parcourir n'est pas une attaque praticable,
     et ce serait payer une réponse trompeuse pour un gain nul. Un service qui
-    **existe ailleurs**, lui, donne bien 403.
+    **existe ailleurs**, lui, donne bien 403 — c'est le garde qui le décide.
     """
-    service = container.service_par_id(service_id)
-    if service is None:
-        raise NotFound("Service introuvable.")
-    return exiger(request, bar_id=service.bar_id, capacite=capacite, operation=operation)
+    return bar_ou_404(container.bar_du_service(service_id), introuvable="Service introuvable.")
+
+
+def bar_ou_404(bar_id: str | None, *, introuvable: str) -> str:
+    """Transforme un bar non résolu en 404.
+
+    `None` signifie que l'objet visé — produit, client, crédit — n'existe pas.
+    """
+    if bar_id is None:
+        raise NotFound(introuvable)
+    return bar_id

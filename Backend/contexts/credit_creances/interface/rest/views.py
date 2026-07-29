@@ -27,7 +27,7 @@ from contexts.credit_creances.domain.exceptions import (
     RemboursementSuperieurAuReste,
 )
 from shared.application.controle_acces import CapaciteRequise
-from shared.interface.rest.acces import exiger, exiger_sur_bar_resolu
+from shared.interface.rest.acces import bar_ou_404, exiger_capacite, exiger_lecture
 
 from .serializers import (
     ClientOutputSerializer,
@@ -72,7 +72,7 @@ class ClientCreateView(APIView):
         entree = CreerClientInputSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
 
-        exiger(
+        exiger_capacite(
             request,
             bar_id=entree.validated_data["bar_id"],
             capacite=CapaciteRequise.CREER_CLIENT,
@@ -111,12 +111,13 @@ class RemboursementCreateView(APIView):
         commande = EnregistrerRemboursementCommand(
             credit_id=credit_id,
             montant=entree.validated_data["montant"],
-            auteur_id=exiger_sur_bar_resolu(
+            auteur_id=exiger_capacite(
                 request,
-                bar_id=container.bar_du_credit(credit_id),
+                bar_id=bar_ou_404(
+                    container.bar_du_credit(credit_id), introuvable="Crédit introuvable."
+                ),
                 capacite=CapaciteRequise.ENCAISSER_REMBOURSEMENT,
                 operation="encaisser un remboursement",
-                introuvable="Crédit introuvable.",
             ),
         )
 
@@ -146,12 +147,12 @@ class EncoursClientView(APIView):
         },
     )
     def get(self, request: Request, client_id: str) -> Response:
-        exiger_sur_bar_resolu(
+        exiger_lecture(
             request,
-            bar_id=container.bar_du_client(client_id),
-            capacite=None,
+            bar_id=bar_ou_404(
+                container.bar_du_client(client_id), introuvable="Crédit introuvable."
+            ),
             operation="lire un encours",
-            introuvable="Crédit introuvable.",
         )
         encours = container.encours_du_client(client_id)
         if encours is None:
@@ -170,6 +171,6 @@ class EncoursListView(APIView):
         responses={200: EncoursClientOutputSerializer(many=True)},
     )
     def get(self, request: Request, bar_id: str) -> Response:
-        exiger(request, bar_id=bar_id, capacite=None, operation="lire les encours")
+        exiger_lecture(request, bar_id=bar_id, operation="lire les encours")
         encours = container.encours_du_bar(bar_id)
         return Response(EncoursClientOutputSerializer(encours, many=True).data)
