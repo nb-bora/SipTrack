@@ -246,11 +246,18 @@ jobs:
       # On interroge donc l'instance jusqu'à y lire le commit attendu.
       # -----------------------------------------------------------------
       - name: 🔎 Constater que le commit est bien servi
-        if: ${{ secrets.RENDER_DEPLOY_HOOK_URL != '' }}
         env:
+          # Le contexte `secrets` n'est pas utilisable dans un `if` : la
+          # condition vit donc dans le script, comme a l'etape precedente.
+          HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
           URL_SANTE: ${{ vars.RENDER_SERVICE_URL || 'https://siptrack-api.onrender.com' }}
           ATTENDU: ${{ github.sha }}
         run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "Aucun deploiement declenche : rien a constater."
+            exit 0
+          fi
+
           # Le plan gratuit met le service en veille et reconstruit lentement :
           # la fenêtre est large à dessein, l'échec doit signaler un vrai
           # problème, pas de l'impatience.
