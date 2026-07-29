@@ -12,6 +12,31 @@ from .base import MIDDLEWARE
 
 DEBUG = False
 
+
+class ConfigurationManquante(RuntimeError):
+    """Un réglage indispensable est absent : mieux vaut ne pas démarrer."""
+
+
+def _exiger(nom: str) -> str:
+    """Lit une variable d'environnement, ou refuse de démarrer.
+
+    `base.py` porte une valeur de repli pour le développement. En production,
+    hériter de ce repli serait pire qu'une panne : l'application démarrerait,
+    servirait, et signerait jetons et cookies avec une clé **publiée dans un
+    dépôt public**. Une panne au démarrage se voit ; une clé de repli, non.
+    """
+    valeur = os.environ.get(nom, "").strip()
+    if not valeur:
+        raise ConfigurationManquante(
+            f"{nom} est absent de l'environnement. La production ne démarre pas "
+            f"sans — voir docs/06-deploiement.md."
+        )
+    return valeur
+
+
+# Jamais `env(..., default=...)` ici : le défaut est précisément le danger.
+SECRET_KEY = _exiger("SECRET_KEY")
+
 # On relit la variable brute au lieu de passer par `env` : le schéma déclaré
 # dans base.py porte le défaut de développement (localhost, 127.0.0.1), qui
 # n'a rien à faire ici. En production la liste vaut exactement ce qui est

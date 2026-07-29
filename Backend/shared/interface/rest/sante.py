@@ -43,6 +43,10 @@ class SanteView(APIView):
 
     authentication_classes: list[type] = []
     permission_classes = [AllowAny]
+    # Render sonde cette route en continu et la CI l'interroge en boucle pour
+    # constater un deploiement. La soumettre au quota anonyme reviendrait a la
+    # faire echouer precisement quand on en a besoin.
+    throttle_classes: list[type] = []
 
     @extend_schema(
         tags=["Exploitation"],

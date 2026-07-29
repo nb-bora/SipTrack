@@ -9,11 +9,13 @@ from .views import (
     BarListCreateView,
     CapaciteUpdateView,
     CompteCreateView,
+    DeconnexionView,
     ObtenirJetonView,
 )
 
 urlpatterns = [
     path("auth/jeton/", ObtenirJetonView.as_view(), name="obtenir-jeton"),
+    path("auth/deconnexion/", DeconnexionView.as_view(), name="deconnexion"),
     path("bars/", BarListCreateView.as_view(), name="bars"),
     path("bars/<str:bar_id>/acces/", AccesPlateformeListView.as_view(), name="acces-bar"),
     path("comptes/", CompteCreateView.as_view(), name="comptes"),
