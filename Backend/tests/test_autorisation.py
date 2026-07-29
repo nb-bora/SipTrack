@@ -292,6 +292,11 @@ def test_aucun_endpoint_ne_repond_a_un_inconnu(django_user_model: Any) -> None:
         "/api/auth/jeton/",
         # Documentation publique, volontairement ouverte.
         "/api/schema/",
+        # État de l'instance : Render la sonde et la CI l'interroge pour
+        # constater qu'un déploiement a bien abouti. Ni l'un ni l'autre ne
+        # porte de jeton. Elle ne rend que le commit servi — que le dépôt
+        # étant public, n'importe qui peut déjà lire — et l'état de la base.
+        "/api/sante/",
         "/api/doc/",
         "/api/redoc/",
         # Créer son premier bar et lister les siens : le seul point d'entrée de
