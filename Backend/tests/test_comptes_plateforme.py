@@ -24,8 +24,10 @@ from rest_framework.test import APIClient
 def _client_de(utilisateur: Any) -> APIClient:
     from rest_framework.authtoken.models import Token
 
+    from conftest import ClientAvecCleIdempotente
+
     jeton, _ = Token.objects.get_or_create(user=utilisateur)
-    client = APIClient()
+    client = ClientAvecCleIdempotente()
     client.credentials(HTTP_AUTHORIZATION=f"Token {jeton.key}")
     return client
 

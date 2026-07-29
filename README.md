@@ -6,9 +6,9 @@
 
 > Le registre incontestable du bar.
 
-⚠️ **STATUS ACTUEL : PoC — un blocker restant avant la préproduction**
+**Les trois blockers de sécurité sont fermés** : cloisonnement entre bars, contrôle des capacités ([ADR-0006](./docs/decisions/0006-autorisation-a-la-frontiere.md)) et idempotence des écritures ([ADR-0009](./docs/decisions/0009-idempotence-des-ecritures.md)).
 
-Le cloisonnement entre bars et le contrôle des capacités sont en place ([ADR-0006](./docs/decisions/0006-autorisation-a-la-frontiere.md)). **Reste l'idempotence des écritures**, sans quoi l'app mobile hors-ligne créera des doublons irrécupérables. Détail dans [07-audit-securite.md](./docs/07-audit-securite.md).
+⚠️ **Il n'existe pas encore d'inscription publique** : un nouvel arrivant ne peut pas créer son compte par l'API. Restent aussi sans réponse les sauvegardes, le health check et les alertes.
 
 **SipTrack** est un outil de **gestion et d'audit** pour bars au Cameroun : il trace chaque
 mouvement de stock, d'argent, de vidanges, de casiers et de créances, de façon **vérifiable et
@@ -30,7 +30,7 @@ attribuable** — même hors ligne, même quand le propriétaire n'est pas là.
 
 | Dossier | Rôle |
 |---|---|
-| [`Backend/`](./Backend/) | API (Django, DDD + Clean Architecture, **215 tests**) |
+| [`Backend/`](./Backend/) | API (Django, DDD + Clean Architecture, **243 tests**) |
 | [`Frontend/`](./Frontend/) | Application web |
 | [`Mobile/`](./Mobile/) | Application mobile (offline-first) |
 | [`docs/`](./docs/) | **Documentation de référence** : métier, langage, architecture, décisions |
@@ -53,7 +53,7 @@ curl https://siptrack-api.onrender.com/api/doc/
 
 # Ou en local (dev) :
 cd Backend
-uv run pytest              # Tous les tests (215)
+uv run pytest              # Tous les tests (243)
 python manage.py runserver # Démarrer le serveur
 # Puis : http://localhost:8000/api/doc/
 ```
@@ -108,7 +108,7 @@ Voir [docs/06-deploiement.md](./docs/06-deploiement.md) pour la procédure compl
 
 ```bash
 cd Backend
-uv run pytest                              # Tests (215)
+uv run pytest                              # Tests (243)
 uv run ruff check .                        # Lint
 uv run ruff format --check .               # Format
 uv run mypy .                              # Types (strict)
@@ -130,7 +130,7 @@ uv run lint-imports                        # Architecture
 
 | Aspect | État |
 |---|---|
-| **Tests** | 215 ✓ (dont 12 d'autorisation) |
+| **Tests** | 243 ✓ (dont 21 de sécurité) |
 | **Quality gates** | ✓ ruff, mypy strict, lint-imports, pytest |
 | **CI/CD** | ✓ GitHub Actions → Render (auto) |
 | **Documentation** | ✓ Complète (métier + architecture + déploiement) |
