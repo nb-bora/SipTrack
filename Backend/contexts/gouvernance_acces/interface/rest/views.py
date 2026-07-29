@@ -26,9 +26,11 @@ from contexts.gouvernance_acces.domain.exceptions import (
     CompteDejaExistant,
     CompteIntrouvable,
 )
+from shared.interface.rest.acces import exiger_lecture
 from shared.interface.rest.attribution import auteur_id_de
 
 from .serializers import (
+    AccesPlateformeOutputSerializer,
     AccorderCapaciteInputSerializer,
     BarOutputSerializer,
     CompteOutputSerializer,
@@ -225,3 +227,30 @@ class CapaciteUpdateView(APIView):
             return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
 
         return Response(CompteOutputSerializer(dto).data)
+
+
+class AccesPlateformeListView(APIView):
+    """Qui, hors du bar, a consulté ses données.
+
+    C'est la contrepartie du privilège de lecture des comptes plateforme : sans
+    cette vue, la trace existerait sans que personne ne puisse la lire, et le
+    privilège reviendrait à regarder sans être vu.
+    """
+
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Consultations faites par la plateforme sur ce bar",
+        description=(
+            "Les consultations d'une personne travaillant dans le bar n'y figurent "
+            "pas : seules celles exercées au titre du privilège plateforme."
+        ),
+        responses={
+            200: AccesPlateformeOutputSerializer(many=True),
+            403: OpenApiResponse(description="Aucun compte dans ce bar."),
+        },
+    )
+    def get(self, request: Request, bar_id: str) -> Response:
+        exiger_lecture(request, bar_id=bar_id, operation="lire les acces au bar")
+        return Response(
+            AccesPlateformeOutputSerializer(container.acces_du_bar(bar_id), many=True).data
+        )

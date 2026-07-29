@@ -37,7 +37,14 @@ def exiger_lecture(request: Request, *, bar_id: str, operation: str) -> str:
     l'énumération, et en inventer une par endpoint donnerait une liste que
     personne ne tiendrait à jour.
     """
-    return _exiger(request, bar_id=bar_id, capacite=None, operation=operation)
+    auteur = auteur_id_de(request)
+    try:
+        container.controle_acces().exiger_lecture(
+            auteur_id=auteur, bar_id=bar_id, operation=operation
+        )
+    except AccesRefuse as refus:
+        raise PermissionDenied(str(refus)) from refus
+    return auteur
 
 
 def exiger_capacite(request: Request, *, bar_id: str, capacite: str, operation: str) -> str:
@@ -46,7 +53,10 @@ def exiger_capacite(request: Request, *, bar_id: str, capacite: str, operation: 
     Renvoie l'auteur plutôt que `None` : la vue en a besoin juste après, et le
     lui rendre ici évite un appel séparé qu'on pourrait faire *sans* le garde.
     """
-    return _exiger(request, bar_id=bar_id, capacite=capacite, operation=operation)
+    auteur, _ = exiger_capacite_et_qualite(
+        request, bar_id=bar_id, capacite=capacite, operation=operation
+    )
+    return auteur
 
 
 def exiger_capacite_et_qualite(
@@ -60,34 +70,13 @@ def exiger_capacite_et_qualite(
     `tests/test_cout_du_garde.py`.
     """
     auteur = auteur_id_de(request)
-    qualite = _autoriser(auteur, bar_id=bar_id, capacite=capacite, operation=operation)
-    return auteur, qualite
-
-
-def _exiger(request: Request, *, bar_id: str, capacite: str | None, operation: str) -> str:
-    """Chemin commun. Privé : les vues passent par l'une des deux portes nommées.
-
-    Le message rendu au client reste volontairement muet sur la cause exacte :
-    « ce bar n'existe pas » et « il existe mais vous n'y avez pas de compte »
-    doivent se ressembler, sinon la réponse devient un moyen d'énumérer les bars
-    des autres.
-    """
-    auteur = auteur_id_de(request)
-    _autoriser(auteur, bar_id=bar_id, capacite=capacite, operation=operation)
-    return auteur
-
-
-def _autoriser(auteur_id: str, *, bar_id: str, capacite: str | None, operation: str) -> Capacite:
-    """Consulte le port et traduit un refus en 403."""
     try:
-        return container.controle_acces().exiger(
-            auteur_id=auteur_id,
-            bar_id=bar_id,
-            capacite=capacite,
-            operation=operation,
+        qualite = container.controle_acces().exiger_capacite(
+            auteur_id=auteur, bar_id=bar_id, capacite=capacite, operation=operation
         )
     except AccesRefuse as refus:
         raise PermissionDenied(str(refus)) from refus
+    return auteur, qualite
 
 
 # ---------------------------------------------------------------------------

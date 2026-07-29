@@ -52,3 +52,11 @@ class RetirerCapaciteInputSerializer(serializers.Serializer[Any]):
     """Retirer une capacité d'un compte."""
 
     capacite = serializers.CharField()
+
+
+class AccesPlateformeOutputSerializer(serializers.Serializer[Any]):
+    """Une consultation faite au titre du privilège plateforme."""
+
+    administrateur_id = serializers.CharField()
+    operation = serializers.CharField()
+    horodatage = serializers.DateTimeField()

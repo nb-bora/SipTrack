@@ -66,20 +66,30 @@ class AccesRefuse(Exception):
 class ControleAcces(Protocol):
     """Autoriser un acte, ou le refuser.
 
-    Ne renvoie rien : soit l'acte est permis et l'appel passe, soit il lève.
-    Un booléen se serait ignoré par oubli — une exception, non.
+    **Deux méthodes, jamais une seule avec un drapeau.** Un privilège de
+    consultation — celui des comptes plateforme — s'attache à `exiger_lecture`
+    et à lui seul. Tant que les deux chemins sont distincts, aucune écriture ne
+    peut l'atteindre, même par erreur de programmation : il n'y a pas de valeur
+    de paramètre qui fasse basculer l'un dans l'autre.
+
+    Ne renvoient rien d'exploitable en cas de refus : soit l'acte est permis et
+    l'appel passe, soit il lève. Un booléen se serait ignoré par oubli — une
+    exception, non.
     """
 
-    def exiger(
-        self, *, auteur_id: str, bar_id: str, capacite: str | None, operation: str
+    def exiger_lecture(self, *, auteur_id: str, bar_id: str, operation: str) -> None:
+        """Lève `AccesRefuse` si l'auteur ne peut pas consulter ce bar.
+
+        Appartenir au bar suffit : aucune capacité de lecture n'existe dans
+        l'énumération, et en inventer une par endpoint donnerait une liste que
+        personne ne tiendrait à jour.
+        """
+        ...
+
+    def exiger_capacite(
+        self, *, auteur_id: str, bar_id: str, capacite: str, operation: str
     ) -> Capacite:
         """Lève `AccesRefuse` si l'auteur ne peut pas faire cet acte dans ce bar.
-
-        `capacite` à `None` n'exige que l'appartenance au bar. C'est le cas des
-        lectures : consulter les encours de son propre bar ne demande pas de
-        droit particulier, mais consulter ceux du voisin reste fermé. Aucune
-        capacité de lecture n'existe dans l'énumération, et en inventer une par
-        endpoint donnerait une liste que personne ne tiendrait à jour.
 
         `operation` est le libellé métier de l'acte (« clôturer le service »),
         destiné au message d'erreur. Il n'entre pas dans la décision.
