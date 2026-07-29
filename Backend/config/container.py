@@ -12,7 +12,7 @@ ORM avant que les applications Django ne soient prêtes.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from contexts.catalogue.application.dto import ProduitDTO
@@ -94,7 +94,9 @@ if TYPE_CHECKING:
     from contexts.stock_inventaire.domain.repositories import (
         ProduitRepository as StockProduitRepository,
     )
+    from shared.application.controle_acces import ControleAcces
     from shared.application.journal import Journal
+    from shared.application.journal_acces import JournalDesAcces
 
 
 class SystemClock:
@@ -129,6 +131,8 @@ class Container:
         self._produits: ProduitRepository | None = None
         self._bars: BarRepository | None = None
         self._comptes: CompteRepository | None = None
+        self._controle_acces: ControleAcces | None = None
+        self._acces: JournalDesAcces | None = None
         self._catalogue_lecture: CatalogueQueryService | None = None
         self._produits_stock: StockProduitRepository | None = None
         self._journal: Journal | None = None
@@ -477,6 +481,89 @@ class Container:
             comptes=self._compte_repository(),
             journal=self._journal_adapter(),
         )
+
+    def _journal_des_acces(self) -> JournalDesAcces:
+        if self._acces is None:
+            from contexts.gouvernance_acces.infrastructure.journal_acces import (
+                DjangoJournalDesAcces,
+            )
+
+            self._acces = DjangoJournalDesAcces()
+        return self._acces
+
+    def acces_du_bar(self, bar_id: str, limite: int = 200) -> list[Any]:
+        """Les consultations plateforme d'un bar, de la plus récente à la plus ancienne.
+
+        Bornée : cette liste est faite pour être regardée, pas exportée. L'index
+        `(bar_id, -horodatage)` sert exactement cette requête.
+        """
+        from contexts.gouvernance_acces.infrastructure.django_app.models import (
+            AccesPlateformeModel,
+        )
+
+        return list(AccesPlateformeModel.objects.filter(bar_id=bar_id)[:limite])
+
+    def controle_acces(self) -> ControleAcces:
+        """Le garde que consultent toutes les frontières HTTP.
+
+        Gouvernance est le seul contexte à savoir ce qu'est une capacité ; il
+        est donc naturel qu'il réponde. Les autres passent par ce port et ne
+        l'importent jamais.
+        """
+        if self._controle_acces is None:
+            from contexts.gouvernance_acces.infrastructure.controle_acces import (
+                ControleAccesParCompte,
+            )
+
+            self._controle_acces = ControleAccesParCompte(
+                self._compte_repository(), self._journal_des_acces()
+            )
+        return self._controle_acces
+
+    # -- Résolution du bar concerné ---------------------------------------
+    #
+    # Le garde d'autorisation raisonne toujours sur un bar. Quand l'URL désigne
+    # un service, un produit, un client ou un crédit, le bar se lit sur l'objet
+    # visé — jamais sur ce que l'appelant en dit. `None` signifie « introuvable ».
+    #
+    # Ces lectures ne reconstruisent **pas** l'agrégat : elles ne ramènent que la
+    # colonne `bar_id`, par la clé primaire. Charger l'objet entier serait du
+    # travail perdu — le cas d'usage le rechargera de toute façon juste après, et
+    # ce coût se paierait sur *chaque* requête du système.
+
+    @staticmethod
+    def _bar_de(modele: type[Any], identifiant: str, colonne: str = "bar_id") -> str | None:
+        valeur = modele.objects.filter(pk=identifiant).values_list(colonne, flat=True).first()
+        return None if valeur is None else str(valeur)
+
+    def bar_du_service(self, service_id: str) -> str | None:
+        from contexts.service_ventes.infrastructure.django_app.models import ServiceModel
+
+        return self._bar_de(ServiceModel, service_id)
+
+    def bar_du_produit_catalogue(self, produit_id: str) -> str | None:
+        from contexts.catalogue.infrastructure.django_app.models import ProduitModel
+
+        return self._bar_de(ProduitModel, produit_id)
+
+    def bar_du_produit_stock(self, produit_id: str) -> str | None:
+        from contexts.stock_inventaire.infrastructure.django_app.models import (
+            ProduitModel as ProduitStockModel,
+        )
+
+        return self._bar_de(ProduitStockModel, produit_id, colonne="bar_id")
+
+    def bar_du_client(self, client_id: str) -> str | None:
+        from contexts.credit_creances.infrastructure.django_app.models import ClientModel
+
+        return self._bar_de(ClientModel, client_id)
+
+    def bar_du_credit(self, credit_id: str) -> str | None:
+        """Un crédit ne porte pas de bar : il tient celui de son débiteur."""
+        from contexts.credit_creances.infrastructure.django_app.models import CreditModel
+
+        client_id = self._bar_de(CreditModel, credit_id, colonne="client_id")
+        return None if client_id is None else self.bar_du_client(client_id)
 
     def gerer_comptes(self) -> GererComptesHandler:
         from contexts.gouvernance_acces.application.use_cases.gerer_comptes import (

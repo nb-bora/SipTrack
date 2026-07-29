@@ -104,10 +104,16 @@ def test_vendre_un_produit_inconnu_est_refuse(client_api: APIClient) -> None:
 
 
 @pytest.mark.django_db
-def test_vendre_un_produit_d_un_autre_bar_est_refuse(client_api: APIClient) -> None:
-    """Le catalogue de l'un ne fixe pas les prix de l'autre."""
+def test_vendre_un_produit_d_un_autre_bar_est_refuse(
+    client_api: APIClient, autre_bar_de_test: str
+) -> None:
+    """Le catalogue de l'un ne fixe pas les prix de l'autre.
+
+    Les deux bars appartiennent ici à la même personne : la frontière éprouvée
+    est celle du catalogue, pas celle des droits.
+    """
     service_id = ouvrir_service_via_api(client_api)  # bar1
-    produit_id = inscrire_produit_via_api(client_api, prix=1_000, bar_id="bar2")
+    produit_id = inscrire_produit_via_api(client_api, prix=1_000, bar_id=autre_bar_de_test)
 
     reponse = _vendre(client_api, service_id, produit_id)
 

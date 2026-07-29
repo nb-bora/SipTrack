@@ -44,9 +44,71 @@ def auteur_identifie(auteur: User) -> User:
     return auteur
 
 
+# Identifiant du bar où travaillent les tests. Les scénarios le passent en dur
+# depuis toujours ; il désigne désormais un bar réellement existant, puisque agir
+# quelque part suppose d'y tenir un compte.
+BAR_DE_TEST = "bar1"
+
+
 @pytest.fixture
-def client_api(auteur: User) -> APIClient:
-    """Client REST authentifié par jeton, comme le sera l'app mobile."""
+def bar_de_test(auteur: User) -> str:
+    """Un bar où `auteur` tient un compte, avec toutes les capacités.
+
+    Créé directement en base plutôt que par l'API : passer par `POST /api/bars/`
+    donnerait un identifiant tiré au hasard, alors que les scénarios existants
+    nomment ce bar « bar1 ». Le contenu est identique à ce que produit le cas
+    d'usage — un bar, et un compte de propriétaire qui peut tout y faire.
+
+    Les tests d'autorisation, eux, passent par l'API : c'est le chemin qu'ils
+    éprouvent.
+    """
+    from contexts.gouvernance_acces.domain.enums import CapaciteAtomique
+    from contexts.gouvernance_acces.infrastructure.django_app.models import (
+        BarModel,
+        CompteModel,
+    )
+
+    bar = BarModel.objects.create(id=BAR_DE_TEST, nom="Bar de test", proprietaire=auteur)
+    CompteModel.objects.create(
+        id=f"compte-{auteur.pk}-{BAR_DE_TEST}",
+        bar=bar,
+        user=auteur,
+        capacites=sorted(CapaciteAtomique.toutes()),
+    )
+    return BAR_DE_TEST
+
+
+@pytest.fixture
+def autre_bar_de_test(auteur: User, bar_de_test: str) -> str:
+    """Un second bar, appartenant au **même** auteur.
+
+    Sert aux scénarios qui opposent deux bars sans mettre en jeu l'autorisation :
+    qu'une même personne tienne deux établissements est courant, et le catalogue
+    de l'un ne doit pas fixer les prix de l'autre pour autant.
+    """
+    from contexts.gouvernance_acces.domain.enums import CapaciteAtomique
+    from contexts.gouvernance_acces.infrastructure.django_app.models import (
+        BarModel,
+        CompteModel,
+    )
+
+    bar = BarModel.objects.create(id="bar2", nom="Second bar de test", proprietaire=auteur)
+    CompteModel.objects.create(
+        id=f"compte-{auteur.pk}-bar2",
+        bar=bar,
+        user=auteur,
+        capacites=sorted(CapaciteAtomique.toutes()),
+    )
+    return "bar2"
+
+
+@pytest.fixture
+def client_api(auteur: User, bar_de_test: str) -> APIClient:
+    """Client REST authentifié par jeton, comme le sera l'app mobile.
+
+    Dépend de `bar_de_test` : un client authentifié qui n'a de compte nulle part
+    ne peut plus rien faire, et tous les scénarios travaillent dans ce bar.
+    """
     from rest_framework.authtoken.models import Token
 
     jeton = Token.objects.create(user=auteur)

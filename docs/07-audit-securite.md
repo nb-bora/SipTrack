@@ -1,12 +1,12 @@
 # 🔴 AUDIT DE SÉCURITÉ - BLOCKERS CRITIQUES
 
 **Date**: 2026-07-29  
-**Status**: ❌ **NON PRÊT POUR PRÉPRODUCTION**  
-**Verdict**: 3 blockers critiques, 5 corrections requises
+**Status**: ⚠️ **1 blocker restant** — mis a jour le 2026-07-29  
+**Verdict**: 2 des 3 blockers fermes (PR #52). Reste l'idempotence.
 
 ---
 
-## 🔴 BLOCKER #1 : PAS DE CLOISONNEMENT INTER-BARS
+## ✅ BLOCKER #1 — FERME (PR #52) : PAS DE CLOISONNEMENT INTER-BARS
 
 ### Problème
 N'importe quel utilisateur authentifié peut accéder et modifier les données de n'importe quel bar. Le `bar_id` vient du body de la requête, jamais du contexte d'authentification.
@@ -49,7 +49,7 @@ if commande.bar_id not in compte.bars_accessibles:
 
 ---
 
-## 🔴 BLOCKER #2 : CAPACITÉS AUTO-DÉCLARÉES (PAS D'AUTORISATION)
+## ✅ BLOCKER #2 — FERME (PR #52) : CAPACITÉS AUTO-DÉCLARÉES
 
 ### Problème
 Les capacités viennent du client et ne sont jamais validées. N'importe qui peut déclarer avoir n'importe quelle capacité.
@@ -92,7 +92,7 @@ def cloture_service(self, commande: ClotureServiceCommand):
 
 ---
 
-## 🔴 BLOCKER #3 : PAS D'IDEMPOTENCE (APP MOBILE = DOUBLONS)
+## 🔴 BLOCKER #3 — OUVERT : PAS D'IDEMPOTENCE (APP MOBILE = DOUBLONS)
 
 ### Problème
 L'application mobile est **offline-first** (vu dans le README). Quand elle se reconnecte :
@@ -168,8 +168,8 @@ mouvement = self._journal.enregistrer(..., idempotency_key=commande.idempotency_
 
 | Priorité | Tâche | Durée | Effort |
 |---|---|---|---|
-| 🔴 P0 | Cloisonnement bar (filtrer bar_id partout) | 2-3j | Moyen (100+ lignes) |
-| 🔴 P0 | Capacités appliquées (câbler gouvernance_acces) | 1-2j | Moyen (50+ lignes) |
+| ✅ FAIT | Cloisonnement bar | — | PR #52 |
+| ✅ FAIT | Capacités appliquées | — | PR #52 |
 | 🔴 P0 | Idempotency_key (journal + dédup) | 2-3j | Moyen (100+ lignes) |
 | 🟠 P1 | Swagger sécurisé (IsAuthenticated) | 1j | Faible (5 lignes) |
 | 🟠 P2 | Stock & Inventaire minimal (optionnel) | 5-7j | Élevé |
@@ -181,7 +181,11 @@ mouvement = self._journal.enregistrer(..., idempotency_key=commande.idempotency_
 
 ## 🎯 RECOMMANDATION
 
-**❌ NE PAS DÉPLOYER EN PRÉPRODUCTION TANT QUE LES 3 P0 NE SONT PAS CORRIGÉS.**
+**⚠️ UN BLOCKER RESTE : l'idempotence.**
+
+Le cloisonnement et les capacites sont fermes. L'app mobile etant offline-first,
+un rejeu de requete cree encore des doublons que le journal immuable ne peut pas
+reparer.
 
 Les 3 blockers rendent l'outil dangereux :
 - Données exposées

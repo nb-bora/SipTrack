@@ -26,7 +26,8 @@ from contexts.credit_creances.domain.exceptions import (
     CreditIntrouvable,
     RemboursementSuperieurAuReste,
 )
-from shared.interface.rest.attribution import auteur_id_de
+from shared.application.controle_acces import CapaciteRequise
+from shared.interface.rest.acces import bar_ou_404, exiger_capacite, exiger_lecture
 
 from .serializers import (
     ClientOutputSerializer,
@@ -71,6 +72,12 @@ class ClientCreateView(APIView):
         entree = CreerClientInputSerializer(data=request.data)
         entree.is_valid(raise_exception=True)
 
+        exiger_capacite(
+            request,
+            bar_id=entree.validated_data["bar_id"],
+            capacite=CapaciteRequise.CREER_CLIENT,
+            operation="creer un client",
+        )
         dto = container.creer_client().executer(
             CreerClientCommand(
                 bar_id=entree.validated_data["bar_id"],
@@ -104,7 +111,14 @@ class RemboursementCreateView(APIView):
         commande = EnregistrerRemboursementCommand(
             credit_id=credit_id,
             montant=entree.validated_data["montant"],
-            auteur_id=auteur_id_de(request),
+            auteur_id=exiger_capacite(
+                request,
+                bar_id=bar_ou_404(
+                    container.bar_du_credit(credit_id), introuvable="Crédit introuvable."
+                ),
+                capacite=CapaciteRequise.ENCAISSER_REMBOURSEMENT,
+                operation="encaisser un remboursement",
+            ),
         )
 
         try:
@@ -133,6 +147,13 @@ class EncoursClientView(APIView):
         },
     )
     def get(self, request: Request, client_id: str) -> Response:
+        exiger_lecture(
+            request,
+            bar_id=bar_ou_404(
+                container.bar_du_client(client_id), introuvable="Crédit introuvable."
+            ),
+            operation="lire un encours",
+        )
         encours = container.encours_du_client(client_id)
         if encours is None:
             return Response({"detail": "Client introuvable."}, status=status.HTTP_404_NOT_FOUND)
@@ -150,5 +171,6 @@ class EncoursListView(APIView):
         responses={200: EncoursClientOutputSerializer(many=True)},
     )
     def get(self, request: Request, bar_id: str) -> Response:
+        exiger_lecture(request, bar_id=bar_id, operation="lire les encours")
         encours = container.encours_du_bar(bar_id)
         return Response(EncoursClientOutputSerializer(encours, many=True).data)

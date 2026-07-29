@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 
 _OUVERTURE_SERVICE = {
     "bar_id": "bar1",
-    "capacite": "operatrice",
     "fond_de_caisse": 10_000,
 }
 
@@ -91,6 +90,7 @@ def test_obtenir_un_jeton_avec_un_mauvais_mot_de_passe_est_refuse(
 def test_le_jeton_obtenu_ouvre_l_acces_et_attribue_le_fait(
     auteur_identifie: User,
     mot_de_passe: str,
+    bar_de_test: str,
 ) -> None:
     """Le parcours réel : j'obtiens un jeton, j'écris, le journal porte mon identité."""
     client = APIClient()

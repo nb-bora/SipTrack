@@ -24,7 +24,8 @@ from contexts.catalogue.domain.exceptions import (
     ProduitIntrouvable,
     TarifInchange,
 )
-from shared.interface.rest.attribution import auteur_id_de
+from shared.application.controle_acces import CapaciteRequise
+from shared.interface.rest.acces import bar_ou_404, exiger_capacite, exiger_lecture
 
 from .serializers import (
     ChangerLeTarifInputSerializer,
@@ -71,7 +72,12 @@ class ProduitCreateView(APIView):
             bar_id=entree.validated_data["bar_id"],
             nom=entree.validated_data["nom"],
             prix=entree.validated_data["prix"],
-            auteur_id=auteur_id_de(request),
+            auteur_id=exiger_capacite(
+                request,
+                bar_id=entree.validated_data["bar_id"],
+                capacite=CapaciteRequise.INSCRIRE_PRODUIT,
+                operation="inscrire un produit",
+            ),
         )
         try:
             dto = container.gerer_le_catalogue().inscrire(commande)
@@ -89,6 +95,7 @@ class CatalogueListView(APIView):
         responses={200: ProduitOutputSerializer(many=True)},
     )
     def get(self, request: Request, bar_id: str) -> Response:
+        exiger_lecture(request, bar_id=bar_id, operation="lire le catalogue")
         produits = container.catalogue_du_bar(bar_id)
         return Response(ProduitOutputSerializer(produits, many=True).data)
 
@@ -118,7 +125,15 @@ class TarifUpdateView(APIView):
         commande = ChangerLeTarifCommand(
             produit_id=produit_id,
             nouveau_prix=entree.validated_data["prix"],
-            auteur_id=auteur_id_de(request),
+            auteur_id=exiger_capacite(
+                request,
+                bar_id=bar_ou_404(
+                    container.bar_du_produit_catalogue(produit_id),
+                    introuvable="Produit introuvable.",
+                ),
+                capacite=CapaciteRequise.TARIFER,
+                operation="changer un tarif",
+            ),
         )
         try:
             dto = container.gerer_le_catalogue().changer_le_tarif(commande)
@@ -147,7 +162,15 @@ class ProduitRetraitView(APIView):
     def post(self, request: Request, produit_id: str) -> Response:
         commande = RetirerProduitCommand(
             produit_id=produit_id,
-            auteur_id=auteur_id_de(request),
+            auteur_id=exiger_capacite(
+                request,
+                bar_id=bar_ou_404(
+                    container.bar_du_produit_catalogue(produit_id),
+                    introuvable="Produit introuvable.",
+                ),
+                capacite=CapaciteRequise.RETIRER_PRODUIT,
+                operation="retirer un produit",
+            ),
         )
         try:
             dto = container.gerer_le_catalogue().retirer(commande)

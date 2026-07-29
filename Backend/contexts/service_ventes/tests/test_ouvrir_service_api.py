@@ -23,7 +23,6 @@ def test_ouvrir_service_cree_le_service_et_journalise_le_mouvement(
         "/api/services/",
         {
             "bar_id": "bar1",
-            "capacite": "operatrice",
             "fond_de_caisse": 10_000,
         },
         format="json",
