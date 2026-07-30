@@ -35,6 +35,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
+    "corsheaders",
     "drf_spectacular",
     # Sert les assets de Swagger depuis le serveur, pas depuis un CDN : l'outil
     # vise des bars, pas un bureau fibré.
@@ -58,6 +59,11 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    # Avant tout ce qui peut produire une réponse : un preflight OPTIONS doit
+    # être tranché ici, sans traverser la chaîne. C'est de la plomberie de
+    # navigateur, pas une requête métier — la mesurer ou l'idempotenter n'aurait
+    # aucun sens. N'autorise par défaut *aucune* origine : voir dev.py.
+    "corsheaders.middleware.CorsMiddleware",
     # Placé tôt : il mesure la durée réellement subie par l'appelant, en
     # englobant le travail des middlewares suivants. Mais après la sécurité, qui
     # doit pouvoir refuser avant qu'on ne mesure quoi que ce soit.

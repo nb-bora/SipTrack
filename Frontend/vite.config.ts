@@ -12,4 +12,19 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    server: {
+      // L'API est servie par Django sur un autre port. Sans ce relais, le
+      // navigateur bloquerait chaque appel faute d'en-têtes CORS côté backend.
+      // Le relais rend les requêtes de même origine : le problème disparaît au
+      // lieu d'être contourné. Laisser VITE_API_URL vide pour que les URLs
+      // restent relatives.
+      proxy: {
+        "/api": {
+          target: "http://127.0.0.1:8000",
+          changeOrigin: true,
+        },
+      },
+    },
+  },
 });
