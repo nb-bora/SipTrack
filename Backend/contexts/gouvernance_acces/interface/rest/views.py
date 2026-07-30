@@ -306,17 +306,14 @@ class InscrireView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        message = (
-            "Inscription réussie. Utilisez votre username et mot de passe "
-            "pour obtenir un jeton."
-        )
+        msg = "Inscription réussie. Utilisez votre username et mot de passe pour obtenir un jeton."
         return Response(
             InscrireOutputSerializer(
                 {
                     "user_id": user_id,
                     "bar_id": bar_dto.id,
                     "bar_nom": bar_dto.nom,
-                    "message": message,
+                    "message": msg,
                 }
             ).data,
             status=status.HTTP_201_CREATED,
