@@ -75,6 +75,7 @@ function PageAccueil() {
               <Label htmlFor="fond">Fond de caisse (FCFA)</Label>
               <Input
                 id="fond"
+                icone={Coins}
                 inputMode="numeric"
                 pattern="[0-9]*"
                 value={fond}

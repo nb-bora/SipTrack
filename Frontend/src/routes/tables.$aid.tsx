@@ -23,6 +23,7 @@ import { signalerErreur } from "@/domaine/erreurs";
 import { toast } from "sonner";
 import { formatHeure } from "@/domaine/format";
 import { cn } from "@/lib/utils";
+import { Coins, User } from "lucide-react";
 
 export const Route = createFileRoute("/tables/$aid")({
   head: () => ({
@@ -299,6 +300,7 @@ function FormPaiement({
       <div>
         <Label>Montant à encaisser</Label>
         <Input
+          icone={Coins}
           inputMode="numeric"
           pattern="[0-9]*"
           value={montant}
@@ -348,6 +350,7 @@ function FormPaiement({
             </p>
             <div className="flex gap-2">
               <Input
+                icone={User}
                 placeholder="Nom du client"
                 value={clientNom}
                 onChange={(e) => setClientNom(e.target.value)}

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Beer } from "lucide-react";
+import { Beer, Lock, User } from "lucide-react";
 import { authJeton } from "@/api/endpoints";
 import { definirJeton, useSession } from "@/etat/session";
 import { Button } from "@/components/ui/button";
@@ -73,13 +73,21 @@ function PageConnexion() {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="u">Identifiant</Label>
-            <Input id="u" autoComplete="username" value={u} onChange={(e) => setU(e.target.value)} required />
+            <Input
+              id="u"
+              icone={User}
+              autoComplete="username"
+              value={u}
+              onChange={(e) => setU(e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="p">Mot de passe</Label>
             <Input
               id="p"
               type="password"
+              icone={Lock}
               autoComplete="current-password"
               value={p}
               onChange={(e) => setP(e.target.value)}
@@ -95,7 +103,14 @@ function PageConnexion() {
             {encours ? "Connexion…" : "Se connecter"}
           </Button>
           <p className="text-center text-xs text-muted-foreground">
-            Les comptes sont créés par la gérante.
+            Pas encore de compte ?{" "}
+            <button
+              type="button"
+              onClick={() => nav({ to: "/inscription" })}
+              className="font-medium text-primary hover:underline"
+            >
+              S'inscrire
+            </button>
           </p>
         </div>
       </form>

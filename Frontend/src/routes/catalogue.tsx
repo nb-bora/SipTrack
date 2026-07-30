@@ -12,6 +12,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { Produit } from "@/api/types";
 import { cn } from "@/lib/utils";
+import { Beer, Coins } from "lucide-react";
 
 export const Route = createFileRoute("/catalogue")({
   head: () => ({
@@ -53,8 +54,14 @@ function PageCatalogue() {
         onSubmit={(e) => { e.preventDefault(); if (nom.trim() && prix) mCreer.mutate(); }}
         className="mb-4 grid grid-cols-[1fr_120px_auto] gap-2"
       >
-        <Input placeholder="Nom du produit" value={nom} onChange={(e) => setNom(e.target.value)} />
         <Input
+          icone={Beer}
+          placeholder="Nom du produit"
+          value={nom}
+          onChange={(e) => setNom(e.target.value)}
+        />
+        <Input
+          icone={Coins}
           inputMode="numeric"
           pattern="[0-9]*"
           placeholder="Prix"
@@ -115,6 +122,7 @@ function LigneProduit({ p }: { p: Produit }) {
         <div className="mt-3 space-y-2">
           <Label>Nouveau tarif</Label>
           <Input
+            icone={Coins}
             inputMode="numeric"
             pattern="[0-9]*"
             value={prix}
