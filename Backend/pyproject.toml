@@ -12,6 +12,7 @@ dependencies = [
     "gunicorn>=26.0.0",
     "whitenoise>=6.12.0",
     "argon2-cffi>=25.1.0",
+    "django-cors-headers>=4.9.0",
 ]
 
 # PEP 735 — groupes de dépendances (gérés par uv)
