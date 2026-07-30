@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Montant, TitrePage } from "@/components/ui-siptrack";
 import { signalerErreur } from "@/domaine/erreurs";
 import { toast } from "sonner";
+import { Hash } from "lucide-react";
 
 export const Route = createFileRoute("/tables")({
   head: () => ({
@@ -97,6 +98,7 @@ function PageTables() {
         className="mb-4 flex gap-2"
       >
         <Input
+          icone={Hash}
           inputMode="numeric"
           pattern="[0-9]*"
           placeholder="N° de table"

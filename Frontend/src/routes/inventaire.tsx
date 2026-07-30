@@ -11,6 +11,7 @@ import type { ProduitStock } from "@/api/types";
 import { useState } from "react";
 import { toast } from "sonner";
 import { signalerErreur } from "@/domaine/erreurs";
+import { FileText, Hash, Package } from "lucide-react";
 
 export const Route = createFileRoute("/inventaire")({
   head: () => ({
@@ -51,8 +52,14 @@ function PageInv() {
         onSubmit={(e) => { e.preventDefault(); if (nom.trim() && qte) mCreer.mutate(); }}
         className="mb-4 grid grid-cols-[1fr_120px_auto] gap-2"
       >
-        <Input placeholder="Nom" value={nom} onChange={(e) => setNom(e.target.value)} />
         <Input
+          icone={Package}
+          placeholder="Nom"
+          value={nom}
+          onChange={(e) => setNom(e.target.value)}
+        />
+        <Input
+          icone={Hash}
           inputMode="numeric"
           pattern="[0-9]*"
           placeholder="Qté initiale"
@@ -120,6 +127,7 @@ function LigneStock({ p }: { p: ProduitStock }) {
         <div className="mt-3 space-y-2">
           <Label>Quantité à ajouter</Label>
           <Input
+            icone={Hash}
             inputMode="numeric"
             pattern="[0-9]*"
             value={ajout}
@@ -135,13 +143,14 @@ function LigneStock({ p }: { p: ProduitStock }) {
         <div className="mt-3 space-y-2">
           <Label>Quantité constatée après comptage</Label>
           <Input
+            icone={Hash}
             inputMode="numeric"
             pattern="[0-9]*"
             value={nouvQte}
             onChange={(e) => setNouvQte(e.target.value.replace(/\D/g, ""))}
           />
           <Label>Raison (obligatoire — c'est ce qui rend l'écart opposable)</Label>
-          <Input value={raison} onChange={(e) => setRaison(e.target.value)} />
+          <Input icone={FileText} value={raison} onChange={(e) => setRaison(e.target.value)} />
           <Button
             className="w-full"
             disabled={mCorr.isPending || !nouvQte || !raison.trim()}

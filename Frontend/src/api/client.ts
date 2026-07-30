@@ -2,7 +2,9 @@
 // Toutes les URLs se terminent par un slash. Auth : `Token <jeton>` (jamais Bearer).
 // Toute écriture porte un Idempotency-Key UUID v4, réutilisé en cas de réessai.
 
-const BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, "") ?? "";
+// Vide par défaut : les URLs deviennent relatives, donc de même origine. C'est
+// le cas nominal quand l'API est servie derrière le même hôte que l'app.
+export const BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, "") ?? "";
 
 export class ErreurAPI extends Error {
   constructor(

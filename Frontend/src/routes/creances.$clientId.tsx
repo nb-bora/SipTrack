@@ -9,6 +9,7 @@ import { LigneKV, Montant, TitrePage } from "@/components/ui-siptrack";
 import { useState } from "react";
 import { toast } from "sonner";
 import { signalerErreur } from "@/domaine/erreurs";
+import { Coins } from "lucide-react";
 
 export const Route = createFileRoute("/creances/$clientId")({
   head: () => ({
@@ -103,6 +104,7 @@ function PageClient() {
           <div>
             <Label>Montant du remboursement</Label>
             <Input
+              icone={Coins}
               inputMode="numeric"
               pattern="[0-9]*"
               value={montant}

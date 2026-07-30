@@ -17,6 +17,7 @@ import { Route as ClotureRouteImport } from './routes/cloture'
 import { Route as ConnexionRouteImport } from './routes/connexion'
 import { Route as CreancesRouteImport } from './routes/creances'
 import { Route as EquipeRouteImport } from './routes/equipe'
+import { Route as InscriptionRouteImport } from './routes/inscription'
 import { Route as InventaireRouteImport } from './routes/inventaire'
 import { Route as JournalAccesRouteImport } from './routes/journal-acces'
 import { Route as RecetteRouteImport } from './routes/recette'
@@ -64,6 +65,11 @@ const CreancesRoute = CreancesRouteImport.update({
 const EquipeRoute = EquipeRouteImport.update({
   id: '/equipe',
   path: '/equipe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InscriptionRoute = InscriptionRouteImport.update({
+  id: '/inscription',
+  path: '/inscription',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InventaireRoute = InventaireRouteImport.update({
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/connexion': typeof ConnexionRoute
   '/creances': typeof CreancesRouteWithChildren
   '/equipe': typeof EquipeRoute
+  '/inscription': typeof InscriptionRoute
   '/inventaire': typeof InventaireRoute
   '/journal-acces': typeof JournalAccesRoute
   '/recette': typeof RecetteRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/connexion': typeof ConnexionRoute
   '/creances': typeof CreancesRouteWithChildren
   '/equipe': typeof EquipeRoute
+  '/inscription': typeof InscriptionRoute
   '/inventaire': typeof InventaireRoute
   '/journal-acces': typeof JournalAccesRoute
   '/recette': typeof RecetteRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/connexion': typeof ConnexionRoute
   '/creances': typeof CreancesRouteWithChildren
   '/equipe': typeof EquipeRoute
+  '/inscription': typeof InscriptionRoute
   '/inventaire': typeof InventaireRoute
   '/journal-acces': typeof JournalAccesRoute
   '/recette': typeof RecetteRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/connexion'
     | '/creances'
     | '/equipe'
+    | '/inscription'
     | '/inventaire'
     | '/journal-acces'
     | '/recette'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/connexion'
     | '/creances'
     | '/equipe'
+    | '/inscription'
     | '/inventaire'
     | '/journal-acces'
     | '/recette'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/connexion'
     | '/creances'
     | '/equipe'
+    | '/inscription'
     | '/inventaire'
     | '/journal-acces'
     | '/recette'
@@ -228,6 +240,7 @@ export interface RootRouteChildren {
   ConnexionRoute: typeof ConnexionRoute
   CreancesRoute: typeof CreancesRouteWithChildren
   EquipeRoute: typeof EquipeRoute
+  InscriptionRoute: typeof InscriptionRoute
   InventaireRoute: typeof InventaireRoute
   JournalAccesRoute: typeof JournalAccesRoute
   RecetteRoute: typeof RecetteRoute
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/equipe'
       fullPath: '/equipe'
       preLoaderRoute: typeof EquipeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inscription': {
+      id: '/inscription'
+      path: '/inscription'
+      fullPath: '/inscription'
+      preLoaderRoute: typeof InscriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inventaire': {
@@ -385,6 +405,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConnexionRoute: ConnexionRoute,
   CreancesRoute: CreancesRouteWithChildren,
   EquipeRoute: EquipeRoute,
+  InscriptionRoute: InscriptionRoute,
   InventaireRoute: InventaireRoute,
   JournalAccesRoute: JournalAccesRoute,
   RecetteRoute: RecetteRoute,

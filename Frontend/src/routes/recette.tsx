@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { LigneKV, Montant, TitrePage } from "@/components/ui-siptrack";
 import { signalerErreur } from "@/domaine/erreurs";
 import { toast } from "sonner";
+import { Coins } from "lucide-react";
 
 export const Route = createFileRoute("/recette")({
   head: () => ({
@@ -87,6 +88,7 @@ function PageRecette() {
         <Label htmlFor="m">Montant remis en caisse (FCFA)</Label>
         <Input
           id="m"
+          icone={Coins}
           inputMode="numeric"
           pattern="[0-9]*"
           value={montant}

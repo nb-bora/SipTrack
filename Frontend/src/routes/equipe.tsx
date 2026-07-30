@@ -12,6 +12,7 @@ import type { Capacite, Compte } from "@/api/types";
 import { useState } from "react";
 import { toast } from "sonner";
 import { signalerErreur } from "@/domaine/erreurs";
+import { User } from "lucide-react";
 
 export const Route = createFileRoute("/equipe")({
   head: () => ({
@@ -52,7 +53,12 @@ function PageEquipe() {
         </p>
         <div className="space-y-2">
           <Label>Identifiant utilisateur</Label>
-          <Input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="user_id" />
+          <Input
+            icone={User}
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            placeholder="user_id"
+          />
           <div className="mt-2 grid grid-cols-1 gap-2">
             {TOUTES_CAPACITES.map((c) => (
               <label key={c} className="flex items-center justify-between rounded-md border border-border p-2 text-sm">

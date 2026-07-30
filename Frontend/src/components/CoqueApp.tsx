@@ -19,7 +19,10 @@ import { getSante } from "@/api/endpoints";
 import { deconnecter, useSession } from "@/etat/session";
 import { cn } from "@/lib/utils";
 
-const ROUTES_SANS_COQUE = new Set(["/connexion", "/bars", "/"]);
+// Routes atteignables sans jeton : le garde ne doit pas les renvoyer vers /connexion.
+const ROUTES_PUBLIQUES = new Set(["/connexion", "/inscription"]);
+
+const ROUTES_SANS_COQUE = new Set(["/connexion", "/inscription", "/bars", "/"]);
 
 export function CoqueApp({ children }: { children: ReactNode }) {
   const loc = useLocation();
@@ -29,9 +32,10 @@ export function CoqueApp({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const p = loc.pathname;
-    if (!jeton && p !== "/connexion") {
+    const publique = ROUTES_PUBLIQUES.has(p);
+    if (!jeton && !publique) {
       nav({ to: "/connexion" });
-    } else if (jeton && !barId && p !== "/bars" && p !== "/connexion") {
+    } else if (jeton && !barId && p !== "/bars" && !publique) {
       nav({ to: "/bars" });
     } else if (jeton && p === "/") {
       nav({ to: barId ? "/accueil" : "/bars" });

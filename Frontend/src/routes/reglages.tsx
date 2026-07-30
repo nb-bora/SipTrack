@@ -7,6 +7,7 @@ import { useSession, deconnecter, definirBar } from "@/etat/session";
 import { ecrireServiceCourant, lireServiceCourant } from "@/etat/local";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/reglages")({
   head: () => ({
@@ -58,7 +59,12 @@ function PageReglages() {
           </p>
           <p className="mb-2 text-xs text-muted-foreground">Actuel : {courant ?? "aucun"}</p>
           <div className="flex gap-2">
-            <Input value={sid} onChange={(e) => setSid(e.target.value)} placeholder="service_id" />
+            <Input
+              icone={ClipboardList}
+              value={sid}
+              onChange={(e) => setSid(e.target.value)}
+              placeholder="service_id"
+            />
             <Button
               disabled={!sid.trim() || !barId}
               onClick={() => {

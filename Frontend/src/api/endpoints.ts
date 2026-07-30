@@ -1,5 +1,5 @@
 // Wrappers typés sur les endpoints. Aucun nom inventé : voir le contrat §3.
-import { ecrire, lire } from "./client";
+import { BASE, ecrire, lire } from "./client";
 import type {
   AccesEntree,
   Addition,
@@ -24,11 +24,21 @@ import type {
 
 // Auth (publique)
 export const authJeton = (username: string, password: string) =>
-  fetch(`${(import.meta.env.VITE_API_URL as string).replace(/\/+$/, "")}/api/auth/jeton/`, {
+  fetch(`${BASE}/api/auth/jeton/`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ username, password }),
   });
+
+export const inscrire = (username: string, password: string, nom_bar: string, email?: string) =>
+  fetch(`${BASE}/api/inscription/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ username, password, email: email || "", nom_bar }),
+  });
+
+export const deconnecter = (cle?: string) =>
+  ecrire<void>("POST", "/api/auth/deconnexion/", undefined, { cle });
 
 export const getSante = () => lire<Sante>("/api/sante/", { auth: false });
 
