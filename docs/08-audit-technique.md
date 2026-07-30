@@ -45,7 +45,7 @@ L'écart ne vient pas de la qualité du code — qui est **au-dessus de la moyen
 
 ```python
 def enregistrer(self, evenements, *, auteur_id):
-    self._verrouiller_la_chaine()      # verrou consultatif GLOBAL
+    self._verrouiller_la_chaine()  # verrou consultatif GLOBAL
     precedent = MouvementModel.objects.order_by("-sequence").first()
 ```
 
@@ -126,7 +126,7 @@ Conséquence si cela arrivait : signature des jetons, des cookies et des jetons 
 
 ```python
 # prod.py
-SECRET_KEY = os.environ["SECRET_KEY"]   # KeyError explicite au demarrage
+SECRET_KEY = os.environ["SECRET_KEY"]  # KeyError explicite au demarrage
 ```
 
 **Priorité : 1** · **Effort : Faible** (15 min)
@@ -226,8 +226,10 @@ SECRET_KEY = os.environ["SECRET_KEY"]   # KeyError explicite au demarrage
 
 ```python
 def tous(self, bar_id):
-    return tuple(self._encours(client)              # 1 requete PAR client
-                 for client in ClientModel.objects.filter(bar_id=bar_id))
+    return tuple(
+        self._encours(client)  # 1 requete PAR client
+        for client in ClientModel.objects.filter(bar_id=bar_id)
+    )
 ```
 
 **Mesure** (`CaptureQueriesContext`) :

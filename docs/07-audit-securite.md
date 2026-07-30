@@ -120,6 +120,7 @@ class MouvementModel(models.Model):
     idempotency_key = models.CharField(unique=True, null=True, blank=True)
     # Seule combinaison (mouvement_type, bar_id, idempotency_key) crée
 
+
 # Dans chaque handler
 if self._journal.existe_mouvement_avec_cle(idempotency_key):
     return self._journal.retrouver_mouvement(idempotency_key)

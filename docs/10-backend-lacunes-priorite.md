@@ -34,14 +34,14 @@ dependencies = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # ← Ajouter, AVANT les autres
     "django.middleware.security.SecurityMiddleware",
-    ...
+    ...,
 ]
 
 # En bas du fichier
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",    # dev local
-    "http://127.0.0.1:5173",    # dev local (alt)
-    "https://yourdomain.com",   # prod
+    "http://localhost:5173",  # dev local
+    "http://127.0.0.1:5173",  # dev local (alt)
+    "https://yourdomain.com",  # prod
 ]
 
 # Optionnel mais recommandé en prod :
@@ -70,10 +70,11 @@ C'est une **query service simple** — aucune règle métier. Modèle :
 ```python
 # Backend/contexts/service_ventes/infrastructure/persistence/query_service.py
 
+
 class DjangoServiceQueryService:
     def par_bar(self, bar_id: str) -> tuple[ServiceDTO, ...]:
         """Liste tous les services d'un bar, triés par date d'ouverture décroissante."""
-        services = ServiceModel.objects.filter(bar_id=bar_id).order_by('-ouvert_le')
+        services = ServiceModel.objects.filter(bar_id=bar_id).order_by("-ouvert_le")
         return tuple(ServiceDTO.depuis(s) for s in services)
 ```
 
@@ -81,6 +82,7 @@ Ajouter une vue :
 
 ```python
 # Backend/contexts/service_ventes/interface/rest/views.py
+
 
 class ServiceListView(APIView):
     @extend_schema(
@@ -100,7 +102,7 @@ Enregistrer la route :
 # Backend/contexts/service_ventes/interface/rest/urls.py
 urlpatterns = [
     path("bars/<str:bar_id>/services/", ServiceListView.as_view(), name="services-bar"),
-    ...
+    ...,
 ]
 ```
 
@@ -123,10 +125,13 @@ Query service :
 ```python
 # Backend/contexts/service_ventes/infrastructure/persistence/query_service.py
 
+
 class DjangoAdditionQueryService:
     def par_service(self, service_id: str) -> tuple[AdditionDTO, ...]:
         """Liste toutes les additions d'un service, triées par table_numero."""
-        additions = AdditionModel.objects.filter(service_id=service_id).order_by('table_numero')
+        additions = AdditionModel.objects.filter(service_id=service_id).order_by(
+            "table_numero"
+        )
         return tuple(AdditionDTO.depuis(a) for a in additions)
 ```
 
@@ -134,6 +139,7 @@ Vue :
 
 ```python
 # Backend/contexts/service_ventes/interface/rest/views.py
+
 
 class AdditionListView(APIView):
     @extend_schema(
@@ -156,8 +162,12 @@ Route :
 ```python
 # Backend/contexts/service_ventes/interface/rest/urls.py
 urlpatterns = [
-    path("services/<str:service_id>/additions/", AdditionListView.as_view(), name="additions-service"),
-    ...
+    path(
+        "services/<str:service_id>/additions/",
+        AdditionListView.as_view(),
+        name="additions-service",
+    ),
+    ...,
 ]
 ```
 
