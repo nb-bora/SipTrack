@@ -47,6 +47,16 @@ class RetirerCapaciteCommand:
 
 
 @dataclass(frozen=True)
+class InscrireUtilisateurCommand:
+    """Créer un compte utilisateur et son premier bar (inscription publique)."""
+
+    username: str
+    password: str
+    nom_bar: str
+    email: str = ""
+
+
+@dataclass(frozen=True)
 class BarDTO:
     """Représentation d'un bar."""
 

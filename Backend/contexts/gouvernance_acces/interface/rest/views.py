@@ -17,7 +17,11 @@ from contexts.gouvernance_acces.application.dto import (
     AccorderCapaciteCommand,
     CreerBarCommand,
     CreerCompteCommand,
+    InscrireUtilisateurCommand,
     RetirerCapaciteCommand,
+)
+from contexts.gouvernance_acces.application.use_cases.inscrire_utilisateur import (
+    UtilisateurDejaInscrit,
 )
 from contexts.gouvernance_acces.domain.exceptions import (
     AutoriseNonAutorisé,
@@ -36,6 +40,8 @@ from .serializers import (
     CompteOutputSerializer,
     CreerBarInputSerializer,
     CreerCompteInputSerializer,
+    InscrireInputSerializer,
+    InscrireOutputSerializer,
     RetirerCapaciteInputSerializer,
 )
 
@@ -253,6 +259,67 @@ class AccesPlateformeListView(APIView):
         exiger_lecture(request, bar_id=bar_id, operation="lire les acces au bar")
         return Response(
             AccesPlateformeOutputSerializer(container.acces_du_bar(bar_id), many=True).data
+        )
+
+
+class InscrireView(APIView):
+    """Inscription publique : créer un compte et un premier bar."""
+
+    authentication_classes = []
+    permission_classes = []
+
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="S'inscrire",
+        description=(
+            "Crée un utilisateur, son premier bar et un compte avec capacités pleines. "
+            "Après inscription, l'utilisateur peut obtenir un jeton en s'authentifiant."
+        ),
+        request=InscrireInputSerializer,
+        responses={
+            201: InscrireOutputSerializer,
+            400: _validation(),
+            409: _erreur("Cet utilisateur existe déjà."),
+        },
+    )
+    def post(self, request: Request) -> Response:
+        entree = InscrireInputSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+
+        try:
+            bar_dto, user_id = container.inscrire_utilisateur().inscrire(
+                InscrireUtilisateurCommand(
+                    username=entree.validated_data["username"],
+                    password=entree.validated_data["password"],
+                    email=entree.validated_data.get("email", ""),
+                    nom_bar=entree.validated_data["nom_bar"],
+                )
+            )
+        except UtilisateurDejaInscrit as erreur:
+            return Response(
+                {"detail": f"Cet utilisateur existe déjà : {str(erreur)}."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except Exception as erreur:
+            return Response(
+                {"detail": str(erreur)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        message = (
+            "Inscription réussie. Utilisez votre username et mot de passe "
+            "pour obtenir un jeton."
+        )
+        return Response(
+            InscrireOutputSerializer(
+                {
+                    "user_id": user_id,
+                    "bar_id": bar_dto.id,
+                    "bar_nom": bar_dto.nom,
+                    "message": message,
+                }
+            ).data,
+            status=status.HTTP_201_CREATED,
         )
 
 

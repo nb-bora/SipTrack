@@ -60,3 +60,21 @@ class AccesPlateformeOutputSerializer(serializers.Serializer[Any]):
     administrateur_id = serializers.CharField()
     operation = serializers.CharField()
     horodatage = serializers.DateTimeField()
+
+
+class InscrireInputSerializer(serializers.Serializer[Any]):
+    """Inscription publique : créer un compte et un premier bar."""
+
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(max_length=128, write_only=True)
+    email = serializers.EmailField(required=False, default="")
+    nom_bar = serializers.CharField(max_length=120)
+
+
+class InscrireOutputSerializer(serializers.Serializer[Any]):
+    """Confirmation d'inscription."""
+
+    user_id = serializers.CharField()
+    bar_id = serializers.CharField()
+    bar_nom = serializers.CharField()
+    message = serializers.CharField()
