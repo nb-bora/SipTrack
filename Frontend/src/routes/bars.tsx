@@ -10,6 +10,7 @@ import { useState } from "react";
 import { signalerErreur } from "@/domaine/erreurs";
 import { TitrePage } from "@/components/ui-siptrack";
 import { toast } from "sonner";
+import { Store } from "lucide-react";
 
 export const Route = createFileRoute("/bars")({
   head: () => ({
@@ -56,7 +57,13 @@ function PageBars() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-8">
-      <TitrePage titre="Vos bars" sous="Choisissez le bar sur lequel travailler." />
+      {/*
+        La liste mêle désormais les bars que l'on possède et ceux où l'on tient
+        simplement un compte : le titre ne peut plus présumer la possession.
+        Distinguer les deux à l'écran suppose de connaître son propre user_id,
+        que l'API n'expose pas encore — voir GET /api/moi/ (#67).
+      */}
+      <TitrePage titre="Où travaillez-vous ?" sous="Choisissez le bar sur lequel travailler." />
       {q.isLoading ? (
         <div className="space-y-2">
           <div className="h-16 animate-pulse rounded-lg bg-muted" />
@@ -75,10 +82,13 @@ function PageBars() {
                 }}
                 className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-4 py-4 text-left hover:border-primary"
               >
-                <div>
-                  <div className="font-semibold">{b.nom}</div>
-                  <div className="text-xs text-muted-foreground">Propriétaire : {b.proprietaire_id}</div>
-                </div>
+                {/*
+                  L'identifiant du propriétaire n'est plus affiché : c'est une
+                  clé technique, illisible pour une gérante, et depuis que la
+                  liste inclut les bars d'autrui elle désignerait une tierce
+                  personne sans rien apprendre à qui la lit.
+                */}
+                <div className="font-semibold">{b.nom}</div>
                 <span className="text-primary">→</span>
               </button>
             </li>
@@ -94,7 +104,12 @@ function PageBars() {
       >
         <h2 className="mb-2 font-semibold">Créer un bar</h2>
         <div className="flex gap-2">
-          <Input placeholder="Nom du bar" value={nom} onChange={(e) => setNom(e.target.value)} />
+          <Input
+            icone={Store}
+            placeholder="Nom du bar"
+            value={nom}
+            onChange={(e) => setNom(e.target.value)}
+          />
           <Button type="submit" disabled={m.isPending || !nom.trim()}>
             {m.isPending ? "Création…" : "Créer"}
           </Button>
