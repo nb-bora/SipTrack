@@ -88,7 +88,8 @@ function PageAccueil() {
             </Button>
           </form>
           <p className="mt-4 text-xs text-muted-foreground">
-            Si un service est déjà en cours mais absent d'ici, saisissez son identifiant dans Réglages.
+            Si un service est déjà en cours mais absent d'ici, saisissez son identifiant dans
+            Réglages.
           </p>
         </div>
       ) : q.isLoading ? (
@@ -107,10 +108,19 @@ function PageAccueil() {
                 {LIBELLE_STATUT_SERVICE[service.statut]}
               </span>
             </div>
-            <LigneKV k="Fond de caisse" v={<Montant valeur={service.fond_de_caisse} taille="lg" />} />
-            <LigneKV k="Ouvert le" v={<span className="text-sm">{formatDateHeure(service.ouvert_le)}</span>} />
+            <LigneKV
+              k="Fond de caisse"
+              v={<Montant valeur={service.fond_de_caisse} taille="lg" />}
+            />
+            <LigneKV
+              k="Ouvert le"
+              v={<span className="text-sm">{formatDateHeure(service.ouvert_le)}</span>}
+            />
             {service.clos_le ? (
-              <LigneKV k="Clos le" v={<span className="text-sm">{formatDateHeure(service.clos_le)}</span>} />
+              <LigneKV
+                k="Clos le"
+                v={<span className="text-sm">{formatDateHeure(service.clos_le)}</span>}
+              />
             ) : null}
             <p className="mt-3 text-[11px] text-muted-foreground">Service : {service.id}</p>
           </div>
@@ -139,7 +149,15 @@ function PageAccueil() {
   );
 }
 
-function ActionCarte({ to, icon: Icon, titre }: { to: string; icon: React.ComponentType<{ className?: string }>; titre: string }) {
+function ActionCarte({
+  to,
+  icon: Icon,
+  titre,
+}: {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  titre: string;
+}) {
   return (
     <Link
       to={to}

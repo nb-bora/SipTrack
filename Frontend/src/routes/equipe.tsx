@@ -27,7 +27,9 @@ export const Route = createFileRoute("/equipe")({
 function PageEquipe() {
   const { barId } = useSession();
   const [userId, setUserId] = useState("");
-  const [initiales, setInitiales] = useState<Set<Capacite>>(new Set(["enregistrer_vente", "encaisser"]));
+  const [initiales, setInitiales] = useState<Set<Capacite>>(
+    new Set(["enregistrer_vente", "encaisser"]),
+  );
   const [dernier, setDernier] = useState<Compte | null>(null);
 
   const mCreer = useEcriture(
@@ -49,7 +51,8 @@ function PageEquipe() {
       <div className="rounded-xl border border-border bg-card p-4">
         <h2 className="mb-2 font-semibold">Créer un compte</h2>
         <p className="mb-3 text-xs text-muted-foreground">
-          Renseignez l'identifiant utilisateur (fourni par la plateforme) et les capacités initiales.
+          Renseignez l'identifiant utilisateur (fourni par la plateforme) et les capacités
+          initiales.
         </p>
         <div className="space-y-2">
           <Label>Identifiant utilisateur</Label>
@@ -61,7 +64,10 @@ function PageEquipe() {
           />
           <div className="mt-2 grid grid-cols-1 gap-2">
             {TOUTES_CAPACITES.map((c) => (
-              <label key={c} className="flex items-center justify-between rounded-md border border-border p-2 text-sm">
+              <label
+                key={c}
+                className="flex items-center justify-between rounded-md border border-border p-2 text-sm"
+              >
                 <span>{LIBELLE_CAPACITE[c]}</span>
                 <Switch
                   checked={initiales.has(c)}
@@ -75,7 +81,11 @@ function PageEquipe() {
               </label>
             ))}
           </div>
-          <Button className="mt-3 h-12 w-full" disabled={mCreer.isPending || !userId.trim()} onClick={() => mCreer.mutate()}>
+          <Button
+            className="mt-3 h-12 w-full"
+            disabled={mCreer.isPending || !userId.trim()}
+            onClick={() => mCreer.mutate()}
+          >
             {mCreer.isPending ? "Création…" : "Créer le compte"}
           </Button>
         </div>
@@ -88,11 +98,17 @@ function PageEquipe() {
 
 function BlocCompte({ compte, onChange }: { compte: Compte; onChange: (c: Compte) => void }) {
   const mAjout = useEcriture((c: Capacite, cle) => ajouterCapacite(compte.id, c, cle), {
-    onSuccess: (c) => { onChange(c); toast.success("Capacité accordée."); },
+    onSuccess: (c) => {
+      onChange(c);
+      toast.success("Capacité accordée.");
+    },
     onError: signalerErreur,
   });
   const mRetrait = useEcriture((c: Capacite, cle) => retirerCapacite(compte.id, c, cle), {
-    onSuccess: (c) => { onChange(c); toast.success("Capacité retirée."); },
+    onSuccess: (c) => {
+      onChange(c);
+      toast.success("Capacité retirée.");
+    },
     onError: signalerErreur,
   });
   return (
@@ -104,7 +120,10 @@ function BlocCompte({ compte, onChange }: { compte: Compte; onChange: (c: Compte
           const on = compte.capacites.includes(c);
           const busy = mAjout.isPending || mRetrait.isPending;
           return (
-            <label key={c} className="flex items-center justify-between rounded-md border border-border p-2 text-sm">
+            <label
+              key={c}
+              className="flex items-center justify-between rounded-md border border-border p-2 text-sm"
+            >
               <span>{LIBELLE_CAPACITE[c]}</span>
               <Switch
                 checked={on}

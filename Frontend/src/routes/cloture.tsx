@@ -68,7 +68,8 @@ function PageCloture() {
 
       {additionsLocales.length > 0 ? (
         <div className="mt-4 rounded-md border border-attente/40 bg-attente/10 p-3 text-sm text-attente">
-          {additionsLocales.length} table(s) semblent encore ouvertes depuis cet appareil. Réglez-les d'abord.
+          {additionsLocales.length} table(s) semblent encore ouvertes depuis cet appareil.
+          Réglez-les d'abord.
         </div>
       ) : null}
 
@@ -90,10 +91,18 @@ function PageCloture() {
             {sc.data?.map((x) => (
               <tr key={x.serveuse_id} className="border-t border-border">
                 <td className="px-3 py-2">{x.serveuse_id.slice(0, 8)}</td>
-                <td className="px-3 py-2 text-right montant">{x.encaisse_especes.toLocaleString("fr-FR")}</td>
-                <td className="px-3 py-2 text-right montant">{x.encaisse_mobile_money.toLocaleString("fr-FR")}</td>
+                <td className="px-3 py-2 text-right montant">
+                  {x.encaisse_especes.toLocaleString("fr-FR")}
+                </td>
+                <td className="px-3 py-2 text-right montant">
+                  {x.encaisse_mobile_money.toLocaleString("fr-FR")}
+                </td>
                 <td className="px-3 py-2 text-right">
-                  {x.verse === null ? <span className="text-attente">en&nbsp;attente</span> : <span className="montant">{x.verse.toLocaleString("fr-FR")}</span>}
+                  {x.verse === null ? (
+                    <span className="text-attente">en&nbsp;attente</span>
+                  ) : (
+                    <span className="montant">{x.verse.toLocaleString("fr-FR")}</span>
+                  )}
                 </td>
                 <td className="px-3 py-2 text-right">
                   {x.ecart === null ? (
@@ -102,7 +111,11 @@ function PageCloture() {
                     <span
                       className={
                         "montant " +
-                        (x.ecart === 0 ? "text-solde" : x.ecart > 0 ? "text-attente" : "text-manquant")
+                        (x.ecart === 0
+                          ? "text-solde"
+                          : x.ecart > 0
+                            ? "text-attente"
+                            : "text-manquant")
                       }
                     >
                       {x.ecart.toLocaleString("fr-FR")}
@@ -131,8 +144,8 @@ function PageCloture() {
         {m.isPending
           ? "Clôture…"
           : confirme
-          ? "Confirmer la clôture (irréversible)"
-          : "Clôturer le service"}
+            ? "Confirmer la clôture (irréversible)"
+            : "Clôturer le service"}
       </Button>
     </div>
   );

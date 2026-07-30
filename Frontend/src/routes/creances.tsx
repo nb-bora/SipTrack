@@ -25,7 +25,10 @@ function PageCreances() {
   const tries = useMemo(() => [...(q.data ?? [])].sort((a, b) => b.reste - a.reste), [q.data]);
   return (
     <div>
-      <TitrePage titre="Créances" sous="Les clients dont toutes les dettes sont éteintes n'apparaissent pas." />
+      <TitrePage
+        titre="Créances"
+        sous="Les clients dont toutes les dettes sont éteintes n'apparaissent pas."
+      />
       {q.isLoading ? (
         <div className="h-24 animate-pulse rounded-xl bg-muted" />
       ) : tries.length === 0 ? (
@@ -44,11 +47,14 @@ function PageCreances() {
                 <div>
                   <div className="font-semibold">{c.client_nom}</div>
                   <div className="text-xs text-muted-foreground">
-                    Dû <Montant valeur={c.total_du} taille="sm" /> · remboursé <Montant valeur={c.total_rembourse} taille="sm" />
+                    Dû <Montant valeur={c.total_du} taille="sm" /> · remboursé{" "}
+                    <Montant valeur={c.total_rembourse} taille="sm" />
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Reste</div>
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    Reste
+                  </div>
                   <Montant valeur={c.reste} taille="lg" ton="manquant" />
                 </div>
               </Link>

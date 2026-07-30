@@ -73,7 +73,11 @@ function PageVente() {
       <div>
         <TitrePage titre="Vente rapide" />
         <p className="text-sm text-muted-foreground">
-          Aucun service en cours. <button onClick={() => nav({ to: "/accueil" })} className="text-primary underline">Ouvrir un service</button>.
+          Aucun service en cours.{" "}
+          <button onClick={() => nav({ to: "/accueil" })} className="text-primary underline">
+            Ouvrir un service
+          </button>
+          .
         </p>
       </div>
     );
@@ -157,9 +161,9 @@ function PageVente() {
               ))}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Le crédit n'est pas proposé ici : une vente au comptoir ne désigne aucun débiteur, donc
-              aucune créance ne pourrait être ouverte. Pour laisser une ardoise, ouvrez une table et
-              encaissez-la en crédit au nom d'un client.
+              Le crédit n'est pas proposé ici : une vente au comptoir ne désigne aucun débiteur,
+              donc aucune créance ne pourrait être ouverte. Pour laisser une ardoise, ouvrez une
+              table et encaissez-la en crédit au nom d'un client.
             </p>
           </div>
           <p className="mt-3 text-[11px] text-muted-foreground">
