@@ -45,6 +45,9 @@ if TYPE_CHECKING:
     from contexts.gouvernance_acces.application.use_cases.gerer_comptes import (
         GererComptesHandler,
     )
+    from contexts.gouvernance_acces.application.use_cases.inscrire_utilisateur import (
+        InscrireUtilisateurHandler,
+    )
     from contexts.gouvernance_acces.domain.repositories import (
         BarRepository,
         CompteRepository,
@@ -476,6 +479,19 @@ class Container:
         from shared.infrastructure.unit_of_work import DjangoUnitOfWork
 
         return GererBarsHandler(
+            uow=DjangoUnitOfWork(),
+            bars=self._bar_repository(),
+            comptes=self._compte_repository(),
+            journal=self._journal_adapter(),
+        )
+
+    def inscrire_utilisateur(self) -> InscrireUtilisateurHandler:
+        from contexts.gouvernance_acces.application.use_cases.inscrire_utilisateur import (
+            InscrireUtilisateurHandler,
+        )
+        from shared.infrastructure.unit_of_work import DjangoUnitOfWork
+
+        return InscrireUtilisateurHandler(
             uow=DjangoUnitOfWork(),
             bars=self._bar_repository(),
             comptes=self._compte_repository(),

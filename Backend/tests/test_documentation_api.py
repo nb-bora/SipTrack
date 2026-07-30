@@ -57,6 +57,7 @@ def test_le_schema_couvre_toutes_les_routes(client_api: APIClient) -> None:
     chemins = set(_schema(client_api)["paths"])
 
     assert chemins == {
+        "/api/inscription/",
         "/api/auth/jeton/",
         "/api/auth/deconnexion/",
         "/api/services/",

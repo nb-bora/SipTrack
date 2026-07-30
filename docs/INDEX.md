@@ -12,6 +12,12 @@ Bienvenue ! Cette documentation est organisée par **domaines métier** et **tes
 - **[06 — Déploiement et outillage](./06-deploiement.md)** — Render, CI/CD, pgAdmin, Portainer
 - **[07 — Audit de sécurité](./07-audit-securite.md)** — **⚠️ Blocker restant avant production**
 
+### 🎨 Frontend & Harmonisation
+
+- **[09 — Harmonisation Frontend ↔ Backend](./09-harmonisation-frontend-backend.md)** — Contrat API, corrections, state of the art
+- **[10 — Backend : lacunes et priorité](./10-backend-lacunes-priorite.md)** — 3 trous connus (CORS, query services), comment les corriger
+- **[11 — Audit alignement : PARFAIT ✅](./11-audit-alignement-parfait.md)** — Vérification pointilliste de tous les 32 endpoints
+
 ### 🏢 Domaines métier
 
 Chaque domaine a sa propre documentation, organisée par **fonctionnalité** :
@@ -63,6 +69,13 @@ Chaque domaine a une suite de tests organisée par niveau (domaine, application,
 ---
 
 ## 🎯 Cas d'usage courants
+
+### Je veux intégrer le frontend avec le backend
+
+1. Lire [09 — Harmonisation Frontend ↔ Backend](./09-harmonisation-frontend-backend.md) — Contrat exact, état de conformité
+2. Consulter [10 — Backend : lacunes et priorité](./10-backend-lacunes-priorite.md) — Ce qu'il faut corriger et par où commencer
+3. Mettre en place CORS sur le backend
+4. Lancer le test basique (voir doc 09)
 
 ### Je veux comprendre une fonctionnalité
 
@@ -174,7 +187,9 @@ docs/
 ├── 02-modele-metier.md
 ├── 03-architecture-backend.md
 ├── 06-deploiement.md
-├── 07-audit-securite.md (⚠️ LIRE EN PRIORITÉ)
+├── 07-audit-securite.md               (⚠️ LIRE AVANT PROD)
+├── 09-harmonisation-frontend-backend.md
+├── 10-backend-lacunes-priorite.md
 │
 ├── domaines/
 │   └── service-ventes/
