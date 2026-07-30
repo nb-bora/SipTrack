@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from django.db import IntegrityError
+from django.db.models import Q
 
 from contexts.gouvernance_acces.domain.bar import Bar
 from contexts.gouvernance_acces.domain.compte import Compte
@@ -60,6 +61,19 @@ class DjangoBarRepository:
 
     def du_proprietaire(self, proprietaire_id: str) -> tuple[Bar, ...]:
         modeles = BarModel.objects.filter(proprietaire_id=int(proprietaire_id))
+        return tuple(_vers_bar(m) for m in modeles)
+
+    def accessibles_par(self, user_id: str) -> tuple[Bar, ...]:
+        # `distinct()` est indispensable : la jointure sur les comptes ramène le
+        # bar autant de fois qu'il compte de lignes correspondantes, et un
+        # propriétaire — qui tient aussi un compte chez lui — le verrait deux fois.
+        modeles = (
+            BarModel.objects.filter(
+                Q(proprietaire_id=int(user_id)) | Q(comptes__user_id=int(user_id))
+            )
+            .distinct()
+            .order_by("cree_le")
+        )
         return tuple(_vers_bar(m) for m in modeles)
 
 

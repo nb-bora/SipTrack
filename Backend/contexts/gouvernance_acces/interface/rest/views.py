@@ -127,7 +127,11 @@ class BarListCreateView(APIView):
     @extend_schema(
         tags=_ETIQUETTES,
         summary="Lister mes bars",
-        description="Liste tous les bars que je possède.",
+        description=(
+            "Les bars où je peux travailler : ceux que je possède, et ceux où je "
+            "tiens un compte. Une employée ne possède rien — s'en tenir à la "
+            "propriété lui renverrait une liste vide, donc aucune porte d'entrée."
+        ),
         responses={200: BarOutputSerializer(many=True)},
     )
     def get(self, request: Request) -> Response:

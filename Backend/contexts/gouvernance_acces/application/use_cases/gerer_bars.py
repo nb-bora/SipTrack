@@ -74,10 +74,14 @@ class GererBarsHandler:
 
             return BarDTO.depuis_bar(bar)
 
-    def lister(self, proprietaire_id: str) -> tuple[BarDTO, ...]:
-        """Liste tous les bars du propriétaire.
+    def lister(self, user_id: str) -> tuple[BarDTO, ...]:
+        """Liste les bars où cette personne peut travailler.
+
+        Possession **et** rattachement : une employée ne possède aucun bar, et
+        s'en tenir à la propriété lui renverrait une liste vide — donc aucune
+        porte d'entrée dans l'application.
 
         Pas d'authentification requise — l'identité vient du jeton.
         """
-        bars = self._bars.du_proprietaire(proprietaire_id)
+        bars = self._bars.accessibles_par(user_id)
         return tuple(BarDTO.depuis_bar(b) for b in bars)
