@@ -9,10 +9,21 @@
 retirer de l'environnement laissait la production démarrer quand même, avec
 cette valeur — publiée dans un dépôt public.
 
-`config/settings/prod.py` lit désormais `SECRET_KEY` par `_exiger()`, qui lève
+`config/settings/prod.py` lit désormais `SECRET_KEY` par `exiger()`, qui lève
 `ConfigurationManquante` si la variable est absente ou vide. Une panne au
 démarrage se voit dans les journaux Render ; une clé de repli qui sert
 silencieusement ne se voit pas.
+
+### Pourquoi le garde vit dans son propre module
+
+Il était d'abord dans `prod.py`. La CI l'a rejeté, et à raison : `prod.py`
+**appelle** le garde au chargement, donc l'importer pour l'éprouver le
+déclenchait. Le test ne pouvait passer que dans un environnement déjà
+configuré — c'est-à-dire jamais là où le garde sert. En local il passait, un
+fichier `.env` fournissant la clé ; en CI, non.
+
+`config/settings/garde.py` n'a aucun effet de bord : il s'importe, et se teste.
+Un module qui en a se contente d'être exécuté.
 
 ## S2 — Débit limité sur l'ensemble de l'API
 

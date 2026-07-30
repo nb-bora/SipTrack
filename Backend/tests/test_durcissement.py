@@ -43,32 +43,37 @@ def test_la_production_refuse_de_demarrer_sans_secret_key(
     Il est **publié dans un dépôt public**. Une application qui démarre avec lui
     signe jetons et cookies avec une clé que tout le monde peut lire — et rien
     ne le signale, puisqu'elle démarre.
+
+    On éprouve le garde lui-même, jamais `prod.py` : ce module *appelle* le
+    garde au chargement, donc l'importer ici le déclencherait — et le test ne
+    passerait que dans un environnement déjà configuré, c'est-à-dire jamais là
+    où il sert. C'est exactement ce qui a fait échouer la CI.
     """
-    from config.settings.prod import ConfigurationManquante, _exiger
+    from config.settings.garde import ConfigurationManquante, exiger
 
     monkeypatch.delenv("SECRET_KEY", raising=False)
 
     with pytest.raises(ConfigurationManquante, match="SECRET_KEY"):
-        _exiger("SECRET_KEY")
+        exiger("SECRET_KEY")
 
 
 def test_la_production_accepte_une_cle_fournie(monkeypatch: pytest.MonkeyPatch) -> None:
     """La contrepartie : le garde ne doit pas bloquer un démarrage légitime."""
-    from config.settings.prod import _exiger
+    from config.settings.garde import exiger
 
     monkeypatch.setenv("SECRET_KEY", "une-cle-de-production")
 
-    assert _exiger("SECRET_KEY") == "une-cle-de-production"
+    assert exiger("SECRET_KEY") == "une-cle-de-production"
 
 
 def test_une_cle_vide_vaut_une_cle_absente(monkeypatch: pytest.MonkeyPatch) -> None:
     """Une variable déclarée mais vide est une erreur de configuration courante."""
-    from config.settings.prod import ConfigurationManquante, _exiger
+    from config.settings.garde import ConfigurationManquante, exiger
 
     monkeypatch.setenv("SECRET_KEY", "   ")
 
     with pytest.raises(ConfigurationManquante):
-        _exiger("SECRET_KEY")
+        exiger("SECRET_KEY")
 
 
 # ---------------------------------------------------------------------------
