@@ -235,6 +235,39 @@ jobs:
           reponse=$(curl --silent --show-error --fail-with-body                          --retry 3 --retry-delay 5 --max-time 30                          -X POST "$HOOK_URL")
           echo "Réponse Render : $reponse"
 
+          # Un hook de **Blueprint** relit render.yaml et repond « sync
+          # started ». Il ne deploie pas le code : si render.yaml n'a pas
+          # change, il n'a rien a faire. C'est ce qui a fige la production
+          # pendant quatre PR, derriere un pipeline vert.
+          #
+          # Un hook de **service** repond {"deploy":{"id":"dep-..."}} et
+          # declenche un vrai build. C'est celui-la qu'il faut.
+          case "$reponse" in
+            *"sync started"*|*blueprint*)
+              echo "::error title=Hook de Blueprint au lieu d'un hook de service::Ce hook ne deploie pas le code."
+              {
+                echo "## ❌ Mauvais type de deploy hook"
+                echo ""
+                echo "Render a repondu :"
+                echo ""
+                echo '```'
+                echo "$reponse"
+                echo '```'
+                echo ""
+                echo "C'est un hook de **Blueprint** : il relit \`render.yaml\`, mais **ne deploie pas le code**."
+                echo "Tant qu'il est configure, chaque merge laissera la production sur l'ancienne version."
+                echo ""
+                echo "### Corriger"
+                echo ""
+                echo "1. Render → \`siptrack-api\` → **Settings** → **Deploy Hook**"
+                echo "2. Copier l'URL — elle contient \`srv-\`, pas \`exs-\`"
+                echo "3. GitHub → **Settings** → **Secrets and variables** → **Actions**"
+                echo "4. Remplacer \`RENDER_DEPLOY_HOOK_URL\`"
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+              ;;
+          esac
+
       # -----------------------------------------------------------------
       # Constater, pas supposer.
       #

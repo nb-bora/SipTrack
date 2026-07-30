@@ -89,6 +89,36 @@ donc la moindre commande en échec arrête le build :
 
 ---
 
+
+## ⚠️ Le deploy hook doit être celui du **service**, pas du Blueprint
+
+Render propose deux hooks, et l'un des deux ne déploie rien.
+
+| Hook | Réponse | Effet |
+|---|---|---|
+| **Blueprint** (`exs-…`) | `sync started, …/blueprint/…/sync/` | relit `render.yaml` — **ne déploie pas le code** |
+| **Service** (`srv-…`) | `{"deploy":{"id":"dep-…"}}` | déclenche un vrai build ✅ |
+
+Un hook de Blueprint qui ne trouve aucun changement dans `render.yaml` **n'a rien
+à faire** : il répond « sync started » et s'arrête. Le job de CI se déclarait
+alors vert, et la production restait sur l'ancienne version.
+
+**C'est arrivé, et c'est passé inaperçu quatre PR d'affilée** : l'idempotence
+(#56), le health check (#58) et le durcissement sécurité (#60) sont restés hors
+ligne pendant que le pipeline affichait tout vert.
+
+### Récupérer le bon hook
+
+1. Render → **`siptrack-api`** → **Settings** → **Deploy Hook**
+2. L'URL contient **`srv-`**. Si elle contient `exs-`, c'est le Blueprint : mauvais hook.
+3. GitHub → **Settings** → **Secrets and variables** → **Actions**
+4. Remplacer `RENDER_DEPLOY_HOOK_URL`
+
+La CI refuse désormais un hook de Blueprint dès la première réponse, avec la
+marche à suivre dans le résumé du job — plutôt que d'attendre dix minutes un
+déploiement qui ne viendra pas.
+
+
 ## 2. Outillage local
 
 ```bash
