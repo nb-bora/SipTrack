@@ -46,7 +46,11 @@ function PageReglages() {
         <section className="rounded-xl border border-border bg-card p-4">
           <h2 className="mb-2 font-semibold">Thème</h2>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={themeClair} onChange={(e) => setThemeClair(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={themeClair}
+              onChange={(e) => setThemeClair(e.target.checked)}
+            />
             Thème clair (par défaut : sombre)
           </label>
         </section>
@@ -80,7 +84,10 @@ function PageReglages() {
             <Button
               variant="ghost"
               className="mt-2"
-              onClick={() => { ecrireServiceCourant(barId as string, null); toast.success("Service oublié localement."); }}
+              onClick={() => {
+                ecrireServiceCourant(barId as string, null);
+                toast.success("Service oublié localement.");
+              }}
             >
               Oublier le service actuel
             </Button>
@@ -92,7 +99,10 @@ function PageReglages() {
           <p className="mb-2 text-xs text-muted-foreground">{barId ?? "aucun"}</p>
           <Button
             variant="outline"
-            onClick={() => { definirBar(null); window.location.assign("/bars"); }}
+            onClick={() => {
+              definirBar(null);
+              window.location.assign("/bars");
+            }}
           >
             Changer de bar
           </Button>
@@ -100,7 +110,13 @@ function PageReglages() {
 
         <section className="rounded-xl border border-border bg-card p-4">
           <h2 className="mb-2 font-semibold">Session</h2>
-          <Button variant="destructive" onClick={() => { deconnecter(); window.location.assign("/connexion"); }}>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              deconnecter();
+              window.location.assign("/connexion");
+            }}
+          >
             Se déconnecter
           </Button>
         </section>

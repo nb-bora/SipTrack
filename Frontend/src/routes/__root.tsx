@@ -19,7 +19,10 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-6xl font-bold">404</h1>
         <p className="mt-2 text-sm text-muted-foreground">Cet écran n'existe pas.</p>
-        <a href="/" className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+        <a
+          href="/"
+          className="mt-6 inline-block rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+        >
           Revenir à l'accueil
         </a>
       </div>
@@ -47,7 +50,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           >
             Réessayer
           </button>
-          <a href="/" className="rounded-md border border-input px-4 py-2 text-sm">Accueil</a>
+          <a href="/" className="rounded-md border border-input px-4 py-2 text-sm">
+            Accueil
+          </a>
         </div>
       </div>
     </div>
@@ -60,16 +65,36 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "SipTrack — Le registre du bar" },
-      { name: "description", content: "SipTrack : le registre incontestable des ventes, encaissements et sous-caisses de votre bar." },
+      {
+        name: "description",
+        content:
+          "SipTrack : le registre incontestable des ventes, encaissements et sous-caisses de votre bar.",
+      },
       { name: "author", content: "SipTrack" },
       { property: "og:title", content: "SipTrack — Le registre du bar" },
-      { property: "og:description", content: "SipTrack : le registre incontestable des ventes, encaissements et sous-caisses de votre bar." },
+      {
+        property: "og:description",
+        content:
+          "SipTrack : le registre incontestable des ventes, encaissements et sous-caisses de votre bar.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "SipTrack — Le registre du bar" },
-      { name: "twitter:description", content: "SipTrack : le registre incontestable des ventes, encaissements et sous-caisses de votre bar." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/119bdd77-b6e3-40e3-bf8a-ed8cd81cce99/id-preview-512a1666--e88127b2-0b54-4e58-8aee-f9a0f7ca88f8.lovable.app-1785339608364.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/119bdd77-b6e3-40e3-bf8a-ed8cd81cce99/id-preview-512a1666--e88127b2-0b54-4e58-8aee-f9a0f7ca88f8.lovable.app-1785339608364.png" },
+      {
+        name: "twitter:description",
+        content:
+          "SipTrack : le registre incontestable des ventes, encaissements et sous-caisses de votre bar.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/119bdd77-b6e3-40e3-bf8a-ed8cd81cce99/id-preview-512a1666--e88127b2-0b54-4e58-8aee-f9a0f7ca88f8.lovable.app-1785339608364.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/119bdd77-b6e3-40e3-bf8a-ed8cd81cce99/id-preview-512a1666--e88127b2-0b54-4e58-8aee-f9a0f7ca88f8.lovable.app-1785339608364.png",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

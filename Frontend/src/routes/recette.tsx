@@ -56,7 +56,9 @@ function PageRecette() {
     },
   });
 
-  const [dernier, setDernier] = useState<null | { attendu: number; verse: number; ecart: number }>(null);
+  const [dernier, setDernier] = useState<null | { attendu: number; verse: number; ecart: number }>(
+    null,
+  );
 
   if (!serviceId) return <p className="text-sm text-muted-foreground">Aucun service en cours.</p>;
 
@@ -70,8 +72,8 @@ function PageRecette() {
       />
 
       <p className="mb-4 rounded-md border border-attente/40 bg-attente/10 p-3 text-xs text-attente">
-        L'attendu est calculé sur vos <strong>encaissements de tables</strong> uniquement. Les ventes
-        au comptoir, elles, ne sont pas comptées dans ce montant.
+        L'attendu est calculé sur vos <strong>encaissements de tables</strong> uniquement. Les
+        ventes au comptoir, elles, ne sont pas comptées dans ce montant.
       </p>
 
       <form
@@ -103,7 +105,11 @@ function PageRecette() {
             Confirmez-vous verser <Montant valeur={n} taille="md" /> ?
           </div>
         ) : null}
-        <Button type="submit" className="mt-4 h-12 w-full text-base" disabled={m.isPending || n <= 0}>
+        <Button
+          type="submit"
+          className="mt-4 h-12 w-full text-base"
+          disabled={m.isPending || n <= 0}
+        >
           {m.isPending ? "Versement…" : confirme ? "Confirmer le versement" : "Verser"}
         </Button>
         <p className="mt-2 text-[11px] text-muted-foreground">
@@ -141,13 +147,27 @@ function PageRecette() {
         ) : sc.data && sc.data.length > 0 ? (
           <ul className="space-y-2">
             {sc.data.map((x) => (
-              <li key={x.serveuse_id} className="rounded-lg border border-border bg-card p-3 text-sm">
-                <div className="mb-1 text-xs text-muted-foreground">Serveuse : {x.serveuse_id.slice(0, 8)}</div>
+              <li
+                key={x.serveuse_id}
+                className="rounded-lg border border-border bg-card p-3 text-sm"
+              >
+                <div className="mb-1 text-xs text-muted-foreground">
+                  Serveuse : {x.serveuse_id.slice(0, 8)}
+                </div>
                 <LigneKV k="Encaissé espèces" v={<Montant valeur={x.encaisse_especes} />} />
-                <LigneKV k="Encaissé mobile money" v={<Montant valeur={x.encaisse_mobile_money} />} />
+                <LigneKV
+                  k="Encaissé mobile money"
+                  v={<Montant valeur={x.encaisse_mobile_money} />}
+                />
                 <LigneKV
                   k="Versé"
-                  v={x.verse === null ? <span className="text-attente">en attente</span> : <Montant valeur={x.verse} />}
+                  v={
+                    x.verse === null ? (
+                      <span className="text-attente">en attente</span>
+                    ) : (
+                      <Montant valeur={x.verse} />
+                    )
+                  }
                 />
                 <LigneKV
                   k="Écart"

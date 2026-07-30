@@ -62,7 +62,10 @@ function PageConnexion() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <form onSubmit={soumettre} className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-lg">
+      <form
+        onSubmit={soumettre}
+        className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-lg"
+      >
         <div className="mb-6 flex items-center gap-2">
           <Beer className="h-6 w-6 text-primary" />
           <div>

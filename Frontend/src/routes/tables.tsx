@@ -35,7 +35,16 @@ function PageTables() {
   const [tick, setTick] = useState(0);
   const [table, setTable] = useState("");
 
-  const locales = useMemo(() => (serviceId ? lireAdditionsLocales(serviceId) : []), [serviceId, tick]);
+  // `tick` n'est pas lu dans le corps : c'est un signal d'invalidation. La
+  // source est le localStorage, que React ne sait pas observer ; `setTick` est
+  // appelé après chaque écriture pour forcer la relecture. La règle le croit
+  // superflu — le retirer laisserait la liste périmée après l'ouverture d'une
+  // table.
+  const locales = useMemo(
+    () => (serviceId ? lireAdditionsLocales(serviceId) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [serviceId, tick],
+  );
 
   const details = useQueries({
     queries: locales.map((a) => ({
@@ -133,7 +142,9 @@ function PageTables() {
                   </div>
                   {d ? (
                     <div className="text-right">
-                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Reste</div>
+                      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                        Reste
+                      </div>
                       <Montant
                         valeur={d.reste_a_payer}
                         taille="lg"

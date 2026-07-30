@@ -38,7 +38,8 @@ function PageInv() {
     {
       onSuccess: () => {
         toast.success("Produit d'inventaire créé.");
-        setNom(""); setQte("");
+        setNom("");
+        setQte("");
         qc.invalidateQueries({ queryKey: ["stock", barId] });
       },
       onError: signalerErreur,
@@ -47,9 +48,15 @@ function PageInv() {
 
   return (
     <div>
-      <TitrePage titre="Inventaire" sous="Distinct du catalogue : ce sont deux objets différents." />
+      <TitrePage
+        titre="Inventaire"
+        sous="Distinct du catalogue : ce sont deux objets différents."
+      />
       <form
-        onSubmit={(e) => { e.preventDefault(); if (nom.trim() && qte) mCreer.mutate(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (nom.trim() && qte) mCreer.mutate();
+        }}
         className="mb-4 grid grid-cols-[1fr_120px_auto] gap-2"
       >
         <Input
@@ -74,7 +81,9 @@ function PageInv() {
         <div className="h-24 animate-pulse rounded-xl bg-muted" />
       ) : (
         <ul className="space-y-2">
-          {q.data?.map((p) => <LigneStock key={p.id} p={p} />)}
+          {q.data?.map((p) => (
+            <LigneStock key={p.id} p={p} />
+          ))}
         </ul>
       )}
     </div>
@@ -92,7 +101,8 @@ function LigneStock({ p }: { p: ProduitStock }) {
     onSuccess: () => {
       toast.success("Stock ajouté.");
       qc.invalidateQueries({ queryKey: ["stock", p.bar_id] });
-      setAjout(""); setMode("aucun");
+      setAjout("");
+      setMode("aucun");
     },
     onError: signalerErreur,
   });
@@ -102,7 +112,9 @@ function LigneStock({ p }: { p: ProduitStock }) {
       onSuccess: () => {
         toast.success("Inventaire corrigé.");
         qc.invalidateQueries({ queryKey: ["stock", p.bar_id] });
-        setNouvQte(""); setRaison(""); setMode("aucun");
+        setNouvQte("");
+        setRaison("");
+        setMode("aucun");
       },
       onError: signalerErreur,
     },
@@ -115,10 +127,18 @@ function LigneStock({ p }: { p: ProduitStock }) {
         <div className="montant text-xl font-bold">{p.quantite}</div>
       </div>
       <div className="mt-2 flex flex-wrap gap-2">
-        <Button size="sm" variant="outline" onClick={() => setMode(mode === "ajout" ? "aucun" : "ajout")}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setMode(mode === "ajout" ? "aucun" : "ajout")}
+        >
           Ajouter du stock
         </Button>
-        <Button size="sm" variant="outline" onClick={() => setMode(mode === "correction" ? "aucun" : "correction")}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setMode(mode === "correction" ? "aucun" : "correction")}
+        >
           Corriger l'inventaire
         </Button>
       </div>
@@ -133,7 +153,11 @@ function LigneStock({ p }: { p: ProduitStock }) {
             value={ajout}
             onChange={(e) => setAjout(e.target.value.replace(/\D/g, ""))}
           />
-          <Button className="w-full" disabled={mAjout.isPending || !ajout} onClick={() => mAjout.mutate()}>
+          <Button
+            className="w-full"
+            disabled={mAjout.isPending || !ajout}
+            onClick={() => mAjout.mutate()}
+          >
             {mAjout.isPending ? "…" : "Ajouter"}
           </Button>
         </div>

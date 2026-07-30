@@ -27,7 +27,11 @@ export function Montant({
     manquant: "text-manquant",
     muted: "text-muted-foreground",
   }[ton];
-  return <span className={cn("montant", tailles, tons, className)}>{formatXAF(valeur ?? undefined)}</span>;
+  return (
+    <span className={cn("montant", tailles, tons, className)}>
+      {formatXAF(valeur ?? undefined)}
+    </span>
+  );
 }
 
 export function LigneKV({ k, v, className }: { k: ReactNode; v: ReactNode; className?: string }) {

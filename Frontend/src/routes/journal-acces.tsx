@@ -24,7 +24,10 @@ function Page() {
   });
   return (
     <div>
-      <TitrePage titre="Consultations plateforme" sous="Qui, hors du bar, a consulté vos données." />
+      <TitrePage
+        titre="Consultations plateforme"
+        sous="Qui, hors du bar, a consulté vos données."
+      />
       {q.isLoading ? (
         <div className="h-24 animate-pulse rounded-xl bg-muted" />
       ) : q.data && q.data.length > 0 ? (
@@ -33,9 +36,13 @@ function Page() {
             <li key={i} className="p-3 text-sm">
               <div className="flex items-baseline justify-between">
                 <span className="font-medium">{a.operation}</span>
-                <span className="text-xs text-muted-foreground">{formatDateHeure(a.horodatage)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDateHeure(a.horodatage)}
+                </span>
               </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">Administrateur : {a.administrateur_id}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">
+                Administrateur : {a.administrateur_id}
+              </div>
             </li>
           ))}
         </ul>

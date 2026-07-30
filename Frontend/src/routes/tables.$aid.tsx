@@ -68,12 +68,10 @@ function PageAddition() {
         <LigneKV k="Total" v={<Montant valeur={a.total} taille="lg" />} />
         <LigneKV k="Payé" v={<Montant valeur={a.paye} taille="md" ton="muted" />} />
         <div className="mt-2 flex items-baseline justify-between border-t border-border pt-3">
-          <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Reste à payer</span>
-          <Montant
-            valeur={a.reste_a_payer}
-            taille="xl"
-            ton={soldee ? "solde" : "manquant"}
-          />
+          <span className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Reste à payer
+          </span>
+          <Montant valeur={a.reste_a_payer} taille="xl" ton={soldee ? "solde" : "manquant"} />
         </div>
       </div>
 
@@ -84,7 +82,10 @@ function PageAddition() {
           </div>
           <ul className="divide-y divide-border">
             {a.lignes.map((l) => (
-              <li key={l.vente_id} className="flex items-baseline justify-between px-4 py-2 text-sm">
+              <li
+                key={l.vente_id}
+                className="flex items-baseline justify-between px-4 py-2 text-sm"
+              >
                 <div>
                   <span className="montant font-semibold">{l.quantite}</span> × produit{" "}
                   <span className="text-muted-foreground">{l.produit_id.slice(0, 8)}</span>
@@ -106,7 +107,10 @@ function PageAddition() {
           </div>
           <ul className="divide-y divide-border">
             {a.paiements.map((p) => (
-              <li key={p.paiement_id} className="flex items-baseline justify-between px-4 py-2 text-sm">
+              <li
+                key={p.paiement_id}
+                className="flex items-baseline justify-between px-4 py-2 text-sm"
+              >
                 <span>
                   {formatHeure(p.horodatage)} · {LIBELLE_FORME[p.forme_paiement]}
                 </span>
@@ -139,15 +143,24 @@ function PageAddition() {
 
       {mode === "ajout" ? <FormAjoutConso serviceId={serviceId} additionId={aid} /> : null}
       {mode === "paiement" && !soldee ? (
-        <FormPaiement serviceId={serviceId} barId={barId as string} additionId={aid} reste={a.reste_a_payer} />
+        <FormPaiement
+          serviceId={serviceId}
+          barId={barId as string}
+          additionId={aid}
+          reste={a.reste_a_payer}
+        />
       ) : null}
 
       {soldee && a.statut === "ouverte" ? (
-        <RegleAddition serviceId={serviceId} additionId={aid} onFait={() => {
-          retirerAdditionLocale(serviceId, aid);
-          qc.invalidateQueries({ queryKey: ["addition"] });
-          nav({ to: "/tables" });
-        }} />
+        <RegleAddition
+          serviceId={serviceId}
+          additionId={aid}
+          onFait={() => {
+            retirerAdditionLocale(serviceId, aid);
+            qc.invalidateQueries({ queryKey: ["addition"] });
+            nav({ to: "/tables" });
+          }}
+        />
       ) : null}
     </div>
   );
@@ -207,10 +220,20 @@ function FormAjoutConso({ serviceId, additionId }: { serviceId: string; addition
       {sel ? (
         <div className="mt-3 space-y-3">
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="h-10 w-10 p-0" onClick={() => setQ((x) => Math.max(1, x - 1))}>−</Button>
+            <Button
+              variant="outline"
+              className="h-10 w-10 p-0"
+              onClick={() => setQ((x) => Math.max(1, x - 1))}
+            >
+              −
+            </Button>
             <span className="montant w-8 text-center text-lg font-bold">{q}</span>
-            <Button variant="outline" className="h-10 w-10 p-0" onClick={() => setQ((x) => x + 1)}>+</Button>
-            <span className="ml-auto"><Montant valeur={sel.prix * q} taille="md" /></span>
+            <Button variant="outline" className="h-10 w-10 p-0" onClick={() => setQ((x) => x + 1)}>
+              +
+            </Button>
+            <span className="ml-auto">
+              <Montant valeur={sel.prix * q} taille="md" />
+            </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {(Object.keys(LIBELLE_FORME) as FormePaiement[]).map((f) => (
@@ -278,7 +301,7 @@ function FormPaiement({
         {
           montant: n,
           forme_paiement: forme,
-          client_id: forme === "credit" ? clientId ?? undefined : undefined,
+          client_id: forme === "credit" ? (clientId ?? undefined) : undefined,
         },
         cle,
       );
@@ -306,7 +329,9 @@ function FormPaiement({
           value={montant}
           onChange={(e) => setMontant(e.target.value.replace(/\D/g, ""))}
         />
-        <p className="mt-1 text-xs text-muted-foreground">Reste à payer : <Montant valeur={reste} taille="sm" /></p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Reste à payer : <Montant valeur={reste} taille="sm" />
+        </p>
       </div>
       <div>
         <Label>Forme de paiement</Label>
@@ -328,7 +353,8 @@ function FormPaiement({
       {forme === "credit" ? (
         <div className="rounded-md border border-attente/40 bg-attente/10 p-3">
           <p className="text-xs text-attente">
-            Un paiement en crédit solde l'addition sans qu'aucun argent n'entre. Une créance sera ouverte au nom du client.
+            Un paiement en crédit solde l'addition sans qu'aucun argent n'entre. Une créance sera
+            ouverte au nom du client.
           </p>
           <div className="mt-2 space-y-2">
             <Label>Client</Label>
@@ -345,8 +371,9 @@ function FormPaiement({
               ))}
             </select>
             <p className="text-[11px] text-muted-foreground">
-              Cette liste ne montre que les clients ayant une dette en cours. Pour tout autre client,
-              saisissez son nom ci-dessous : un nom déjà connu du bar sera retrouvé, pas dupliqué.
+              Cette liste ne montre que les clients ayant une dette en cours. Pour tout autre
+              client, saisissez son nom ci-dessous : un nom déjà connu du bar sera retrouvé, pas
+              dupliqué.
             </p>
             <div className="flex gap-2">
               <Input
@@ -373,14 +400,26 @@ function FormPaiement({
           <Montant valeur={n} taille="lg" />
         </div>
       </div>
-      <Button className="h-12 w-full" disabled={m.isPending || n <= 0 || bloqueCredit} onClick={() => m.mutate()}>
+      <Button
+        className="h-12 w-full"
+        disabled={m.isPending || n <= 0 || bloqueCredit}
+        onClick={() => m.mutate()}
+      >
         {m.isPending ? "Encaissement…" : "Confirmer l'encaissement"}
       </Button>
     </div>
   );
 }
 
-function RegleAddition({ serviceId, additionId, onFait }: { serviceId: string; additionId: string; onFait: () => void }) {
+function RegleAddition({
+  serviceId,
+  additionId,
+  onFait,
+}: {
+  serviceId: string;
+  additionId: string;
+  onFait: () => void;
+}) {
   const m = useEcriture((_: void, cle) => reglerAddition(serviceId, additionId, cle), {
     onSuccess: () => {
       toast.success("Addition réglée.");
@@ -390,7 +429,9 @@ function RegleAddition({ serviceId, additionId, onFait }: { serviceId: string; a
   });
   return (
     <div className="mt-4 rounded-xl border border-solde/40 bg-solde/10 p-4">
-      <p className="text-sm text-solde">Le reste à payer atteint 0. Vous pouvez constater le règlement.</p>
+      <p className="text-sm text-solde">
+        Le reste à payer atteint 0. Vous pouvez constater le règlement.
+      </p>
       <Button className="mt-3 h-12 w-full" disabled={m.isPending} onClick={() => m.mutate()}>
         {m.isPending ? "…" : "Régler l'addition"}
       </Button>

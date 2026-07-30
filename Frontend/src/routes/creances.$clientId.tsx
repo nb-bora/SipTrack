@@ -62,7 +62,10 @@ function PageClient() {
       <TitrePage titre={e.client_nom} />
       <div className="rounded-xl border border-border bg-card p-4">
         <LigneKV k="Total dû" v={<Montant valeur={e.total_du} taille="md" />} />
-        <LigneKV k="Total remboursé" v={<Montant valeur={e.total_rembourse} taille="md" ton="muted" />} />
+        <LigneKV
+          k="Total remboursé"
+          v={<Montant valeur={e.total_rembourse} taille="md" ton="muted" />}
+        />
         <div className="mt-2 flex items-baseline justify-between border-t border-border pt-3">
           <span className="text-sm font-semibold uppercase text-muted-foreground">Reste</span>
           <Montant valeur={e.reste} taille="xl" ton="manquant" />
@@ -79,9 +82,17 @@ function PageClient() {
               (choix === c.credit_id ? "border-primary" : "border-border")
             }
           >
-            <button className="w-full text-left" onClick={() => { setChoix(c.credit_id); setMontant(String(c.reste)); }}>
+            <button
+              className="w-full text-left"
+              onClick={() => {
+                setChoix(c.credit_id);
+                setMontant(String(c.reste));
+              }}
+            >
               <div className="flex items-baseline justify-between">
-                <span className="text-xs text-muted-foreground">Créance {c.credit_id.slice(0, 8)}</span>
+                <span className="text-xs text-muted-foreground">
+                  Créance {c.credit_id.slice(0, 8)}
+                </span>
                 <Montant valeur={c.reste} ton={c.reste === 0 ? "solde" : "manquant"} />
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
@@ -123,7 +134,11 @@ function PageClient() {
             </div>
           ) : null}
           <Button className="h-12 w-full" disabled={m.isPending || n <= 0}>
-            {m.isPending ? "Enregistrement…" : confirme ? "Confirmer" : "Encaisser le remboursement"}
+            {m.isPending
+              ? "Enregistrement…"
+              : confirme
+                ? "Confirmer"
+                : "Encaisser le remboursement"}
           </Button>
         </form>
       ) : null}

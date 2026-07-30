@@ -39,7 +39,8 @@ function PageCatalogue() {
     {
       onSuccess: () => {
         toast.success("Produit créé.");
-        setNom(""); setPrix("");
+        setNom("");
+        setPrix("");
         qc.invalidateQueries({ queryKey: ["produits", barId] });
       },
       onError: signalerErreur,
@@ -48,10 +49,16 @@ function PageCatalogue() {
 
   return (
     <div>
-      <TitrePage titre="Catalogue & tarifs" sous="Les ventes déjà saisies gardent leur prix. Chaque changement est consigné." />
+      <TitrePage
+        titre="Catalogue & tarifs"
+        sous="Les ventes déjà saisies gardent leur prix. Chaque changement est consigné."
+      />
 
       <form
-        onSubmit={(e) => { e.preventDefault(); if (nom.trim() && prix) mCreer.mutate(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (nom.trim() && prix) mCreer.mutate();
+        }}
         className="mb-4 grid grid-cols-[1fr_120px_auto] gap-2"
       >
         <Input
@@ -99,7 +106,10 @@ function LigneProduit({ p }: { p: Produit }) {
       setEdite(false);
       setConfirme(false);
     },
-    onError: (e) => { signalerErreur(e); setConfirme(false); },
+    onError: (e) => {
+      signalerErreur(e);
+      setConfirme(false);
+    },
   });
   const mRetrait = useEcriture((_: void, cle) => retirerProduit(p.id, cle), {
     onSuccess: () => {
@@ -114,7 +124,9 @@ function LigneProduit({ p }: { p: Produit }) {
       <div className="flex items-baseline justify-between gap-2">
         <div>
           <div className="font-semibold">{p.nom}</div>
-          {!p.en_vente ? <div className="text-[11px] text-muted-foreground">retiré de la vente</div> : null}
+          {!p.en_vente ? (
+            <div className="text-[11px] text-muted-foreground">retiré de la vente</div>
+          ) : null}
         </div>
         <Montant valeur={p.prix} taille="md" />
       </div>
@@ -126,18 +138,28 @@ function LigneProduit({ p }: { p: Produit }) {
             inputMode="numeric"
             pattern="[0-9]*"
             value={prix}
-            onChange={(e) => { setPrix(e.target.value.replace(/\D/g, "")); setConfirme(false); }}
+            onChange={(e) => {
+              setPrix(e.target.value.replace(/\D/g, ""));
+              setConfirme(false);
+            }}
           />
           {confirme ? (
             <div className="rounded-md bg-muted p-2 text-xs">
-              Nouveau tarif : <Montant valeur={parseInt(prix, 10) || 0} taille="sm" />. Les ventes déjà saisies gardent leur prix.
+              Nouveau tarif : <Montant valeur={parseInt(prix, 10) || 0} taille="sm" />. Les ventes
+              déjà saisies gardent leur prix.
             </div>
           ) : null}
           <div className="flex gap-2">
-            <Button className="flex-1" disabled={mTarif.isPending} onClick={() => (confirme ? mTarif.mutate() : setConfirme(true))}>
+            <Button
+              className="flex-1"
+              disabled={mTarif.isPending}
+              onClick={() => (confirme ? mTarif.mutate() : setConfirme(true))}
+            >
               {mTarif.isPending ? "…" : confirme ? "Confirmer" : "Modifier"}
             </Button>
-            <Button variant="outline" onClick={() => setEdite(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setEdite(false)}>
+              Annuler
+            </Button>
           </div>
         </div>
       ) : (
@@ -146,7 +168,12 @@ function LigneProduit({ p }: { p: Produit }) {
             Changer le tarif
           </Button>
           {p.en_vente ? (
-            <Button size="sm" variant="ghost" disabled={mRetrait.isPending} onClick={() => mRetrait.mutate()}>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={mRetrait.isPending}
+              onClick={() => mRetrait.mutate()}
+            >
               {mRetrait.isPending ? "…" : "Retirer de la vente"}
             </Button>
           ) : null}
