@@ -121,6 +121,17 @@ DATABASES = {
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("CONN_MAX_AGE", default=60)
 
 # --- Divers -----------------------------------------------------------------
+# Argon2id, recommandé par l'OWASP : conçu pour résister au cassage par GPU,
+# là où PBKDF2 — le défaut de Django — ne fait que multiplier les itérations.
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    # Les suivants restent déclarés pour que les mots de passe déjà hachés
+    # continuent d'être vérifiés, puis réencodés en Argon2 à la connexion.
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -145,17 +156,30 @@ REST_FRAMEWORK = {
     # Jeton plutôt que session : l'app mobile est offline-first, elle ne peut
     # pas dépendre d'une session serveur ni d'un cycle de rafraîchissement.
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        # Jeton DRF, mais daté : voir shared/interface/rest/authentification.py
+        "shared.interface.rest.authentification.JetonExpirable",
     ],
     # Fermé par défaut : une route nouvellement ajoutée est protégée sans que
     # personne ait à y penser. C'est l'inverse qui serait dangereux.
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    # `ScopedRateThrottle` seul ne freinait *que* les vues déclarant un
+    # `throttle_scope` — une seule le faisait. Tout le reste de l'API était sans
+    # limite : un jeton valide suffisait à saturer le service.
     "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.ScopedRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
+        # Large : une serveuse en coup de feu saisit vite, et brider le travail
+        # légitime ferait contourner l'outil — ce qui coûterait plus cher que
+        # l'abus qu'on prévient.
+        "user": env("THROTTLE_UTILISATEUR", default="300/min"),
+        # Un anonyme n'a presque rien à faire ici : seules l'obtention de jeton
+        # et la documentation lui sont ouvertes.
+        "anon": env("THROTTLE_ANONYME", default="30/min"),
         # Freine le bourrinage de mots de passe sur l'obtention de jeton.
         "obtention_jeton": env("THROTTLE_OBTENTION_JETON", default="10/min"),
     },
@@ -228,3 +252,23 @@ LOGGING = {
         "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
     },
 }
+
+
+# ---------------------------------------------------------------------------
+# Cache
+#
+# Les compteurs de débit s'appuient dessus. En mémoire de processus, ils sont
+# **par worker** : correct tant qu'il n'y en a qu'un, faux dès qu'il y en a
+# plusieurs. Passer à Redis se fait alors en changeant `CACHE_URL`, sans
+# toucher au code.
+# ---------------------------------------------------------------------------
+CACHES = {
+    "default": env.cache_url(
+        "CACHE_URL",
+        default="locmemcache://siptrack",
+    ),
+}
+
+# Durée de vie d'un jeton. Un téléphone volé ne doit pas donner un accès à vie ;
+# une serveuse ne doit pas non plus se reconnecter chaque soir.
+JETON_DUREE_JOURS = env.int("JETON_DUREE_JOURS", default=30)

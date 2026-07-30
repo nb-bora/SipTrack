@@ -290,6 +290,9 @@ def test_aucun_endpoint_ne_repond_a_un_inconnu(django_user_model: Any) -> None:
     hors_perimetre = {
         # Délivre le jeton : exiger un compte pour l'obtenir serait circulaire.
         "/api/auth/jeton/",
+        # Rendre son propre jeton ne suppose aucun compte dans un bar : on se
+        # déconnecte de la plateforme, pas d'un établissement.
+        "/api/auth/deconnexion/",
         # Documentation publique, volontairement ouverte.
         "/api/schema/",
         # État de l'instance : Render la sonde et la CI l'interroge pour

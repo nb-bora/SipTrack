@@ -9,8 +9,13 @@ import os
 # Import générique : convention Django pour les settings (cf. dev.py).
 from .base import *  # noqa: F403  # NOSONAR
 from .base import MIDDLEWARE
+from .garde import exiger
 
 DEBUG = False
+
+
+# Jamais `env(..., default=...)` ici : le défaut est précisément le danger.
+SECRET_KEY = exiger("SECRET_KEY")
 
 # On relit la variable brute au lieu de passer par `env` : le schéma déclaré
 # dans base.py porte le défaut de développement (localhost, 127.0.0.1), qui

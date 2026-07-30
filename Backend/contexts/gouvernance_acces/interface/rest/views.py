@@ -254,3 +254,28 @@ class AccesPlateformeListView(APIView):
         return Response(
             AccesPlateformeOutputSerializer(container.acces_du_bar(bar_id), many=True).data
         )
+
+
+class DeconnexionView(APIView):
+    """Rendre son jeton.
+
+    Sans cela, la seule façon de couper l'accès d'un téléphone perdu serait
+    d'intervenir en base. Une révocation qui suppose un accès à la production
+    n'est pas une révocation.
+    """
+
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Se déconnecter",
+        description=(
+            "Supprime le jeton présenté. Les autres appareils de la même "
+            "personne ne sont pas affectés : chacun a le sien."
+        ),
+        request=None,
+        responses={204: OpenApiResponse(description="Jeton révoqué.")},
+    )
+    def post(self, request: Request) -> Response:
+        jeton = getattr(request, "auth", None)
+        if jeton is not None:
+            jeton.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
