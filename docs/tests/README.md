@@ -123,9 +123,11 @@ uv run pytest-watch
 def test_une_quantite_negative_est_rejetee():
     """Domaine : quantité > 0."""
 
+
 # Handler : action exécutée + résultat
 def test_la_vente_est_persistee_et_journalisee():
     """Application : orchestre création + persistance."""
+
 
 # API : HTTP + contrat
 def test_ouvrir_service_cree_le_service_et_retourne_201():

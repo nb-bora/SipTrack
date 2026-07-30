@@ -42,9 +42,9 @@ class CloturerServiceHandler:
     def executer(self, cmd: CloturerServiceCommand) -> ServiceDTO:
         service = self.repository.par_id(cmd.service_id)  # port injecté
         service.cloturer(auteur_id=cmd.auteur_id, horodatage=self.clock.now())
-        self.repository.mettre_a_jour(service)            # persistance
-        self.journal.enregistrer_evenements(service)       # journalisation
-        self.unit_of_work.commit()                          # transaction
+        self.repository.mettre_a_jour(service)  # persistance
+        self.journal.enregistrer_evenements(service)  # journalisation
+        self.unit_of_work.commit()  # transaction
         return ServiceDTO.from_domaine(service)
 ```
 
@@ -61,7 +61,7 @@ class DjangoServiceRepository:
 ```python
 # Interface (DRF)
 # Backend/contexts/service_ventes/interface/rest/views.py
-@api_view(['POST'])
+@api_view(["POST"])
 def cloturer_service(request, service_id: str):
     cmd = CloturerServiceCommand(service_id=service_id, auteur_id=request.user.id)
     dto = container.cloturer_service().executer(cmd)
@@ -119,14 +119,17 @@ class Service:
 # Backend/contexts/service_ventes/infrastructure/django_app/models.py
 from django.db import models
 
+
 class ServiceModel(models.Model):
     id = models.CharField(max_length=50, primary_key=True)
     bar_id = models.CharField(max_length=50)
-    statut = models.CharField(max_length=20, choices=[("ouvert", "Ouvert"), ("cloture", "Clôturé")])
+    statut = models.CharField(
+        max_length=20, choices=[("ouvert", "Ouvert"), ("cloture", "Clôturé")]
+    )
     fond_de_caisse = models.IntegerField()
     ouvert_le = models.DateTimeField(auto_now_add=True)
     clos_le = models.DateTimeField(null=True, blank=True)
-    
+
     class Meta:
         app_label = "service_ventes"
 ```
@@ -144,9 +147,9 @@ class ServiceMapper:
             fond_de_caisse=ligne.fond_de_caisse,
             ouvert_le=ligne.ouvert_le,
             clos_le=ligne.clos_le,
-            events=[]
+            events=[],
         )
-    
+
     @staticmethod
     def vers_ligne(service: Service, ligne: ServiceModel) -> None:
         ligne.bar_id = service.bar_id
@@ -265,6 +268,7 @@ class Service:
     fond_de_caisse: int
     # ... (simple, ~5 champs)
 
+
 # Agrégat 2 : Vente (indépendante)
 class Vente:
     id: str
@@ -273,6 +277,7 @@ class Vente:
     quantite: int
     montant_total: int
     # ... (simple, ~6 champs)
+
 
 # Agrégat 3 : Addition (indépendante)
 class Addition:
@@ -293,6 +298,7 @@ class Service:
     id: str
     # ... sans collection d'additions
 
+
 # Charger les additions d'un service se fait via query :
 additions = repository.additions_d_un_service(service_id)
 ```
@@ -303,16 +309,17 @@ additions = repository.additions_d_un_service(service_id)
 # En V1, Addition n'existe pas → on livre la transition pure (OUVERT → CLÔTURÉ)
 # Quand Addition arrive, on ajoute le garde-fou :
 
+
 class CloturerServiceHandler:
     def executer(self, cmd: CloturerServiceCommand) -> ServiceDTO:
         service = self.repository.par_id(cmd.service_id)
-        
+
         # NOUVEAU (quand Addition est implémentée) :
         # Vérifier qu'aucune Addition n'est ouverte
         additions_ouvertes = self.addition_repository.par_service_id(service.id)
         if any(a.statut == StatutAddition.OUVERTE for a in additions_ouvertes):
             raise ImpossibleClotureAdditionOuverte(service.id)
-        
+
         service.cloturer(auteur_id=cmd.auteur_id, horodatage=self.clock.now())
         self.repository.mettre_a_jour(service)
         return ServiceDTO.from_domaine(service)
@@ -395,6 +402,7 @@ class VenteEnregistree(DomainEvent):
     produit_id: str  # juste l'ID (string), pas l'objet
     quantite: int
     # ...
+
 
 # Backend/contexts/stock_inventaire/application/eventHandlers/
 class DiminuerStockQuandVenteEnregistree:

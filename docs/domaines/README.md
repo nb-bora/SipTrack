@@ -174,11 +174,13 @@ def test_concept_invariant():
     """Domaine : règle métier fondamentale."""
     assert ...
 
+
 # 2. Handler (orchestration + persistance)
 def test_handler_persiste_et_journalise():
     """Application : fakes en mémoire."""
     assert repository.par_id(id) is not None
     assert journal.evenements[-1].type == ...
+
 
 # 3. API (bout en bout)
 def test_api_endpoint_retourne_201():
