@@ -638,10 +638,16 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean;
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
+  // Largeur variable entre 50 et 90 %, pour que les lignes du squelette ne
+  // soient pas toutes identiques. Dérivée de `useId()` plutôt que tirée au
+  // hasard : un générateur pseudo-aléatoire n'a rien à faire ici, et l'identité
+  // stable du composant suffit à varier les largeurs entre instances — tout en
+  // gardant le même rendu d'un rendu à l'autre.
+  const identite = React.useId();
   const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`;
-  }, []);
+    const empreinte = Array.from(identite).reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return `${(empreinte % 41) + 50}%`;
+  }, [identite]);
 
   return (
     <div
