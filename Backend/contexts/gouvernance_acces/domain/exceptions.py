@@ -103,3 +103,11 @@ class CapaciteRequiseManquante(GouvernanceError):
         self.compte_id = compte_id
         self.capacite_requise = capacite_requise
         self.operation = operation
+
+
+class UtilisateurIntrouvable(GouvernanceError):
+    """Aucun utilisateur Django ne correspond à cet identifiant."""
+
+    def __init__(self, user_id: str) -> None:
+        super().__init__(f"Utilisateur introuvable : {user_id}.")
+        self.user_id = user_id
