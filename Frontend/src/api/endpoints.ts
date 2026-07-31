@@ -53,6 +53,21 @@ export const creerCompte = (
   capacites_initiales: Capacite[],
   cle?: string,
 ) => ecrire<Compte>("POST", "/api/comptes/", { bar_id, user_id, capacites_initiales }, { cle });
+
+export const creerEmploye = (
+  bar_id: string,
+  username: string,
+  mot_de_passe_initial: string,
+  capacites_initiales: Capacite[],
+  cle?: string,
+) =>
+  ecrire<Compte>(
+    "POST",
+    "/api/comptes/employe/",
+    { bar_id, username, mot_de_passe_initial, capacites_initiales },
+    { cle },
+  );
+
 export const ajouterCapacite = (compteId: string, capacite: Capacite, cle?: string) =>
   ecrire<Compte>("POST", `/api/comptes/${compteId}/capacites/`, { capacite }, { cle });
 export const retirerCapacite = (compteId: string, capacite: Capacite, cle?: string) =>

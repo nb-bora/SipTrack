@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ajouterCapacite, creerCompte, retirerCapacite } from "@/api/endpoints";
+import { ajouterCapacite, creerEmploye, retirerCapacite } from "@/api/endpoints";
 import { useEcriture } from "@/api/ecriture";
 import { useSession } from "@/etat/session";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import type { Capacite, Compte } from "@/api/types";
 import { useState } from "react";
 import { toast } from "sonner";
 import { signalerErreur } from "@/domaine/erreurs";
-import { User } from "lucide-react";
+import { Lock, User } from "lucide-react";
 
 export const Route = createFileRoute("/equipe")({
   head: () => ({
@@ -26,19 +26,22 @@ export const Route = createFileRoute("/equipe")({
 
 function PageEquipe() {
   const { barId } = useSession();
-  const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
+  const [mdp, setMdp] = useState("");
   const [initiales, setInitiales] = useState<Set<Capacite>>(
     new Set(["enregistrer_vente", "encaisser"]),
   );
   const [dernier, setDernier] = useState<Compte | null>(null);
 
   const mCreer = useEcriture(
-    (_: void, cle) => creerCompte(barId as string, userId.trim(), Array.from(initiales), cle),
+    (_: void, cle) =>
+      creerEmploye(barId as string, username.trim(), mdp, Array.from(initiales), cle),
     {
       onSuccess: (c) => {
-        toast.success("Compte créé.");
+        toast.success("Employé créé.");
         setDernier(c);
-        setUserId("");
+        setUsername("");
+        setMdp("");
       },
       onError: signalerErreur,
     },
@@ -49,18 +52,25 @@ function PageEquipe() {
       <TitrePage titre="Équipe & accès" sous="Attribution des capacités par personne." />
 
       <div className="rounded-xl border border-border bg-card p-4">
-        <h2 className="mb-2 font-semibold">Créer un compte</h2>
+        <h2 className="mb-2 font-semibold">Créer un employé</h2>
         <p className="mb-3 text-xs text-muted-foreground">
-          Renseignez l'identifiant utilisateur (fourni par la plateforme) et les capacités
-          initiales.
+          Entrez le nom d'utilisateur et le mot de passe initial de l'employé.
         </p>
         <div className="space-y-2">
-          <Label>Identifiant utilisateur</Label>
+          <Label>Nom d'utilisateur</Label>
           <Input
             icone={User}
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="user_id"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="ex: alice"
+          />
+          <Label className="mt-3">Mot de passe initial</Label>
+          <Input
+            icone={Lock}
+            type="password"
+            value={mdp}
+            onChange={(e) => setMdp(e.target.value)}
+            placeholder="Mot de passe sécurisé"
           />
           <div className="mt-2 grid grid-cols-1 gap-2">
             {TOUTES_CAPACITES.map((c) => (
@@ -83,10 +93,10 @@ function PageEquipe() {
           </div>
           <Button
             className="mt-3 h-12 w-full"
-            disabled={mCreer.isPending || !userId.trim()}
+            disabled={mCreer.isPending || !username.trim() || !mdp}
             onClick={() => mCreer.mutate()}
           >
-            {mCreer.isPending ? "Création…" : "Créer le compte"}
+            {mCreer.isPending ? "Création…" : "Créer l'employé"}
           </Button>
         </div>
       </div>
