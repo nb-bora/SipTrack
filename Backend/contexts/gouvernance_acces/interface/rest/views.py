@@ -17,6 +17,7 @@ from contexts.gouvernance_acces.application.dto import (
     AccorderCapaciteCommand,
     CreerBarCommand,
     CreerCompteCommand,
+    CreerEmployeCommand,
     InscrireUtilisateurCommand,
     RetirerCapaciteCommand,
 )
@@ -29,6 +30,7 @@ from contexts.gouvernance_acces.domain.exceptions import (
     BarIntrouvable,
     CompteDejaExistant,
     CompteIntrouvable,
+    MotDePasseInvalide,
     UtilisateurIntrouvable,
 )
 from shared.interface.rest.acces import exiger_lecture
@@ -41,6 +43,7 @@ from .serializers import (
     CompteOutputSerializer,
     CreerBarInputSerializer,
     CreerCompteInputSerializer,
+    CreerEmployeInputSerializer,
     InscrireInputSerializer,
     InscrireOutputSerializer,
     RetirerCapaciteInputSerializer,
@@ -178,6 +181,56 @@ class CompteCreateView(APIView):
             )
         except CompteDejaExistant as erreur:
             return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
+        except AutoriseNonAutorisé as erreur:
+            return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
+
+        return Response(CompteOutputSerializer(dto).data, status=status.HTTP_201_CREATED)
+
+
+class CreerEmployeView(APIView):
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Créer un compte pour un nouvel employé",
+        description=(
+            "Crée d'abord un utilisateur Django (username + mot de passe), "
+            "puis un compte dans le bar. Requiert la capacité CREER_COMPTE."
+        ),
+        request=CreerEmployeInputSerializer,
+        responses={
+            201: CompteOutputSerializer,
+            400: _validation(),
+            404: _erreur("Bar introuvable."),
+            409: _erreur("Cet utilisateur existe déjà."),
+        },
+    )
+    def post(self, request: Request) -> Response:
+        entree = CreerEmployeInputSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+
+        try:
+            dto = container.gerer_comptes().creer_employe(
+                CreerEmployeCommand(
+                    bar_id=entree.validated_data["bar_id"],
+                    username=entree.validated_data["username"],
+                    mot_de_passe_initial=entree.validated_data["mot_de_passe_initial"],
+                    capacites_initiales=frozenset(
+                        entree.validated_data.get("capacites_initiales", [])
+                    ),
+                    auteur_id=auteur_id_de(request),
+                )
+            )
+        except BarIntrouvable:
+            return Response({"detail": "Bar introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        except UtilisateurDejaInscrit as erreur:
+            return Response(
+                {"detail": f"Cet utilisateur existe déjà : {str(erreur)}."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except MotDePasseInvalide as erreur:
+            return Response(
+                {"detail": f"Mot de passe invalide : {'; '.join(erreur.messages)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except AutoriseNonAutorisé as erreur:
             return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
 

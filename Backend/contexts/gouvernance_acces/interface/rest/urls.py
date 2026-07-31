@@ -9,6 +9,7 @@ from .views import (
     BarListCreateView,
     CapaciteUpdateView,
     CompteCreateView,
+    CreerEmployeView,
     DeconnexionView,
     InscrireView,
     ObtenirJetonView,
@@ -21,5 +22,6 @@ urlpatterns = [
     path("bars/", BarListCreateView.as_view(), name="bars"),
     path("bars/<str:bar_id>/acces/", AccesPlateformeListView.as_view(), name="acces-bar"),
     path("comptes/", CompteCreateView.as_view(), name="comptes"),
+    path("comptes/employe/", CreerEmployeView.as_view(), name="creer-employe"),
     path("comptes/<str:compte_id>/capacites/", CapaciteUpdateView.as_view(), name="capacites"),
 ]
