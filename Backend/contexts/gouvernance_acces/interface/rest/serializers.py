@@ -95,3 +95,20 @@ class InscrireOutputSerializer(serializers.Serializer[Any]):
     bar_id = serializers.CharField()
     bar_nom = serializers.CharField()
     message = serializers.CharField()
+
+
+class ChangerMotDePasseInputSerializer(serializers.Serializer[Any]):
+    """Changer le mot de passe de l'utilisateur authentifié."""
+
+    nouveau_mot_de_passe = serializers.CharField(
+        max_length=128,
+        write_only=True,
+        help_text="Nouveau mot de passe ; doit satisfaire les règles de validation Django.",
+    )
+
+
+class ObtenirJetonOutputSerializer(serializers.Serializer[Any]):
+    """Réponse d'authentification avec flag mot de passe."""
+
+    token = serializers.CharField()
+    doit_changer_mot_de_passe = serializers.BooleanField()

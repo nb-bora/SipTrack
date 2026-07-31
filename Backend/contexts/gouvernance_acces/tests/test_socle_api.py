@@ -264,6 +264,112 @@ def test_creer_un_employe_mdp_invalide(client_api: APIClient) -> None:
 
 
 @pytest.mark.django_db
+def test_employe_doit_changer_mdp_au_login(client_api: APIClient) -> None:
+    """Un employé créé reçoit doit_changer_mot_de_passe=True à la connexion."""
+    # Créer un bar.
+    bar = client_api.post("/api/bars/", {"nom": "Le Bar"}, format="json").json()
+
+    # Créer un employé.
+    reponse = client_api.post(
+        "/api/comptes/employe/",
+        {
+            "bar_id": bar["id"],
+            "username": "alice",
+            "mot_de_passe_initial": "SecurePass123!",
+            "capacites_initiales": [],
+        },
+        format="json",
+    )
+    assert reponse.status_code == 201
+
+    # Se connecter avec cet employé (public access).
+    login_reponse = APIClient().post(
+        "/api/auth/jeton/",
+        {"username": "alice", "password": "SecurePass123!"},
+        format="json",
+    )
+    assert login_reponse.status_code == 200
+    assert login_reponse.json()["doit_changer_mot_de_passe"] is True
+
+
+@pytest.mark.django_db
+def test_employe_bloque_sans_changer_mdp(client_api: APIClient) -> None:
+    """Un employé avec doit_changer_mdp=True ne peut pas accéder aux routes."""
+    # Créer un bar.
+    bar = client_api.post("/api/bars/", {"nom": "Le Bar"}, format="json").json()
+
+    # Créer un employé.
+    client_api.post(
+        "/api/comptes/employe/",
+        {
+            "bar_id": bar["id"],
+            "username": "alice",
+            "mot_de_passe_initial": "SecurePass123!",
+            "capacites_initiales": [],
+        },
+        format="json",
+    )
+
+    # Se connecter avec cet employé.
+    login_reponse = APIClient().post(
+        "/api/auth/jeton/",
+        {"username": "alice", "password": "SecurePass123!"},
+        format="json",
+    )
+    jeton = login_reponse.json()["token"]
+
+    # Essayer d'accéder à /api/bars/ → bloqué (403 Forbidden).
+    employee_client = APIClient()
+    employee_client.credentials(HTTP_AUTHORIZATION=f"Token {jeton}")
+    bars_reponse = employee_client.get("/api/bars/", format="json")
+    assert bars_reponse.status_code == 403
+
+
+@pytest.mark.django_db
+def test_employe_change_mdp_puis_acces_ok(client_api: APIClient) -> None:
+    """Après changement de mdp, l'employé peut accéder aux routes."""
+    # Créer un bar et employé.
+    bar = client_api.post("/api/bars/", {"nom": "Le Bar"}, format="json").json()
+    client_api.post(
+        "/api/comptes/employe/",
+        {
+            "bar_id": bar["id"],
+            "username": "alice",
+            "mot_de_passe_initial": "SecurePass123!",
+            "capacites_initiales": [],
+        },
+        format="json",
+    )
+
+    # Se connecter.
+    login_reponse = APIClient().post(
+        "/api/auth/jeton/",
+        {"username": "alice", "password": "SecurePass123!"},
+        format="json",
+    )
+    jeton = login_reponse.json()["token"]
+
+    # Changer le mot de passe avec client qui gère l'idempotence.
+    employee_client = APIClient()
+    employee_client.credentials(HTTP_AUTHORIZATION=f"Token {jeton}")
+
+    # Utiliser client_api (avec clé idempotence) pour le changement.
+    # On crée une copie avec le jeton de l'employé.
+    change_client = client_api
+    change_client.credentials(HTTP_AUTHORIZATION=f"Token {jeton}")
+    change_reponse = change_client.post(
+        "/api/moi/mot-de-passe/",
+        {"nouveau_mot_de_passe": "NewSecurePass456!"},
+        format="json",
+    )
+    assert change_reponse.status_code == 204
+
+    # Accéder à /api/bars/ → succès (200).
+    bars_reponse = employee_client.get("/api/bars/", format="json")
+    assert bars_reponse.status_code == 200
+
+
+@pytest.mark.django_db
 def test_accorder_une_capacite(client_api: APIClient, auteur: Any, django_user_model: Any) -> None:
     """Accorder une capacité à un compte."""
     bar = client_api.post("/api/bars/", {"nom": "Le Relais"}, format="json").json()
