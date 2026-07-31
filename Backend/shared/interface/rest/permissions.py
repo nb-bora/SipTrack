@@ -31,8 +31,14 @@ class MotDePasseAJour(BasePermission):
     de mot de passe, etc.).
     """
 
+    EXEMPTED_VIEWS = {"DeconnexionView", "ChangerMotDePasseView", "MoiView"}
+
     def has_permission(self, request: Request, view: Any) -> bool:
         from config.container import container
+
+        # Exempter les vues listées
+        if view.__class__.__name__ in self.EXEMPTED_VIEWS:
+            return True
 
         if not request.user or not request.user.is_authenticated:
             return True

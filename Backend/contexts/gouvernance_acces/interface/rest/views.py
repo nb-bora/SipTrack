@@ -411,9 +411,6 @@ class DeconnexionView(APIView):
     n'est pas une révocation.
     """
 
-    permission_classes = []
-    authentication_classes = []
-
     @extend_schema(
         tags=_ETIQUETTES,
         summary="Se déconnecter",
@@ -437,8 +434,6 @@ class ChangerMotDePasseView(APIView):
     Accessible même si l'utilisateur doit changer son mot de passe initial
     (c'est précisément le but).
     """
-
-    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         tags=_ETIQUETTES,
