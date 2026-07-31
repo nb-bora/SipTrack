@@ -14,6 +14,7 @@ from contexts.gouvernance_acces.domain.exceptions import (
 from contexts.gouvernance_acces.infrastructure.django_app.models import (
     BarModel,
     CompteModel,
+    ProfilUtilisateurModel,
 )
 
 
@@ -112,4 +113,30 @@ class DjangoCompteRepository:
     def mettre_a_jour(self, compte: Compte) -> None:
         CompteModel.objects.filter(id=compte.id).update(
             capacites=list(compte.capacites),
+        )
+
+
+class DjangoProfilRepository:
+    """Persistence des profils utilisateurs."""
+
+    def creer_pour(self, user_id: str, doit_changer_mdp: bool = False) -> None:
+        import uuid
+
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        user = User.objects.get(pk=int(user_id))
+        ProfilUtilisateurModel.objects.create(
+            id=str(uuid.uuid4()),
+            user=user,
+            doit_changer_mot_de_passe=doit_changer_mdp,
+        )
+
+    def doit_changer(self, user_id: str) -> bool:
+        profil = ProfilUtilisateurModel.objects.filter(user_id=int(user_id)).first()
+        return profil.doit_changer_mot_de_passe if profil else False
+
+    def marquer_change(self, user_id: str) -> None:
+        ProfilUtilisateurModel.objects.filter(user_id=int(user_id)).update(
+            doit_changer_mot_de_passe=False
         )

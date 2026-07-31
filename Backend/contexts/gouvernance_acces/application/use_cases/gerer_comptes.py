@@ -29,6 +29,7 @@ from contexts.gouvernance_acces.domain.exceptions import (
 from contexts.gouvernance_acces.domain.repositories import (
     BarRepository,
     CompteRepository,
+    ProfilRepository,
 )
 from shared.application.journal import Journal
 from shared.application.unit_of_work import UnitOfWork
@@ -45,11 +46,13 @@ class GererComptesHandler:
         uow: UnitOfWork,
         bars: BarRepository,
         comptes: CompteRepository,
+        profils: ProfilRepository,
         journal: Journal,
     ) -> None:
         self._uow = uow
         self._bars = bars
         self._comptes = comptes
+        self._profils = profils
         self._journal = journal
 
     def creer(self, commande: CreerCompteCommand) -> CompteDTO:
@@ -196,6 +199,9 @@ class GererComptesHandler:
                 password=commande.mot_de_passe_initial,
             )
             user_id = str(user.pk)
+
+            # Créer le profil avec flag "doit changer mot de passe".
+            self._profils.creer_pour(user_id, doit_changer_mdp=True)
 
             # Créer le compte dans le bar.
             return self._creer_compte_pour(

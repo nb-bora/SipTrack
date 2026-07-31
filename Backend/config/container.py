@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from contexts.gouvernance_acces.domain.repositories import (
         BarRepository,
         CompteRepository,
+        ProfilRepository,
     )
     from contexts.service_ventes.application.dto import ServiceDTO
     from contexts.service_ventes.application.ports import (
@@ -134,6 +135,7 @@ class Container:
         self._produits: ProduitRepository | None = None
         self._bars: BarRepository | None = None
         self._comptes: CompteRepository | None = None
+        self._profils: ProfilRepository | None = None
         self._controle_acces: ControleAcces | None = None
         self._acces: JournalDesAcces | None = None
         self._catalogue_lecture: CatalogueQueryService | None = None
@@ -265,6 +267,15 @@ class Container:
 
             self._comptes = DjangoCompteRepository()
         return self._comptes
+
+    def _profil_repository(self) -> ProfilRepository:
+        if self._profils is None:
+            from contexts.gouvernance_acces.infrastructure.persistence.repository import (
+                DjangoProfilRepository,
+            )
+
+            self._profils = DjangoProfilRepository()
+        return self._profils
 
     def _catalogue_query_service(self) -> CatalogueQueryService:
         if self._catalogue_lecture is None:
@@ -591,8 +602,13 @@ class Container:
             uow=DjangoUnitOfWork(),
             bars=self._bar_repository(),
             comptes=self._compte_repository(),
+            profils=self._profil_repository(),
             journal=self._journal_adapter(),
         )
+
+    def doit_changer_mot_de_passe(self, user_id: str) -> bool:
+        """Vérifie si l'utilisateur doit changer son mot de passe."""
+        return self._profil_repository().doit_changer(user_id)
 
     def _stock_produit_repository(self) -> StockProduitRepository:
         if self._produits_stock is None:

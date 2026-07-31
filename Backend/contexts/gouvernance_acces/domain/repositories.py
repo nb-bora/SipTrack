@@ -53,3 +53,19 @@ class CompteRepository(Protocol):
         ...
 
     def mettre_a_jour(self, compte: Compte) -> None: ...
+
+
+class ProfilRepository(Protocol):
+    """Persistence des profils utilisateurs."""
+
+    def creer_pour(self, user_id: str, doit_changer_mdp: bool = False) -> None:
+        """Crée un profil pour un utilisateur."""
+        ...
+
+    def doit_changer(self, user_id: str) -> bool:
+        """Retourne True si l'utilisateur doit changer son mot de passe."""
+        ...
+
+    def marquer_change(self, user_id: str) -> None:
+        """Marque le mot de passe comme changé."""
+        ...
