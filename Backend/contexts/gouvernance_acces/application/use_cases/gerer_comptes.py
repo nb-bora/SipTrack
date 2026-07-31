@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from django.contrib.auth import get_user_model
+
 from contexts.gouvernance_acces.application.dto import (
     AccorderCapaciteCommand,
     CompteDTO,
@@ -15,6 +17,7 @@ from contexts.gouvernance_acces.domain.exceptions import (
     BarIntrouvable,
     CompteDejaExistant,
     CompteIntrouvable,
+    UtilisateurIntrouvable,
 )
 from contexts.gouvernance_acces.domain.repositories import (
     BarRepository,
@@ -22,6 +25,8 @@ from contexts.gouvernance_acces.domain.repositories import (
 )
 from shared.application.journal import Journal
 from shared.application.unit_of_work import UnitOfWork
+
+User = get_user_model()
 
 
 class GererComptesHandler:
@@ -51,6 +56,10 @@ class GererComptesHandler:
             bar = self._bars.par_id(commande.bar_id)
             if bar is None:
                 raise BarIntrouvable(commande.bar_id)
+
+            # Vérifier que l'utilisateur cible existe.
+            if not User.objects.filter(pk=commande.user_id).exists():
+                raise UtilisateurIntrouvable(commande.user_id)
 
             # Vérifier que l'auteur a CREER_COMPTE.
             auteur = self._charger_compte_auteur(commande.bar_id, commande.auteur_id)

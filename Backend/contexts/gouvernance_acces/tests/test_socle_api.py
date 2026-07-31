@@ -163,6 +163,27 @@ def test_creer_un_compte_dans_un_bar(
 
 
 @pytest.mark.django_db
+def test_creer_un_compte_avec_user_id_introuvable(client_api: APIClient) -> None:
+    """Créer un compte avec un user_id qui n'existe pas → 404."""
+    # Créer un bar.
+    bar = client_api.post("/api/bars/", {"nom": "Le Bar"}, format="json").json()
+
+    # Tenter de créer un compte avec un user_id bidon.
+    reponse = client_api.post(
+        "/api/comptes/",
+        {
+            "bar_id": bar["id"],
+            "user_id": "999999",  # n'existe pas
+            "capacites_initiales": [],
+        },
+        format="json",
+    )
+
+    assert reponse.status_code == 404
+    assert "Utilisateur introuvable" in reponse.json()["detail"]
+
+
+@pytest.mark.django_db
 def test_accorder_une_capacite(client_api: APIClient, auteur: Any, django_user_model: Any) -> None:
     """Accorder une capacité à un compte."""
     bar = client_api.post("/api/bars/", {"nom": "Le Relais"}, format="json").json()

@@ -29,6 +29,7 @@ from contexts.gouvernance_acces.domain.exceptions import (
     BarIntrouvable,
     CompteDejaExistant,
     CompteIntrouvable,
+    UtilisateurIntrouvable,
 )
 from shared.interface.rest.acces import exiger_lecture
 from shared.interface.rest.attribution import auteur_id_de
@@ -171,6 +172,10 @@ class CompteCreateView(APIView):
             )
         except BarIntrouvable:
             return Response({"detail": "Bar introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        except UtilisateurIntrouvable:
+            return Response(
+                {"detail": "Utilisateur introuvable."}, status=status.HTTP_404_NOT_FOUND
+            )
         except CompteDejaExistant as erreur:
             return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
         except AutoriseNonAutorisé as erreur:
