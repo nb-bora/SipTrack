@@ -85,6 +85,31 @@ class AdministrateurPlateformeModel(models.Model):
         return f"{self.user.username} — plateforme ({etat})"
 
 
+class ProfilUtilisateurModel(models.Model):
+    """Profil utilisateur : métadonnées au-delà de l'authentification Django.
+
+    Un-à-un vers auth.User, stocke notamment si l'utilisateur doit changer son
+    mot de passe à la prochaine connexion.
+    """
+
+    id = models.CharField(max_length=36, primary_key=True)
+    user = models.OneToOneField(
+        "auth.User",
+        on_delete=models.CASCADE,
+        related_name="profil_siptrack",
+    )
+    doit_changer_mot_de_passe = models.BooleanField(default=False)
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "gouvernance_profil_utilisateur"
+
+    def __str__(self) -> str:
+        status = "mdp à changer" if self.doit_changer_mot_de_passe else "ok"
+        return f"{self.user.username} — {status}"
+
+
 class AccesPlateformeModel(models.Model):
     """Trace d'une consultation faite au titre du privilège plateforme.
 

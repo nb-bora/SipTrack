@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers, status
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
@@ -17,6 +20,7 @@ from contexts.gouvernance_acces.application.dto import (
     AccorderCapaciteCommand,
     CreerBarCommand,
     CreerCompteCommand,
+    CreerEmployeCommand,
     InscrireUtilisateurCommand,
     RetirerCapaciteCommand,
 )
@@ -29,6 +33,7 @@ from contexts.gouvernance_acces.domain.exceptions import (
     BarIntrouvable,
     CompteDejaExistant,
     CompteIntrouvable,
+    MotDePasseInvalide,
     UtilisateurIntrouvable,
 )
 from shared.interface.rest.acces import exiger_lecture
@@ -41,6 +46,7 @@ from .serializers import (
     CompteOutputSerializer,
     CreerBarInputSerializer,
     CreerCompteInputSerializer,
+    CreerEmployeInputSerializer,
     InscrireInputSerializer,
     InscrireOutputSerializer,
     RetirerCapaciteInputSerializer,
@@ -53,13 +59,17 @@ from .serializers import (
     description=(
         "Seule route ouverte du système. Le jeton obtenu se présente ensuite sur "
         "chaque appel : `Authorization: Token <jeton>`. Il n'expire pas — l'app "
-        "mobile est offline-first — et se révoque en supprimant sa ligne."
+        "mobile est offline-first — et se révoque en supprimant sa ligne. "
+        "Retourne aussi `doit_changer_mot_de_passe` pour les employés créés."
     ),
     request=AuthTokenSerializer,
     responses={
         200: inline_serializer(
             name="Jeton",
-            fields={"token": serializers.CharField()},
+            fields={
+                "token": serializers.CharField(),
+                "doit_changer_mot_de_passe": serializers.BooleanField(),
+            },
         ),
         400: inline_serializer(
             name="IdentifiantsInvalides",
@@ -77,6 +87,20 @@ class ObtenirJetonView(ObtainAuthToken):
 
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "obtention_jeton"
+
+    def post(self, request: Request) -> Response:
+        response = super().post(request)
+        if response.status_code == 200:
+            token_key = response.data.get("token")
+            from rest_framework.authtoken.models import Token
+
+            try:
+                token = Token.objects.get(key=token_key)
+                doit_changer = container.doit_changer_mot_de_passe(str(token.user.pk))
+                response.data["doit_changer_mot_de_passe"] = doit_changer
+            except Token.DoesNotExist:
+                response.data["doit_changer_mot_de_passe"] = False
+        return response
 
 
 # ============================================================================
@@ -178,6 +202,56 @@ class CompteCreateView(APIView):
             )
         except CompteDejaExistant as erreur:
             return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
+        except AutoriseNonAutorisé as erreur:
+            return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
+
+        return Response(CompteOutputSerializer(dto).data, status=status.HTTP_201_CREATED)
+
+
+class CreerEmployeView(APIView):
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Créer un compte pour un nouvel employé",
+        description=(
+            "Crée d'abord un utilisateur Django (username + mot de passe), "
+            "puis un compte dans le bar. Requiert la capacité CREER_COMPTE."
+        ),
+        request=CreerEmployeInputSerializer,
+        responses={
+            201: CompteOutputSerializer,
+            400: _validation(),
+            404: _erreur("Bar introuvable."),
+            409: _erreur("Cet utilisateur existe déjà."),
+        },
+    )
+    def post(self, request: Request) -> Response:
+        entree = CreerEmployeInputSerializer(data=request.data)
+        entree.is_valid(raise_exception=True)
+
+        try:
+            dto = container.gerer_comptes().creer_employe(
+                CreerEmployeCommand(
+                    bar_id=entree.validated_data["bar_id"],
+                    username=entree.validated_data["username"],
+                    mot_de_passe_initial=entree.validated_data["mot_de_passe_initial"],
+                    capacites_initiales=frozenset(
+                        entree.validated_data.get("capacites_initiales", [])
+                    ),
+                    auteur_id=auteur_id_de(request),
+                )
+            )
+        except BarIntrouvable:
+            return Response({"detail": "Bar introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        except UtilisateurDejaInscrit as erreur:
+            return Response(
+                {"detail": f"Cet utilisateur existe déjà : {str(erreur)}."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except MotDePasseInvalide as erreur:
+            return Response(
+                {"detail": f"Mot de passe invalide : {'; '.join(erreur.messages)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except AutoriseNonAutorisé as erreur:
             return Response({"detail": str(erreur)}, status=status.HTTP_409_CONFLICT)
 
@@ -351,4 +425,51 @@ class DeconnexionView(APIView):
         jeton = getattr(request, "auth", None)
         if jeton is not None:
             jeton.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ChangerMotDePasseView(APIView):
+    """Changer le mot de passe de l'utilisateur authentifié.
+
+    Accessible même si l'utilisateur doit changer son mot de passe initial
+    (c'est précisément le but).
+    """
+
+    @extend_schema(
+        tags=_ETIQUETTES,
+        summary="Changer mon mot de passe",
+        description="Change le mot de passe de l'utilisateur authentifié.",
+        request=inline_serializer(
+            name="ChangerMotDePasseInput",
+            fields={
+                "nouveau_mot_de_passe": serializers.CharField(
+                    max_length=128, write_only=True
+                ),
+            },
+        ),
+        responses={
+            204: OpenApiResponse(description="Mot de passe changé."),
+            400: _validation(),
+        },
+    )
+    def post(self, request: Request) -> Response:
+        nouveau = request.data.get("nouveau_mot_de_passe", "").strip()
+        if not nouveau:
+            return Response(
+                {"detail": "nouveau_mot_de_passe est requis."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            validate_password(nouveau, user=request.user)
+        except ValidationError as e:
+            return Response(
+                {"detail": f"Mot de passe invalide : {'; '.join(e.messages)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        request.user.set_password(nouveau)
+        request.user.save()
+        container._profil_repository().marquer_change(str(request.user.pk))
+
         return Response(status=status.HTTP_204_NO_CONTENT)

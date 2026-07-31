@@ -169,6 +169,7 @@ REST_FRAMEWORK = {
     # personne ait à y penser. C'est l'inverse qui serait dangereux.
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
+        "shared.interface.rest.permissions.MotDePasseAJour",
     ],
     # `ScopedRateThrottle` seul ne freinait *que* les vues déclarant un
     # `throttle_scope` — une seule le faisait. Tout le reste de l'API était sans

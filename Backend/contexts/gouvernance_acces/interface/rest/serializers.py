@@ -33,6 +33,23 @@ class CreerCompteInputSerializer(serializers.Serializer[Any]):
     )
 
 
+class CreerEmployeInputSerializer(serializers.Serializer[Any]):
+    """Créer un compte pour un nouvel employé (crée aussi le User Django)."""
+
+    bar_id = serializers.CharField(max_length=36)
+    username = serializers.CharField(max_length=150)
+    mot_de_passe_initial = serializers.CharField(
+        max_length=128,
+        write_only=True,
+        help_text="Mot de passe initial ; doit satisfaire les règles de validation Django.",
+    )
+    capacites_initiales = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        default=[],
+    )
+
+
 class CompteOutputSerializer(serializers.Serializer[Any]):
     """Représentation d'un compte utilisateur."""
 
@@ -78,3 +95,20 @@ class InscrireOutputSerializer(serializers.Serializer[Any]):
     bar_id = serializers.CharField()
     bar_nom = serializers.CharField()
     message = serializers.CharField()
+
+
+class ChangerMotDePasseInputSerializer(serializers.Serializer[Any]):
+    """Changer le mot de passe de l'utilisateur authentifié."""
+
+    nouveau_mot_de_passe = serializers.CharField(
+        max_length=128,
+        write_only=True,
+        help_text="Nouveau mot de passe ; doit satisfaire les règles de validation Django.",
+    )
+
+
+class ObtenirJetonOutputSerializer(serializers.Serializer[Any]):
+    """Réponse d'authentification avec flag mot de passe."""
+
+    token = serializers.CharField()
+    doit_changer_mot_de_passe = serializers.BooleanField()
