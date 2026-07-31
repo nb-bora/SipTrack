@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 from contexts.gouvernance_acces.application.dto import (
     AccorderCapaciteCommand,
     CompteDTO,
     CreerCompteCommand,
+    CreerEmployeCommand,
     RetirerCapaciteCommand,
+)
+from contexts.gouvernance_acces.application.use_cases.inscrire_utilisateur import (
+    UtilisateurDejaInscrit,
 )
 from contexts.gouvernance_acces.domain.compte import Compte
 from contexts.gouvernance_acces.domain.enums import CapaciteAtomique
@@ -17,6 +23,7 @@ from contexts.gouvernance_acces.domain.exceptions import (
     BarIntrouvable,
     CompteDejaExistant,
     CompteIntrouvable,
+    MotDePasseInvalide,
     UtilisateurIntrouvable,
 )
 from contexts.gouvernance_acces.domain.repositories import (
@@ -72,28 +79,49 @@ class GererComptesHandler:
             if existant is not None:
                 raise CompteDejaExistant(commande.bar_id, commande.user_id)
 
-            # Vérifier que l'auteur ne délègue que ce qu'il possède.
-            for cap in commande.capacites_initiales:
-                if not CapaciteAtomique.valide(cap):
-                    raise ValueError(f"Capacité inconnue : {cap}")
-                if not auteur.possede(cap):
-                    raise AutoriseNonAutorisé(commande.auteur_id, cap)
-
-            # Créer le compte avec les capacités initiales.
-            compte = Compte.creer(
+            return self._creer_compte_pour(
                 bar_id=commande.bar_id,
                 user_id=commande.user_id,
                 capacites_initiales=commande.capacites_initiales,
                 auteur_id=commande.auteur_id,
             )
-            # Note: le DTOdans CompteCree enregistre les capacites comme tuple
-            # (JSON seriable). Compte lui-même les porte en frozenset (immutable).
-            self._comptes.ajouter(compte)
-            self._journal.enregistrer(compte.evenements_non_publies(), auteur_id=commande.auteur_id)
-            compte.purger_evenements()
-            self._uow.commit()
 
-            return CompteDTO.depuis_compte(compte)
+    def _creer_compte_pour(
+        self,
+        *,
+        bar_id: str,
+        user_id: str,
+        capacites_initiales: frozenset[str],
+        auteur_id: str,
+    ) -> CompteDTO:
+        """Crée un compte utilisateur avec vérifications et persistance.
+
+        Appellé par creer() et creer_employe().
+        """
+        # Vérifier que l'auteur a CREER_COMPTE.
+        auteur = self._charger_compte_auteur(bar_id, auteur_id)
+        auteur.verifier_capacite(CapaciteAtomique.CREER_COMPTE, "créer un compte")
+
+        # Vérifier que l'auteur ne délègue que ce qu'il possède.
+        for cap in capacites_initiales:
+            if not CapaciteAtomique.valide(cap):
+                raise ValueError(f"Capacité inconnue : {cap}")
+            if not auteur.possede(cap):
+                raise AutoriseNonAutorisé(auteur_id, cap)
+
+        # Créer le compte avec les capacités initiales.
+        compte = Compte.creer(
+            bar_id=bar_id,
+            user_id=user_id,
+            capacites_initiales=capacites_initiales,
+            auteur_id=auteur_id,
+        )
+        self._comptes.ajouter(compte)
+        self._journal.enregistrer(compte.evenements_non_publies(), auteur_id=auteur_id)
+        compte.purger_evenements()
+        self._uow.commit()
+
+        return CompteDTO.depuis_compte(compte)
 
     def accorder_capacite(self, commande: AccorderCapaciteCommand) -> CompteDTO:
         """Accorde une capacité à un compte.
@@ -140,6 +168,42 @@ class GererComptesHandler:
             self._uow.commit()
 
             return CompteDTO.depuis_compte(compte)
+
+    def creer_employe(self, commande: CreerEmployeCommand) -> CompteDTO:
+        """Crée un employé : d'abord l'utilisateur Django, puis le compte du bar.
+
+        Le mot de passe est validé ; un mot de passe invalide lève MotDePasseInvalide.
+        """
+        with self._uow:
+            # Vérifier que le username n'existe pas.
+            if User.objects.filter(username=commande.username).exists():
+                raise UtilisateurDejaInscrit(commande.username)
+
+            # Vérifier que le bar existe.
+            bar = self._bars.par_id(commande.bar_id)
+            if bar is None:
+                raise BarIntrouvable(commande.bar_id)
+
+            # Valider le mot de passe.
+            try:
+                validate_password(commande.mot_de_passe_initial)
+            except ValidationError as e:
+                raise MotDePasseInvalide(e.messages) from e
+
+            # Créer l'utilisateur Django.
+            user = User.objects.create_user(
+                username=commande.username,
+                password=commande.mot_de_passe_initial,
+            )
+            user_id = str(user.pk)
+
+            # Créer le compte dans le bar.
+            return self._creer_compte_pour(
+                bar_id=commande.bar_id,
+                user_id=user_id,
+                capacites_initiales=commande.capacites_initiales,
+                auteur_id=commande.auteur_id,
+            )
 
     def _charger_compte_auteur(self, bar_id: str, user_id: str) -> Compte:
         """Charge le compte de l'auteur dans ce bar.

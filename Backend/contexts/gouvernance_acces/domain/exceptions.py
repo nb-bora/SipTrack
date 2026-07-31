@@ -111,3 +111,11 @@ class UtilisateurIntrouvable(GouvernanceError):
     def __init__(self, user_id: str) -> None:
         super().__init__(f"Utilisateur introuvable : {user_id}.")
         self.user_id = user_id
+
+
+class MotDePasseInvalide(GouvernanceError):
+    """Le mot de passe ne satisfait pas les règles de validation."""
+
+    def __init__(self, messages: list[str]) -> None:
+        super().__init__(f"Mot de passe invalide : {' ; '.join(messages)}")
+        self.messages = messages

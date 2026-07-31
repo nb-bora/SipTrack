@@ -57,6 +57,17 @@ class InscrireUtilisateurCommand:
 
 
 @dataclass(frozen=True)
+class CreerEmployeCommand:
+    """Créer un compte pour un nouvel employé dans un bar existant."""
+
+    bar_id: str
+    username: str
+    mot_de_passe_initial: str
+    capacites_initiales: frozenset[str]
+    auteur_id: str
+
+
+@dataclass(frozen=True)
 class BarDTO:
     """Représentation d'un bar."""
 
